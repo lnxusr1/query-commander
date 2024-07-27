@@ -224,10 +224,55 @@ function doExecuteSQL(tab_id, exec_type) {
     });
 }
 
+function doGetTableContents(container, selection=false, delimiter="\t") {
+
+    let content = '';
+    $(container).find('thead tr:first-child > th > data').each(function(i, o) {
+        if (i > 0) {
+            if (i > 1) {
+                content = content + delimiter;
+            }
+
+            let data_item = $(o).find('span').text();
+            if ((data_item.includes(delimiter)) || (data_item.includes('"'))) {
+                if (data_item.includes('"')) {
+                    data_item = data_item.replace('"', '""');
+                }
+                content = content + '"' + data_item + '"';
+            } else {
+                content = content + data_item;
+            }
+        }
+    });
+
+    $(container).find('tbody tr').each(function(ir, tr) {
+        if (content != "") { content = content + "\r\n"; }
+        $(tr).find('td').each(function(i, o) {
+            if (i > 0) {
+                content = content + delimiter;
+            }
+
+            let data_item = $(o).find('data').text();
+            if ((data_item.includes(delimiter)) || (data_item.includes('"'))) {
+                if (data_item.includes('"')) {
+                    data_item = data_item.replace('"', '""');
+                }
+                content = content + '"' + data_item + '"';
+            } else {
+                content = content + data_item;
+            }
+        });
+    });
+
+    return content;
+}
+
 function doClearQueryResults(container) {
 
     //$(container).parent().find('div.section.statement div').text('');
     $(container).parent().find('div.section.output div').text('');
+    $(container).parent().parent().find('.btn-tab-export').prop('disabled', true);
+    $(container).parent().parent().find('.btn-tab-copy').prop('disabled', true);
 
     $(container).find('table th > data').off();
     $(container).find('table tbody td').off();
@@ -288,6 +333,9 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
 
             if (data["records"].length == 0) {
                 $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+            } else {
+                $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
+                $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
             }
         }
     }
@@ -442,14 +490,45 @@ function doWireUpQueryTab(tab_id) {
         return false;
     });
 
-    $(tab_id + ' .btn-tab-export').click(function() { });
-    $(tab_id + ' .btn-tab-copy').click(function() { });
+    $(tab_id + ' .btn-tab-export').click(function() { 
+        
+        //TODO: Get content from loaded table
+        let content = doGetTableContents($(tab_id + ' div.section.data'), false, ",");
+        let blob = new Blob([content], { type: "text/plain" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'export.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        return false;
+    });
+    $(tab_id + ' .btn-tab-copy').click(function() { 
+        let selected_only = false;
+        if ($(tab_id + ' div.section.data table').find('.selected').length > 0) {
+            selected_only = true;
+        }
+
+        let content = doGetTableContents($(tab_id + ' div.section.data'), selected_only);
+        console.log(content);
+
+        return false;
+    });
+
     $(tab_id + ' .btn-tab-filter').click(function() { });
     $(tab_id + ' .btn-tab-first').click(function() { });
     $(tab_id + ' .btn-tab-prev').click(function() { });
     $(tab_id + ' .btn-tab-next').click(function() { });
     $(tab_id + ' .btn-tab-last').click(function() { });
     $(tab_id + ' .btn-tab-refresh').click(function() { });
+
+    $(tab_id + ' > item > results .data > div').scroll(function() {
+        $(tab_id + ' > item > results .data > div > div:first-child table').css('top', '' + $(this).scrollTop() + 'px');
+        $(tab_id + ' > item > results .data > div > div table tr > th:first-child').css('left', ($(this).scrollLeft()) + 'px');
+    });
 
     doClearQueryResults($(tab_id + ' .data'));
     //doLoadQueryData($(tab_id + ' results .data'), { "headers": [], "records": [] });
@@ -614,6 +693,10 @@ function doAddDetailTab(obj_details) {
                     doClearQueryResults(content);
                     doLoadQueryData(content, sec_dtl, false, false);
                 }
+
+                content.scroll(function() {
+                    $(this).find('div:first-child > table').css('top', '' + $(this).scrollTop() + 'px')
+                });
 
             });
 

@@ -91,10 +91,10 @@ core > tab.query > item > results .statement > div,
 core > tab.query > item > results .output > div { padding: 12px; }
 core > tab.query > item > results .data { display: flex; flex-direction: column; user-select: none; width: 100%; }
 core > tab.query > item > results .data > * { overflow: hidden; white-space: nowrap; }
-core > tab.query > item > results .data > div { flex: 1; overflow: auto; width: 100%; }
+core > tab.query > item > results .data > div { flex: 1; overflow: auto; width: 100%; position: relative; }
 core > tab.query > item > results .data > div > div:first-child { height: 26px; }
 
-core > tab.query > item > results .data > div > div:first-child > table { position: fixed; z-index: 2; }
+core > tab.query > item > results .data > div > div:first-child > table { position: absolute; top:0; left: 0; z-index: 2; }
 core > tab.query > item > results .data data { overflow: hidden; }
 core > tab.query > item > results .tab-loading { user-select: none; z-index: 20; position: absolute; top: 0; right: 0; left: 0; bottom: 0; display: flex; flex-direction: row; align-items: center; background: var(--output-overlay-bg); }
 .tab-loading > div { display: flex; flex-direction: column; align-items: center; width: 100%; }
@@ -109,7 +109,7 @@ results table, propdetail table { border-spacing: 0; margin-left: 0; user-select
 results table data, propdetail table data { position: relative; display: block; height: 24px; line-height: 24px; overflow: hidden; white-space: nowrap; }
 
 propdetail .table > div:first-child { height: 26px; }
-propdetail .table > div:first-child > table { position: fixed; z-index: 2; }
+propdetail .table > div:first-child > table { position: absolute; top: 0; left: 0; z-index: 2; }
 
 results table thead tr:first-child th data, 
 propdetail table thead tr:first-child th data,
@@ -117,6 +117,9 @@ results table tbody tr td data,
 propdetail table tbody tr td data { width: 120px; overflow: hidden; }
 
 results table thead tr:first-child th:first-child data { width: 54px; }
+results table tr > th:first-child { display: block; position: absolute; z-index:1; }
+results table thead tr:first-child th:first-child { z-index: 2; }
+results table tr > *:nth-child(2) { display: block; margin-left: 56px; }
 
 results table th, propdetail table th { 
     background: var(--results-table-header-bg); 
@@ -195,7 +198,7 @@ propdetail > div:first-child > button:first-child { border-top: 1px solid var(--
 propdetail button.active { background-color: var(--button-active); }
 propdetail .code { background: var(--editor-bg); font-family: monospace; white-space: pre; font-size: 0.9rem; }
 propdetail .code > div { padding: 10px; }
-propdetail .section { width: 100%; overflow: scroll;}
+propdetail .section { width: 100%; overflow: scroll; position: relative; }
 propdetail .table td > data { user-select: all; }
 
 overlay { display: none; }

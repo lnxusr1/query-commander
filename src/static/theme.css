@@ -1,0 +1,39 @@
+:root {
+    --text-color: #000000;
+    --error-color: red;
+    --main-bg: #aaaaaa;
+
+    --sidebar-bg-color: #ffffff;
+
+    --toolbar-bg: #e5e5e5;
+    --toolbar-border-color: #bababa;
+    --toolbar-bg-dark: linear-gradient(#dedede, #b0b0b0);
+    --toolbar-bg-dark-active: linear-gradient(#b0b0b0, #dedede);
+    --toolbar-border-color-dark: #999999;
+
+    --editor-bg: #ffffff;
+    --editor-text-color: #000000;
+
+    --slider-bg: #cccccc;
+    --slider-fg-color: #333333;
+
+    --results-bg: #ffffff;
+    --results-table-border: #000000;
+    --results-table-header-bg: #e5e5e5;
+    --results-table-header-alt-border: #ffffff;
+    --results-table-bg: #ffffff;
+    --results-table-bg-selected: rgba(109, 174, 228,1);
+    --results-table-text-selected: #ffffff;
+    --results-table-bg-selected-alt: rgba(0, 120, 215, 1);
+    --results-table-bg-alt: rgba(219, 229, 241, 1);
+    --results-table-numbers-color: rgba(0, 0, 0, .6);
+    --tab-active: linear-gradient(#e5e5e5, #ffffff);
+    --close-hover-color: red;
+
+    --button-hover: orange;
+    --button-border-light: #bcbcbc;
+    --button-active: #ffffff;
+    --sidebar-highlight: rgba(109, 174, 228,.3);
+    --overlay-transparent-bg: rgba(0, 0, 0, .3);
+    --output-overlay-bg: rgba(0, 0, 0, .4);
+}

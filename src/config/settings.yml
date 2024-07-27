@@ -1,0 +1,40 @@
+tokenizer:
+  type: local
+  timeout: 20 # minutes
+  path: /tmp/tokens
+  safe_password: abc123456abcdef
+
+authenticator:
+  type: local
+
+connections:
+  myconn1:
+    type: postgres
+    host: my-db-server.lan
+    port: 5432
+    credentials:
+      - username: mydbuser1
+        password: mydbuserpassword
+        databases:
+          - mydatabase
+          - postgers
+  myconn2:
+    type: postgres
+    host: localhost
+    port: 5432
+    credentials:
+      - username: mydbuser1
+        password: mydbuserpassword
+
+mappings:
+  mygroup1:
+    - connection: myconn1
+      username: mydbuser1
+  mygroup2:
+    - connection: myconn2
+      username: mydbuser2
+  mygroup3:
+    - connection: myconn1
+      username: mydbuser1
+    - connection: myconn2
+      username: mydbuser2

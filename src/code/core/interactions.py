@@ -1,0 +1,93 @@
+#!/usr/bin/env python
+
+import sys
+import logging
+import json
+import http.cookies
+from core.tokenizer import tokenizer
+
+
+class Response:
+    def __init__(self, **kwargs):
+        hdrs = kwargs.get("headers", { "Content-Type": "application/json"})
+        if isinstance(hdrs, dict):
+            self.headers = hdrs
+
+        self.data = kwargs.get("data")
+
+    def add_header(self, name, value):
+        if name is not None and value is not None:
+            self.headers[str(name)] = str(value)
+
+        return True
+
+    def output(self, data=None):
+
+        if len(self.headers) == 0:
+            print("Content-Type: text/html")
+
+        self.add_header("Access-Control-Allow-Origin", "*")
+
+        for item in self.headers:
+            print(str(item.rstrip()) + ":", str(self.headers.get(item)))
+        
+        cookie = tokenizer.cookie
+        if cookie is not None:
+            print(str(cookie).strip())
+    
+        print("")
+        if data is None and self.data is None:
+            print("")
+
+        if data is None and self.data is not None:
+            data = self.data
+
+        if isinstance(data, list) or isinstance(data, dict):
+            print(json.dumps(data))
+        else:
+            print(str(data))
+
+
+class Request:
+    def __init__(self, **kwargs):
+        self.raw_data = None
+        self.json_data = {}
+        self.token = None
+
+        self.headers = {}
+
+        self.headers["CONTENT_TYPE"] = kwargs.get("CONTENT_TYPE", "text/html")
+        self.headers["REQUEST_METHOD"] = kwargs.get("REQUEST_METHOD", "GET")
+        self.headers["HTTP_COOKIE"] = kwargs.get("HTTP_COOKIE", "")
+        self.headers["REMOTE_ADDR"] = kwargs.get("REMOTE_ADDR", "")
+
+        content_length = str(kwargs.get("CONTENT_LENGTH", "0"))
+        self.headers["CONTENT_LENGTH"] = int(content_length) if content_length.isnumeric() else 0
+
+        try:
+            self.cookies = http.cookies.SimpleCookie(self.headers["HTTP_COOKIE"])
+        except:
+            self.cookies = {}
+
+        try:
+            if "token" in self.cookies:
+                self.token = self.cookies["token"].value
+        except:
+            pass
+
+    def set_data(self, data):
+        if data is not None:
+            self.raw_data = data
+            if (str(self.headers.get("CONTENT_TYPE"))).lower() == "application/json" and len(self.raw_data) > 0:
+                self.json_data = json.loads(self.raw_data)
+
+    def set_user(self, username):
+        self.json_data["username"] = username
+
+    @property
+    def host(self):
+        return self.headers.get("REMOTE_ADDR")
+
+if __name__ == "__main__":
+    print("Location: /\n")
+    sys.exit()

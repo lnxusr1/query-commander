@@ -1,0 +1,426 @@
+<html class="no-js" lang="en-US">
+<head>
+	<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<title>Query Commander</title>
+
+    <link rel="icon" type="image/png" href="favicon.svg">
+    <meta name="msapplication-TileImage" content="favicon.svg">
+
+    <!-- <link rel="stylesheet" href="libs/fontawesome/css/all.min.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="structure.css">
+    <link rel="stylesheet" href="theme.css">
+    <!-- <script type="text/javascript" src="libs/jquery/jquery-3.7.1.min.js"></script> -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+    <script src="script.js" type="module"></script>
+
+</head>
+<body>
+
+    <div class="sidebar-context-menu">
+        <ul>
+            <li><a id="btn-context-refresh-item" href="#">Refresh</a></li>
+            <li><a id="btn-context-copy-name" href="#">Copy to Clipboard</a></li>
+            <li><a class="optional" id="btn-context-generate-ddl" href="#">Generate DDL...</a></li>
+            <li><a class="perms" id="btn-context-view-details" href="#">View Details</a></li>
+        </ul>
+    </div>
+
+    <overlay id="login" style="display: block;">
+        <div>
+            <div class="card-left"></div>
+            <div class="card">
+                <h1 class="logo"><img src="logo.png" alt="Query Commander" /></h1>
+                <form id="form-login">
+                    <h2>Sign In</h2>
+                    <div id="login-error">Username or password is invalid. Login failed.</div>
+                    <span>Username</span>
+                    <input type="text" id="username" placeholder="Please enter your login" autocomplete="off" />
+                    <span>Password</span>
+                    <input type="password" id="password" placeholder="Please enter your password" autocomplete="off" />
+                    <button id="btn-login">Login</button>
+                    <span>&nbsp;</span>
+                    <h2>&nbsp;</h2>
+                </form>
+                <div class="footer"><a href="https://www.querycommander.com">Query Commander</a> <version></version></div>
+            </div>
+        </div>
+    </overlay>
+
+    <overlay id="page-loading" style="display: block;">
+        <div>
+            <div>
+                <div><i class="fas fa-gear fa-spin"></i><span>Loading...</span></div>
+            </div>
+            <div></div>
+        </div>
+    </overlay>
+
+    <overlay class="chooser" id="chooser-select-role" style="display: block;">
+        <form>
+            <div class="message-box">
+                <div class="title">
+                    <span>Select Role</span>
+                    <button class="btn-chooser-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="message">
+                    <div id="select-role">
+                        <span>Please select a role from the list below:</span>
+                        <ul>
+                            <li><input type="radio" /><label>TEST</label></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <ul>
+                        <li><button class="btn-chooser-close">Cancel</button></li>
+                        <li><button class="btn-chooser-select">Select</button></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </overlay>
+
+    <overlay class="chooser" id="chooser-select-connection">
+        <form>
+            <div class="message-box">
+                <div class="title">
+                    <span>Select Connection</span>
+                    <button class="btn-chooser-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="message">
+                    <div id="select-connection">
+                        <span>Please select a connection from the list below:</span>
+                        <ul>
+                            <li><input type="radio" /><label>TEST</label></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <ul>
+                        <li><button class="btn-chooser-close">Cancel</button></li>
+                        <li><button class="btn-chooser-select">Select</button></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </overlay>
+
+    <overlay class="chooser" id="ddl-data">
+        <form>
+            <div class="message-box">
+                <div class="title">
+                    <span>Generated SQL</span>
+                    <button class="btn-chooser-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="message">
+                    <span>STATEMENT</span>
+                </div>
+                <div class="buttons">
+                    <ul>
+                        <li><button class="btn-chooser-refresh">Refresh</button></li>
+                        <li><button class="btn-chooser-copy">Copy</button></li>
+                        <li><button class="btn-chooser-close">Close</button></li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </overlay>
+
+    <toolbar>
+        <div>
+            <item class="logo">
+                <a target="_new" title="Query Commander" href="https://www.querycommander.com"><img alt="Query Commander" src="favicon.svg" /></a>
+            </item>
+            <item>
+                <button class="btn-open-role-chooser" title="Role"><i class="fas fa-shield-halved"></i><span id="role_selected">&lt;default&gt;</span></button>
+                <button id="btn-new-tab" title="New SQL Script"><i class="fas fa-scroll fa-fw"></i><span>SQL</span></button>
+                <button title="Settings"><i class="fas fa-screwdriver-wrench fa-fw"></i></button>
+                <button title="Decrease Indent"><i class="fas fa-outdent fa-fw"></i></button>
+                <button title="Increase Indent"><i class="fas fa-indent fa-fw"></i></button>
+                <button id="btn-execute" title="Execute [Ctrl+Q]"><i class="fas fa-play fa-fw"></i><span>Execute</span></button>
+                <button title="Help"><i class="far fa-circle-question fa-fw"></i></button>
+            </item>
+            <item>
+                <div>
+                    <button title="About"><i class="fas fa-circle-info fa-fw"></i></button>
+                    <button id="btn-logout" title="Logout"><i class="fas fa-right-from-bracket fa-fw"></i></button>
+                </div>
+            </item>
+        </div>
+    </toolbar>
+    <page>
+        <sidebar>
+            <navmenu>
+                <item><button id="btn-refresh-connections" title="Refresh"><i class="fas fa-refresh"></i></button></item>
+            </navmenu>
+            <metadata>
+                <ul>
+                    <li>
+                        <a class="expanded" href="#"><i class="fa fa-server fa-fw"></i><span>myconn</span></a>
+                        <ul>
+                            <li>
+                                <a class="expanded"  href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase1</span></a>
+                                <ul>
+                                    <li>
+                                        <a class="expanded"  href="#"><i class="fa fa-folder fa-fw"></i><span>Schemas</span></a>
+                                        <ul>
+                                            <li>
+                                                <a href="#"><i class="fa fa-file-lines fa-fw"></i><span>myschema1</span></a>
+                                            </li>
+                                            <li>
+                                                <a href="#"><i class="fa fa-file-lines fa-fw"></i><span>myschema2</span></a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li>
+                                        <a href="#"><i class="fa fa-folder fa-fw"></i><span>Roles</span></a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase2</span></a></li>
+                        </ul>
+                    </li>
+                    <a class="expanded"  href="#"><i class="fa fa-server fa-fw"></i><span>myconn</span></a>
+                        <ul>
+                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase3</span></a></li>
+                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase4</span></a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </metadata>
+        </sidebar>
+        <slider>
+            <div>
+                &middot; &middot; &middot; &middot; &middot;
+            </div>
+        </slider>
+        <core>
+            <tablist>
+                <item></item>
+                <item><a href="#">tab item<button title="Close"><i class="fas fa-times"></i></button></a></item>
+                <item><a class="active" href="#">tab item<button title="Close"><i class="fas fa-times"></i></button></a></item>
+                <item></item>
+            </tablist>
+        </core>
+    </page>
+    <statusbar>
+        <div>
+            <item><a target="_new" href="https://www.querycommander.com">Query Commander</a> <version></version></item>
+            <item>Pos <span id="cur_pos">0</span></item>
+            <item>Sel <span id="sel_pos">0 : 0</span></item>
+        </div>
+    </statusbar>
+
+    <templates>
+        <tab_query>
+            <item>
+                <navmenu>
+                    <item>
+                        <button class="btn-tab-execute" title="Execute"><i class="fas fa-play fa-fw"></i></button>
+                    </item>
+                    <item>
+                        <button class="btn-tab-explain" title="Explain Plan"><i class="far fa-map fa-fw"></i></button>
+                        <button class="btn-tab-settings" title="Settings"><i class="fas fa-gear fa-fw"></i></button>
+                    </item>
+                </navmenu>
+                <textarea class="editor"></textarea>
+            </item>
+            <slider>
+                <div>
+                    &middot; &middot; &middot; &middot; &middot;
+                </div>
+            </slider>
+            <item>
+                <navmenu>
+                    <item>
+                        <button class="active btn-tab-results" title="Results as Grid"><i class="fas fa-table-cells fa-fw"></i></button>
+                        <button class="btn-tab-code" title="SQL Statement"><i class="fas fa-code fa-fw"></i></button>
+                        <button class="btn-tab-output" title="Show Server Output"><i class="far fa-rectangle-list fa-fw"></i></button>
+                        <button class="btn-tab-export" title="Export to File"><i class="fas fa-download fa-fw"></i></button>
+                        <button class="btn-tab-copy" title="Copy Results to Clipboard"><i class="far fa-copy fa-fw"></i></button>
+                    </item>
+                </navmenu>
+                <results>
+                    <div class="tab-loading">
+                        <div>
+                            <div><span><i class="fas fa-spinner fa-spin"></i></span><span>Loading...</span></div>
+                        </div>
+                    </div>
+                    <div class="section data">
+                        <div>
+                            <div>
+                                <table cellspacing="0" cellpadding="0">
+                                    <thead>
+                                        <tr>
+                                            <th><data></data></th>
+                                            <th><data><i class="data-type fas fa-font fa-fw"></i>column1<i class="sort-order fas fa-caret-down fa-fw"></i></data></th>
+                                            <th><data><i class="data-type fas fa-hashtag fa-fw"></i>column2<i class="sort-order fas fa-caret-down fa-fw"></i></data></th>
+                                            <th><data><i class="data-type fas fa-clock fa-fw"></i>column3<i class="sort-order fas fa-caret-down fa-fw"></i></data></th>
+                                            <th><data><i class="data-type fas fa-font fa-fw"></i>column4<i class="sort-order fas fa-caret-down fa-fw"></i></data></th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                            <div>
+                                <table cellspacing="0" cellpadding="0">
+                                    <tbody>
+                                        <tr>
+                                            <th><data>1</data></th>
+                                            <td><data></data></td>
+                                            <td class="number"><data></data></td>
+                                            <td><data></data></td>
+                                            <td><data></data></td>
+                                        </tr>
+                                        <tr>
+                                            <th><data>2</data></th>
+                                            <td><data></data></td>
+                                            <td class="number"><data></data></td>
+                                            <td><data></data></td>
+                                            <td><data></data></td>
+                                        </tr>
+                                        <tr>
+                                            <th><data>3</data></th>
+                                            <td><data></data></td>
+                                            <td class="number"><data></data></td>
+                                            <td><data></data></td>
+                                            <td><data></data></td>
+                                        </tr>
+                                        <tr>
+                                            <th><data>4</data></th>
+                                            <td><data></data></td>
+                                            <td class="number"><data></data></td>
+                                            <td><data></data></td>
+                                            <td><data></data></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <resultsnav>
+                            <item><button class="btn-tab-filter" title="Filter"><i class="fas fa-filter"></i></button></item>
+                            <item>
+                                <button class="btn-tab-first" title="First"><i class="fas fa-angles-left"></i></button>
+                                <button class="btn-tab-prev" title="Previous"><i class="fas fa-angle-left"></i></button>
+                                <button class="btn-tab-next" title="Next"><i class="fas fa-angle-right"></i></button>
+                                <button class="btn-tab-last" title="Last"><i class="fas fa-angles-right"></i></button>
+                            </item>
+                            <item><button class="btn-tab-refresh" title="Refresh"><i class="fas fa-arrows-rotate"></i></button></item>
+                            <item class="metrics"><!-- # records - TIME - RUN_TIME seconds --></item>
+                        </resultsnav>
+                    </div>
+                    <div class="section statement" style="display: none;"><div></div></div>
+                    <div class="section output" style="display: none;"><div></div></div>
+                </results>
+            </item>
+        </tab_query>
+        <tab_properties>
+            <properties>
+                <breadcrumbs>
+                    connection : database : schema : object
+                </breadcrumbs>
+
+                <settings>
+                    <div>
+                        <item>
+                            <text></text>
+                            <value><data></data></value>
+                        </item>
+                    </div>
+                    <div>
+                        <item>
+                            <text></text>
+                            <value><data></data></value>
+                        </item>
+                    </div>
+                </settings>
+
+                <!--
+                database: name, encoding, collate, default tablespace, connection limit
+                schemas: name, namespace id, owner
+                tables: name, owner, object id, has row level security, partition by, tablespace
+                views: name, object id, owner, "extra options"
+                materialized views: name, object id, owner, tablespace, "extra options"
+                columns: name, Ordinal position, data type, identity, not null, default value
+                constraints: name, owner, type (PRIMARY KEY), expression, object id, deferrable/deferred
+                triggers: name, timing (before/after), manipulation (insert, update, delete), type (row), columns, enabled, object id, when expression, function
+                policies: name, type, event, role, using, with check
+                indexes: name, column(s), table, options(unique, primary, exclusion, immediate, clustered, valid, check x min, ready), predicate, rel size, num scans, access method (btree), tablespace
+                foreign keys: name, owner, delete rule, update rule, type ("FOREIGN KEY"), object id, deferrable/deferred, associated entity (target), referenced constraint (target columns), match type ("SIMPLE")
+                functions/procedures: name, owner, type (procedure/function), object id
+                sequences: name, object id, owner/owned by, last value, start value, min value, max value, increment by, cache, cycled (t/f)
+                roles: name, object id, super user, inherit, create role, create database, can login, replication, bypass rls
+                -->
+            </properties>
+            <propdetail>
+
+                <div class="action-buttons">
+                    <button class="active">test</button>
+                    <button>test</button>
+                </div>
+                <div class="section table">
+                    <div>
+                        <table cellpadding="0" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th><data>Column1</data></th>
+                                    <th><data>Column2</data></th>
+                                    <th><data>Column3</data></th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div>
+                        <table cellpadding="0" cellspacing="0">
+                            <tbody>
+                                <tr>
+                                    <td><data>Data1</data></td>
+                                    <td><data>Data2</data></td>
+                                    <td><data>Data3</data></td>
+                                </tr>
+                                <tr>
+                                    <td><data>Data1</data></td>
+                                    <td><data>Data2</data></td>
+                                    <td><data>Data3</data></td>
+                                </tr>
+                                <tr>
+                                    <td><data>Data1</data></td>
+                                    <td><data>Data2</data></td>
+                                    <td><data>Data3</data></td>
+                                </tr>
+                                <tr>
+                                    <td><data>Data1</data></td>
+                                    <td><data>Data2</data></td>
+                                    <td><data>Data3</data></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="section code"></div>
+
+                <!--
+                database: storage (tablespaces)
+                schemas: permissions, source (code)
+                tables: columns, constraints, indexes, foreign keys, partitions, triggers, policies, permissions, DDL (code)
+                views: columns (?!?), triggers (?), permissions, source (code)
+                materialized views: columns, indexes, permissions, source (code)
+                triggers: source (code)
+                constraints: constraint columns, source (code)
+                indexes: index columns, source (code)
+                foreign keys: foreign key columns, source (code)                   
+                functions/procedures: permissions, properties (owner, language, return type), source (code)
+                sequences: permissions, DDL (code)
+                roles: member of roles, settings (connection limit, valid until), permissions (direct), source (code)
+                -->
+            </propdetail>
+        </tab_properties>
+    </templates>
+
+</body>
+</html>

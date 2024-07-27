@@ -1,0 +1,22 @@
+site_name: Query Commander Docs
+site_url: https://querycommander.com/
+repo_url: https://github.com/lnxusr1/query-commander/
+
+theme: 
+    name: readthedocs
+    highlightjs: true
+    prev_next_buttons_location: none
+    titles_only: true
+    collapse_navigation: false
+    logo: https://querycommander.com/logo-white.png
+
+nav:
+    - Overview: 'index.md'
+    - Links:
+      - '@ Code': 'https://github.com/lnxusr1/query-commander/'
+      #- '@ Community': 'https://kenzy.ai/discussion'
+      - '@ Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
+      - '@ Website': 'https://querycommander.com'
+
+plugins:
+  - search

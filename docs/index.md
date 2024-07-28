@@ -2,7 +2,7 @@
 
 Introducing **Query Commander**, the revolutionary *opensource* browser-based SQL tool designed for secure and efficient database management. 
 
-![Basic Screenshot](/images/screen_basic.png)
+![Basic Screenshot](images/screen_basic.png)
 
 ## Features:
 

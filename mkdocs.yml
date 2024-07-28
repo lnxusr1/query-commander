@@ -8,7 +8,7 @@ theme:
     prev_next_buttons_location: none
     titles_only: true
     collapse_navigation: false
-    logo: /images/logo-white.png
+    logo: /en/latest/images/logo-white.png
 
 nav:
     - Overview: 'index.md'

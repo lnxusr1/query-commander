@@ -8,7 +8,7 @@ theme:
     prev_next_buttons_location: none
     titles_only: true
     collapse_navigation: false
-    logo: https://github.com/lnxusr1/query-commander/blob/main/docs/images/logo-white.png?raw=true
+    logo: /images/logo-white.png
 
 nav:
     - Overview: 'index.md'

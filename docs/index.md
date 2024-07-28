@@ -1,39 +1,44 @@
 # Query Commander &middot; [![GitHub license](https://img.shields.io/github/license/lnxusr1/query-commander)](https://github.com/lnxusr1/query-commander/blob/master/LICENSE) ![Python Versions](https://img.shields.io/pypi/pyversions/yt2mp3.svg) ![Read the Docs](https://img.shields.io/readthedocs/query-commander) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/lnxusr1/query-commander)
 
-Introducing __Query Commander__, the revolutionary browser-based SQL tool designed for secure and efficient database management. 
+Introducing **Query Commander**, the revolutionary *opensource* browser-based SQL tool designed for secure and efficient database management. 
+
+![Basic Screenshot](/images/screen_basic.png)
 
 ## Features:
 
-1. __Database Connectivity:__  
-    * Support for multiple database types (Oracle, MySQL, PostgreSQL, and more).
-    * Supports multiple server connections and heterogeneous targets
+1. **Database Connectivity**
+    - Support for multiple database types (Oracle, PostgreSQL, Redshift, MySQL, etc.)
+    - Support for multiple server connections and heterogeneous targets
 
-3. __Database Management:__  
-    * Viewing of database objects (tables, views, procedures, functions, triggers, etc.), 
-    * Schema browsing
-    * Data export capabilities
-    * Explain plain visualization.
+3. **Database Management**
+    - Viewing of database objects
+    - Browse Schemas
+    - Data export capabilities
+    - Explain Plain visualization
 
-4. __Metadata Access:__ 
-    * View table structures, constraints, indexes, relationships, roles, and permissions.
-    * Generate ddl for views, materialized views, procedures, functions, and much more.
+4. **Metadata Access**
+    - View table structures, constraints, indexes, relationships, roles, and permissions
+    - Generate ddl for views, materialized views, procedures, functions, and much more
 
-5. __User Interface:__ 
-    * Intuitive, familiar, and user-friendly interface.  
-    * Browser-based multi-tab and multi-window interface
-    * SQL Editor: Custom SQL Execution and results display
+5. **User Interface**
+    - Intuitive, familiar, and user-friendly interface
+    - Browser-based multi-tab and multi-window interface
+    - SQL Editor: Custom SQL Execution and results display
 
-6. __Enhanced Security:__
-    * Multiple authentication options (configuration-based, database login-based, LDAP/Active Directory)
-    * Advanced permissions management with "Persona proxies" and group-based authorization
-    * Ideal for cloud-hosted and remote database server access
+6. **Enhanced Security**
+    - Support for End-to-End Encryption
+    - Multiple authentication options (Database login-based, LDAP/Active Directory)
+    - Optional time-based rate limits for queries executed and/or total records retrieved by user
+    - Advanced permissions management with "Persona proxies" and group-based authorization
+    - Ideal for cloud-hosted and remote database server access
+    - Support for AWS Secret Manager for secure credential storage and database server info
 
-7. __Modern Hosting Options:__
-    * Traditional installation with CGI executions
-    * Optional __Serverless__ installation
+7. **Modern Hosting Options**
+    - Traditional installation with CGI executions
+    - Optional **Serverless** installation
 
 !!! note "Serverless Hosting"
-    Serverless hosting in AWS leverages the combination of __S3__ file storage for static objects, __API Gateway__ + __Lambda__ for backend processing, and __DynamoDB__ for secure token storage.
+    Serverless hosting in AWS leverages the combination of **S3** file storage for static objects, **API Gateway** + **Lambda** for backend processing, and **DynamoDB** for secure token storage.
 
 !!! danger "SECURITY: SOX and HIPAA Compliance"
     By enabling LDAP (Active Director or OpenLDAP) authentication Query Commander can leverage "Persona proxies" which allow for tying role-based access in the database to users authenticated via LDAP.  

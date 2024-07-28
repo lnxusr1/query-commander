@@ -338,6 +338,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
             } else {
                 $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
                 $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
+                $(container).find('resultsnav').find('button').prop('disabled', false);
             }
         }
     }

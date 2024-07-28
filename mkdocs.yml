@@ -8,10 +8,11 @@ theme:
     prev_next_buttons_location: none
     titles_only: true
     collapse_navigation: false
-    logo: /en/latest/images/logo-white.png
+    logo: https://docs.querycommander.com/en/latest/images/logo-white.png
 
 nav:
     - Overview: 'index.md'
+    - About: 'about.md'
     - Links:
       - '@ Code': 'https://github.com/lnxusr1/query-commander/'
       #- '@ Community': 'https://kenzy.ai/discussion'

@@ -7,11 +7,10 @@ from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
 
 
-def get_query_results(connection_name, sql, query_type):
-
+def get_query_results(connection_name, db_name, sql, query_type):
     resp = Response()
 
-    connection = get_db_connection(connection_name, database=None)
+    connection = get_db_connection(connection_name, database=db_name)
     if connection is None:
         resp.output({ "ok": False, "error": "Invalid connection specified." })
         sys.exit()

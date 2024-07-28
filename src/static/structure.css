@@ -75,13 +75,20 @@ core > tab.active { display: flex; }
 core > tab.query > item:first-child { resize: vertical; background: var(--editor-bg); }
 core > tab.query > item { display: flex; flex-direction: row; }
 core > tab.query > item > *:last-child { flex: 1; }
+core > tab.query > item:first-child > div { display: flex;  flex-direction: column;  }
+
+core > tab.query > item:first-child > div > *:first-child { flex: 1; }
+core > tab.query > item:first-child > div > *:last-child { background: var(--toolbar-bg); border-top: 1px solid var(--toolbar-border-color); height: 26px; line-height: 26px; padding: 0 6px; }
+core > tab.query > item:first-child > div > div > select { border: 1px solid var(--toolbar-border-color-dark); padding: 0 6px; vertical-align: middle; background: var(--editor-bg); height: 20px; line-height: 20px; font-size: 0.8rem; }
+core > tab.query > item:first-child > div > div > span { display: inline-block; height: 26px; line-height: 26px; margin: 0 4px 0 4px; font-size: 0.8rem; }
+core > tab.query > item:first-child > div > div > span.loading { display: none; }
 core > tab.query > item:last-child { flex: 1; resize: none; }
 core > tab.query > item > navmenu { display: flex; flex-direction: column; background: var(--toolbar-bg); border-right: 1px solid var(--toolbar-border-color); align-content: space-between; }
 core > tab.query > item > navmenu *:first-child { flex: 1; }
 core > tab.query > item > navmenu button { display: block; border: none; margin: 0; padding: 6px 0; text-align: center; width: 25px; background: transparent; font-size: 0.85rem; }
 core > tab.query > item > navmenu button:hover { background: var(--button-hover); }
 core > tab.query > item > navmenu button.active { background-color: var(--button-active); }
-core > tab.query .editor { border: none; border-radius: 0; overflow: scroll; outline: 0; margin: 0; padding: 4px; white-space: pre; }
+core > tab.query .editor { border: none; border-radius: 0; overflow: scroll; outline: 0; margin: 0; padding: 4px; white-space: pre; resize: none; }
 core > tab.query > item > results { display: flex; flex-direction: row; position: relative; width: calc(100% - 26px); }
 core > tab.query > item > results > * { flex: 1; }
 core > tab.query > item > results .statement,
@@ -92,7 +99,9 @@ core > tab.query > item > results .output > div { padding: 12px; }
 core > tab.query > item > results .data { display: flex; flex-direction: column; user-select: none; width: 100%; }
 core > tab.query > item > results .data > * { overflow: hidden; white-space: nowrap; }
 core > tab.query > item > results .data > div { flex: 1; overflow: auto; width: 100%; position: relative; }
-core > tab.query > item > results .data > div > div:first-child { height: 26px; }
+
+
+core > tab.query > item > results .data > div > div:last-child { }
 
 core > tab.query > item > results .data > div > div:first-child > table { position: absolute; top:0; left: 0; z-index: 2; }
 core > tab.query > item > results .data data { overflow: hidden; }

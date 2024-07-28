@@ -172,6 +172,7 @@ function doExecuteSQL(tab_id, exec_type) {
     $(tab_id + ' textarea.editor').focus(); 
     let sql = doGetSQL(tab_id);
     let connection_name = $('tablist > item > a.active > span').text();
+    let db_name = $(tab_id + ' select option:selected').val();
 
     if ((sql == '') || (connection_name == '')) { return; }
 
@@ -185,7 +186,8 @@ function doExecuteSQL(tab_id, exec_type) {
         command: "query",
         type: exec_type,
         statement: sql,
-        connection: connection_name
+        connection: connection_name,
+        database: db_name
     }
 
     $.ajax({
@@ -574,6 +576,55 @@ function addQueryTab(check_exists=false) {
     $('core > tablist > item:first-child').after(tab_button);
     $('core').append(tab);
     tab.addClass('active');
+
+    let meta_request = {
+        command: "meta", 
+        target: connection_selected, 
+        type: "connection", 
+        path: {
+            connection: connection_selected
+        }
+    };
+
+    $.ajax({
+        url: site_path,
+        dataType: "json",
+        method: "POST",
+        crossDomain: true,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        data: JSON.stringify(meta_request),
+        contentType: "application/json",
+        beforeSend: function(xhr) {
+            $('#' + tab_id + ' > item:first-child select').empty();
+            $('#' + tab_id + ' > item:first-child .loading').show();
+        },
+        success: function(data) {
+            if (!data.ok) {
+                if (data.error) { alert(data.error); }
+                let o = $('<option></option>');
+                o.val('');
+                o.text('<default>');
+                $('#' + tab_id + ' > item:first-child select').append(o);
+                if (data.logout) { doLogout(); }
+                return;
+            }
+            if (data.items) {
+                data.items.sort();
+                for (let i = 0; i<data.items.length; i++) {
+                    let o = $('<option></option>');
+                    o.val(data.items[i]);
+                    o.text(data.items[i]);
+                    $('#' + tab_id + ' > item:first-child select').append(o);
+                }
+            }
+        },
+        complete: function() {
+            $('#' + tab_id + ' > item:first-child .loading').hide();
+        },
+        error: function(e) {
+
+        }
+    });
 
     doWireUpQueryTab('#' + tab_id);
 

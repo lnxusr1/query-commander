@@ -139,7 +139,7 @@ def process_request(request):
     if command == "query":
         #logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from functions.query import get_query_results
-        get_query_results(request.json_data.get("connection"), request.json_data.get("statement"), request.json_data.get("type"))
+        get_query_results(request.json_data.get("connection"), request.json_data.get("database"), request.json_data.get("statement"), request.json_data.get("type"))
 
     # Default response... not valid, client should initiate logout procedures
     logging.error(f"Invalid request from {request.host}")

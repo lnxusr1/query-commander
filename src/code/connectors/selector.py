@@ -9,6 +9,9 @@ from core.tokenizer import tokenizer
 
 
 def get_db_connection(connection_name, database=None):
+    if database == "":
+        database = None
+        
     for conn_name in tokenizer.connections:
         if connection_name == conn_name:
             if conn_name in cfg.sys_connections:

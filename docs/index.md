@@ -42,18 +42,3 @@ Introducing __Query Commander__, the revolutionary browser-based SQL tool design
 
 
 
-## Not your ordinary SQL Tool...
-
-1. __Browser-Based Solution:__ No local software installation required, allowing multiple users to benefit from a one-time setup.
-2. __Robust Authentication and Authorization:__ Leverages Active Directory for username/password validation and group-based authorization. Users are authenticated against Active Directory, and their groups are mapped to database service accounts representing different access levels. This ensures secure, proven access mechanisms and simplifies management for DevOps teams.
-
-By relying on established access protocols within Active Directory and database engines, Query Commander eliminates the need for a separate, complex codebase. This approach also reduces the risk of incorrect access assignments, which is crucial for compliance with regulations like SOX and HIPAA. Query Commander streamlines database access management, making it an indispensable tool for any organization.
-
-
-
-## INSTALL
-
-## How do I get support?
-
-## Who build it and why?
-

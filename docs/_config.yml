@@ -1,3 +1,3 @@
-theme: remote_theme: carlosperate/jekyll-theme-rtd
+remote_theme: carlosperate/jekyll-theme-rtd
 title: Query Commander
 description: Browser-based SQL query tool for Universal Database Access.

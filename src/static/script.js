@@ -349,7 +349,7 @@ function doGetTableContents(container, selection=false, delimiter="\t") {
     });
 
     $(container).find('tbody tr').each(function(ir, tr) {
-        if ($(tr).find('td.selected').length == 0) { return; }
+        if ((selection) && ($(tr).find('td.selected').length == 0)) { return; }
         if (content != "") { content = content + "\r\n"; }
         $(tr).children().each(function(i, o) {
             if ((i >= col_start) && (i <= col_end)) {

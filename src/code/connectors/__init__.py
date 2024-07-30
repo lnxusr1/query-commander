@@ -1,12 +1,14 @@
-#!/usr/bin/env python
-
-import sys
-
 class Connector:
     def __init__(self, **kwargs):
         self._type = kwargs.get("type")
         self.connection = None
         self.err = []
+        self.columns = []
+
+    @property
+    def exec_time(self):
+        """ Execution time in seconds """
+        return None
 
     def open(self):
         self.err.append("Not implemented.")
@@ -45,7 +47,3 @@ class Connector:
     def details(self, type, target, path):
         self.err.append("Not implemented.")
         return None
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

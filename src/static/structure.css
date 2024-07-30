@@ -78,7 +78,7 @@ core > tab.query > item > *:last-child { flex: 1; }
 core > tab.query > item:first-child > div { display: flex;  flex-direction: column;  }
 
 core > tab.query > item:first-child > div > *:first-child { flex: 1; }
-core > tab.query > item:first-child > div > *:last-child { background: var(--toolbar-bg); border-top: 1px solid var(--toolbar-border-color); height: 26px; line-height: 26px; padding: 0 6px; }
+core > tab.query > item:first-child > div > *:last-child { background: var(--toolbar-bg); border-top: 1px solid var(--toolbar-border-color); height: 26px; line-height: 26px; padding: 0 6px; user-select: none; }
 core > tab.query > item:first-child > div > div > select { border: 1px solid var(--toolbar-border-color-dark); padding: 0 6px; vertical-align: middle; background: var(--editor-bg); height: 20px; line-height: 20px; font-size: 0.8rem; }
 core > tab.query > item:first-child > div > div > span { display: inline-block; height: 26px; line-height: 26px; margin: 0 4px 0 4px; font-size: 0.8rem; }
 core > tab.query > item:first-child > div > div > span.loading { display: none; }
@@ -100,9 +100,6 @@ core > tab.query > item > results .data { display: flex; flex-direction: column;
 core > tab.query > item > results .data > * { overflow: hidden; white-space: nowrap; }
 core > tab.query > item > results .data > div { flex: 1; overflow: auto; width: 100%; position: relative; }
 
-
-core > tab.query > item > results .data > div > div:last-child { }
-
 core > tab.query > item > results .data > div > div:first-child > table { position: absolute; top:0; left: 0; z-index: 2; }
 core > tab.query > item > results .data data { overflow: hidden; }
 core > tab.query > item > results .tab-loading { user-select: none; z-index: 20; position: absolute; top: 0; right: 0; left: 0; bottom: 0; display: flex; flex-direction: row; align-items: center; background: var(--output-overlay-bg); }
@@ -111,6 +108,7 @@ core > tab.query > item > results .tab-loading { user-select: none; z-index: 20;
 .tab-loading > div span { display: inline-block; font-size: 1.1rem; }
 .tab-loading > div span:last-child { margin-left: 6px; }
 
+results .section.data > div:first-child > div:last-child { padding-top: 26px; }
 
 core > tab.properties > *:last-child { flex: 1; }
 
@@ -185,6 +183,8 @@ results table tr:nth-child(even) td.selected, propdetail table tr:nth-child(even
     border-bottom: 1px solid var(--results-table-bg-selected-alt);
     color: var(--results-table-text-selected);
 }
+
+i.sort-order { opacity: 0.5; }
 
 results resultsnav { z-index:3; display: flex; flex-direction: row; background: var(--toolbar-bg); border-top: 1px solid var(--toolbar-border-color); height: 24px; line-height: 24px;  }
 results resultsnav > item:last-child { flex: 1; border-right: none; padding: 0 8px; overflow: hidden; white-space: nowrap; font-size: 0.9rem; }

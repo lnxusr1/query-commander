@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-
-import sys
-import logging
 import json
 import http.cookies
 from core.tokenizer import tokenizer
@@ -87,7 +83,3 @@ class Request:
     @property
     def host(self):
         return self.headers.get("REMOTE_ADDR")
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

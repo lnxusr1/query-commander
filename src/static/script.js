@@ -7,6 +7,29 @@ var role_list = [];
 var connection_list = [];
 var connection_selected = "";
 var tab_counter = 0;
+var escape_key = false;
+
+function doGetCurrentDate() {
+    var now = new Date();
+    var month = now.getMonth() + 1; // Months are zero-based
+    var day = now.getDate();
+    var year = now.getFullYear();
+    var hours = now.getHours();
+    var minutes = now.getMinutes();
+    var seconds = now.getSeconds();
+    var ampm = hours >= 12 ? 'PM' : 'AM';
+
+    // Convert 24-hour format to 12-hour format
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+
+    // Pad minutes and seconds with leading zeros
+    minutes = minutes < 10 ? '0' + minutes : minutes;
+    seconds = seconds < 10 ? '0' + seconds : seconds;
+
+    var formattedDate = month + '/' + day + '/' + year + ' ' + hours + ':' + minutes + ':' + seconds + ' ' + ampm;
+    return formattedDate;
+}
 
 function doClearTimer() {
     clearTimeout(timer);
@@ -122,6 +145,35 @@ function selectRow(table, cell, ri_start) {
     }
 }
 
+function doTableSort(container, column_index, sort_direction="ascending") {
+
+    $(container).find('.selected').removeClass('.selected');
+
+    var c_idx = column_index;
+    var rows = $(container).find('table > tbody').children('tr').get();
+
+    rows.sort(function(a, b) {
+        let x = $(a).children().eq(c_idx).text().toLowerCase();
+        let y = $(b).children().eq(c_idx).text().toLowerCase();
+
+        if ($(a).children().eq(c_idx).children('data').hasClass('number')) { x = parseFloat(x); y = parseFloat(y); }
+
+        if (sort_direction === "ascending") {
+            if (x < y) return -1;
+            if (x > y) return 1;
+        } else {
+            if (x < y) return 1;
+            if (x > y) return -1;
+        }
+        return 0;
+    });
+
+    $.each(rows, function(index, row) {
+        $(row).children().eq(0).find('data').text(index+1);
+        $(container).find('table > tbody').append(row);
+    });
+}
+
 function updateStatusBar() {
 
     setTimeout(function() {
@@ -154,6 +206,40 @@ function updateStatusBar() {
     }, 100);
 }
 
+function doManageTab(obj, is_shift) {
+    let x = obj.val();
+    let text_to_insert="    ";
+
+    let p_start = obj[0].selectionStart; 
+    let p_end = obj[0].selectionEnd
+    //let new_value = x.slice(0,p_start)+text_to_insert+x.slice(p_start);
+
+    let x_sel = x.slice(p_start, p_end);
+
+    if (is_shift) {
+        if (p_end != p_start) {
+            x_sel = ("\n" + x_sel).replace(/(\r?\n)\s{4}/g, "\n").slice(1);
+        } else {
+            if ((p_start > 4) && (x.slice(p_start - 4, p_start) == text_to_insert)) { console.log('prior tab'); }
+        }
+    } else {
+        x_sel = text_to_insert + x_sel.replace(/\n/g, "\n" + text_to_insert)
+    }
+
+    let new_value = x.slice(0,p_start) + x_sel + x.slice(p_end);
+    obj.val(new_value);
+    //obj.val(text_to_insert + x_sel);
+    p_end = p_end + (x_sel.length - (p_end - p_start))
+    if ((p_end - p_start) > 4) {
+        obj[0].selectionStart = p_start;
+    }
+    obj[0].selectionEnd = p_end; // + text_to_insert.length;
+}
+
+function doLoadMore(tab_id) {
+    console.log(tab_id);
+}
+
 function doGetSQL(tab_id) {
     let sql = '';
     if ($(tab_id + ' textarea.editor').is(":focus")) {
@@ -168,9 +254,12 @@ function doGetSQL(tab_id) {
     return sql;
 }
 
-function doExecuteSQL(tab_id, exec_type) {
+function doExecuteSQL(tab_id, exec_type, sql_statement='') {
     $(tab_id + ' textarea.editor').focus(); 
     let sql = doGetSQL(tab_id);
+    if (sql_statement != '') {
+        sql = sql_statement;
+    }
     let connection_name = $('tablist > item > a.active > span').text();
     let db_name = $(tab_id + ' select option:selected').val();
 
@@ -228,10 +317,22 @@ function doExecuteSQL(tab_id, exec_type) {
 
 function doGetTableContents(container, selection=false, delimiter="\t") {
 
+    let col_start = 1;
+    let col_end = $(container).find('thead tr:first-child > th > data').length - 1;
+
+    if (selection) {
+        if ($(container).find('tbody > tr > td.selected').length > 0) {
+            col_start = $(container).find('tbody > tr > td.selected').first().index();
+            col_end = $(container).find('tbody > tr > td.selected').last().index();
+        }
+    }
+
+    console.log(col_start + ', ' + col_end);
+
     let content = '';
     $(container).find('thead tr:first-child > th > data').each(function(i, o) {
-        if (i > 0) {
-            if (i > 1) {
+        if ((i >= col_start) && (i <= col_end)) {
+            if (i > col_start) {
                 content = content + delimiter;
             }
 
@@ -248,20 +349,24 @@ function doGetTableContents(container, selection=false, delimiter="\t") {
     });
 
     $(container).find('tbody tr').each(function(ir, tr) {
+        if ($(tr).find('td.selected').length == 0) { return; }
         if (content != "") { content = content + "\r\n"; }
-        $(tr).find('td').each(function(i, o) {
-            if (i > 0) {
-                content = content + delimiter;
-            }
+        $(tr).children().each(function(i, o) {
+            if ((i >= col_start) && (i <= col_end)) {
 
-            let data_item = $(o).find('data').text();
-            if ((data_item.includes(delimiter)) || (data_item.includes('"'))) {
-                if (data_item.includes('"')) {
-                    data_item = data_item.replace('"', '""');
+                if (i > col_start) {
+                    content = content + delimiter;
                 }
-                content = content + '"' + data_item + '"';
-            } else {
-                content = content + data_item;
+
+                let data_item = $(o).find('data').text();
+                if ((data_item.includes(delimiter)) || (data_item.includes('"'))) {
+                    if (data_item.includes('"')) {
+                        data_item = data_item.replace('"', '""');
+                    }
+                    content = content + '"' + data_item + '"';
+                } else {
+                    content = content + data_item;
+                }
             }
         });
     });
@@ -293,6 +398,20 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
         $(container).parent().find('div.section.output div').first().text(data["error"]);
         $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
         return;
+    }
+
+    if (data["stats"]) {
+        let records = '';
+        if (data["records"]) {
+            records = data["records"].length;
+        }
+
+        let secs = '';
+        if (data["stats"]["exec_time"]) {
+            secs = parseFloat(data["stats"]["exec_time"]).toFixed(2);
+        }
+
+        $(container).parent().find('div.section.data .metrics').text(records + ' records - ' + doGetCurrentDate() + ' - ' + secs + ' secs')
     }
 
     if (data["output"]) {
@@ -334,14 +453,40 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
             }
 
             if (data["records"].length == 0) {
-                $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+                if ((data["output"]) && (data["output"].length > 0)) {
+                    $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+                }
+                $(container).find('resultsnav').find('.btn-tab-refresh').prop('disabled', false);
             } else {
                 $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
                 $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
+                
                 $(container).find('resultsnav').find('button').prop('disabled', false);
+                $(container).find('resultsnav').find('.btn-tab-filter').prop('disabled', true);
             }
         }
     }
+
+    $(container).find('table th > data > i.sort-order').click(function(event) {
+        if ($(this).hasClass('fa-caret-down')) {
+            $(this).parent().parent().parent().find('i.sort-order').removeClass('fa-caret-up');
+            $(this).parent().parent().parent().find('i.sort-order').addClass('fa-caret-down');
+            $(this).parent().parent().parent().find('i.sort-order').css('opacity', '0.5');
+            $(this).removeClass('fa-caret-down');
+            $(this).addClass('fa-caret-up');
+            $(this).css('opacity', '1');
+            doTableSort($(this).parent().parent().parent().parent().parent().parent().parent(), $(this).parent().parent().index(), "ascending");
+        } else {
+            $(this).parent().parent().parent().find('i.sort-order').removeClass('fa-caret-up');
+            $(this).parent().parent().parent().find('i.sort-order').addClass('fa-caret-down');
+            $(this).parent().parent().parent().find('i.sort-order').css('opacity', '0.5');
+            $(this).removeClass('fa-caret-up');
+            $(this).addClass('fa-caret-down');
+            $(this).css('opacity', '1');
+            doTableSort(container, $(this).parent().parent().index(), "descending");
+        }
+        return false;
+    });
 
     //$(container).find('table tbody tr td data').css('width', '120px');
 
@@ -349,6 +494,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
     if (with_numbers) {
         extra_width = 36;
     }
+
     $(container).find('table th > data').mousedown(function(e) {
         let t = $(this);
         document.onmousemove = function onMouseMove(e) {
@@ -457,8 +603,37 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
 
 function doWireUpQueryTab(tab_id) {
 
-    $(tab_id + ' textarea.editor').keyup(function() { updateStatusBar(); });
     $(tab_id + ' textarea.editor').mouseup(function() { updateStatusBar(); });
+    $(tab_id + ' textarea.editor').focus(function() { escape_key = false; });
+
+    $(tab_id + ' textarea.editor').keyup(function(e) { 
+
+        if (!(escape_key) && (e.keyCode == 9)) {
+            e.preventDefault();
+        }
+
+        if (e.ctrlKey) {
+            if (e.keyCode == 81) {
+                $('.btn-execute').trigger('click');
+            }
+        }
+
+        escape_key = false;
+
+        if (e.keyCode == 27) {
+            escape_key = true;
+        }
+
+        updateStatusBar(); 
+    });
+
+    $(tab_id + ' textarea.editor').keydown(function(e) { 
+        if (!(escape_key) && (e.keyCode == 9)) {
+            e.preventDefault();
+
+            doManageTab($(this), e.shiftKey);
+        }
+    });
 
     $(tab_id + ' .tab-loading').hide();
     $(tab_id + ' item:first-child').css('height', '100%');
@@ -510,27 +685,95 @@ function doWireUpQueryTab(tab_id) {
         return false;
     });
     $(tab_id + ' .btn-tab-copy').click(function() { 
-        let selected_only = false;
-        if ($(tab_id + ' div.section.data table').find('.selected').length > 0) {
-            selected_only = true;
+        let content = '';
+
+        if ($(tab_id + ' .btn-tab-results').hasClass('active')) {
+            let selected_only = false;
+            if ($(tab_id + ' div.section.data table').find('.selected').length > 0) {
+                selected_only = true;
+            }
+    
+            content = doGetTableContents($(tab_id + ' div.section.data'), selected_only);
+            //console.log(content);
         }
 
-        let content = doGetTableContents($(tab_id + ' div.section.data'), selected_only);
-        console.log(content);
+        if ($(tab_id + ' .btn-tab-code').hasClass('active')) {
+            content = $(tab_id + ' .section.statement > div').text();
+        }
+
+        if ($(tab_id + ' .btn-tab-output').hasClass('active')) {
+            content = $(tab_id + ' .section.output > div').text();
+        }
+
+        if (content != '') {
+            navigator.clipboard
+                .writeText(content)
+                .then(() => {})
+                .catch(() => { alert("Copy to Clipboard failed."); });
+        }
 
         return false;
     });
 
-    $(tab_id + ' .btn-tab-filter').click(function() { });
-    $(tab_id + ' .btn-tab-first').click(function() { });
-    $(tab_id + ' .btn-tab-prev').click(function() { });
-    $(tab_id + ' .btn-tab-next').click(function() { });
-    $(tab_id + ' .btn-tab-last').click(function() { });
-    $(tab_id + ' .btn-tab-refresh').click(function() { });
+    $(tab_id + ' .btn-tab-filter').click(function() { return false; });
+
+    $(tab_id + ' .btn-tab-first').click(function() { 
+        $(tab_id + ' .section.data table').find('.selected').removeClass('selected');
+        let el = $(tab_id + ' .section.data table tbody > tr').first().find('td').first();
+        el.addClass('selected');
+        el.focus();
+
+        $(tab_id + ' > item > results .data > div').scrollTop(0);
+        
+        return false; 
+    });
+
+    $(tab_id + ' .btn-tab-prev').click(function() { 
+        let idx = $(tab_id + ' .section.data table tbody > tr > td.selected').first().parent().index();
+        $(tab_id + ' .section.data table').find('.selected').removeClass('selected');
+        idx--;
+        if (idx < 0) { idx = 0; }
+        $(tab_id + ' .section.data table tbody').children('tr').eq(idx).children('td').first().addClass('selected');
+
+        return false; 
+    });
+
+    $(tab_id + ' .btn-tab-next').click(function() { 
+        let idx = $(tab_id + ' .section.data table tbody > tr > td.selected').first().parent().index();
+        $(tab_id + ' .section.data table').find('.selected').removeClass('selected');
+        idx++;
+        if (idx >= $(tab_id + ' .section.data table tbody').children('tr').length) { idx = $(tab_id + ' .section.data table tbody').children('tr').length - 1; }
+        $(tab_id + ' .section.data table tbody').children('tr').eq(idx).children('td').first().addClass('selected');
+        return false; 
+    });
+
+    $(tab_id + ' .btn-tab-last').click(function() { 
+        $(tab_id + ' .section.data table').find('.selected').removeClass('selected');
+        let el = $(tab_id + ' .section.data table tbody > tr').last().find('td').first();
+        el.addClass('selected');
+        el.focus();
+
+        $(tab_id + ' > item > results .data > div').scrollTop($(tab_id + ' > item > results .data > div > div:last-child').height());
+
+        return false; 
+    });
+
+    $(tab_id + ' .btn-tab-refresh').click(function() { 
+        let sql_statement = $(tab_id + ' .section.statement > div').text();
+        if (sql_statement.length > 0) {
+            doExecuteSQL(tab_id, "query", sql_statement);
+        }
+
+        return false; 
+    });
 
     $(tab_id + ' > item > results .data > div').scroll(function() {
         $(tab_id + ' > item > results .data > div > div:first-child table').css('top', '' + $(this).scrollTop() + 'px');
         $(tab_id + ' > item > results .data > div > div table tr > th:first-child').css('left', ($(this).scrollLeft()) + 'px');
+
+        if ($(this).scrollTop() >= ($(this).children('div').eq(1).height() - $(this).height())) { 
+            doLoadMore(tab_id);
+        };
     });
 
     doClearQueryResults($(tab_id + ' .data'));
@@ -1379,10 +1622,34 @@ $(document).ready(function() {
         return false;
     });
 
+    $('#btn-outdent').click(function() {
+        if ($('tab.active').hasClass('query')) {
+            $('tab.active textarea.editor').focus();
+            doManageTab($('tab.active textarea.editor'), true);
+        }
+        return false;
+    });
+
+    $('#btn-indent').click(function() {
+        if ($('tab.active').hasClass('query')) {
+            $('tab.active textarea.editor').focus();
+            doManageTab($('tab.active textarea.editor'), false);
+        }
+        return false;
+    });
+
     doEnableSlider('page > sidebar', 'page > slider', 'horizontal');
 
     doCheckSession(true);
 
     $(document).mouseup(function() { is_mouse_down=false; updateStatusBar(); });
     $(document).click(function() { doCloseContextMenu(); });
+
+    $(document).keydown(function (e) {
+        if (e.which === 27) {
+            $('.sidebar-context-menu').hide();
+            $('overlay.chooser#chooser-select-connection').hide();
+            $('overlay.chooser#ddl-data').hide();
+        }
+    });
 });

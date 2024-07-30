@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 import sys
-import logging
 from core.interactions import Response
 from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
@@ -19,7 +16,7 @@ def get_query_results(connection_name, db_name, sql, query_type):
         resp.output({ "ok": False, "error": "Unable to connect to server.  Please check username/password." })
         sys.exit()
 
-    data = { "error": "", "headers": [], "records": [], "output": "" }
+    data = { "error": "", "headers": [], "records": [], "output": "", "stats": {} }
     try:
         if query_type == "explain":
             sql = f"EXPLAIN {sql}"
@@ -28,7 +25,11 @@ def get_query_results(connection_name, db_name, sql, query_type):
             data["headers"] = headers
             data["records"].append(record)
 
+        if len(data["headers"]) == 0:
+            data["headers"] = connection.columns
+
         data["output"] = connection.notices
+        data["stats"]["exec_time"] = connection.exec_time
 
         if query_type == "explain":
             data["output"] = "\n".join(["\t".join(r) for r in data["records"]])

@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import sys
 from core.config import settings as cfg
 
 
@@ -74,7 +71,3 @@ def get_authenticator():
     return Authenticator()
 
 authenticator = get_authenticator()
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

@@ -1,11 +1,10 @@
-#!/usr/bin/env python
-
 import sys
 import logging
 import traceback
 
 from datetime import datetime
 from decimal import Decimal
+import time
 
 import psycopg
 from connectors import Connector
@@ -25,12 +24,18 @@ class Postgres(Connector):
         self.user = kwargs.get("username")
         self.password = kwargs.get("password")
         self.database = kwargs.get("database")
+        self.stats = {}
 
         self._notices = []
-        self._columns = []
+        self.columns = []
 
     def _save_notice(self, diag):
         self._notices.append(f"{diag.severity} - {diag.message_primary}")
+    
+    @property
+    def exec_time(self):
+        t = self.stats.get("end_time", self.stats.get("exec_time", 0)) - self.stats.get("start_time", 0)
+        return t if t >= 0 else None
     
     @property
     def notices(self):
@@ -91,7 +96,9 @@ class Postgres(Connector):
                 if params is not None:
                     logging.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
 
+                self.stats["start_time"] = time.time()
                 cur = self.connection.execute(sql, params=params)
+                self.stats["exec_time"] = time.time()
 
                 # Move to last set in results (mimic psycopg2)
                 while cur.nextset():
@@ -130,11 +137,13 @@ class Postgres(Connector):
                 logging.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
                 headers = []
+                self.stats["end_time"] = time.time()
                 raise
 
-            self._columns = headers
+            self.columns = headers
             
             if cur.rowcount <= 0:
+                self.stats["end_time"] = time.time()
                 return
 
             try:
@@ -147,11 +156,11 @@ class Postgres(Connector):
                         record = list(record)
                         for i, item in enumerate(record):
                             if isinstance(item, datetime):
-                                self._columns[i]["type"] = "date"
+                                self.columns[i]["type"] = "date"
                             elif isinstance(item, bool):
-                                self._columns[i]["type"] = "text"
+                                self.columns[i]["type"] = "text"
                             elif isinstance(item, float) or isinstance(item, int) or isinstance(item, Decimal):
-                                self._columns[i]["type"] = "number"
+                                self.columns[i]["type"] = "number"
                             
                             record[i] = str(item) if item is not None else item
             
@@ -162,11 +171,13 @@ class Postgres(Connector):
                 else:
                     logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
                     logging.debug(str(traceback.format_exc()))
+                    self.stats["end_time"] = time.time()
                     return
             except:
                 logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 logging.debug(str(traceback.format_exc()))
                 self.err.append("Unable to fetch rows for query.")
+                self.stats["end_time"] = time.time()
                 raise
 
             try:
@@ -175,13 +186,17 @@ class Postgres(Connector):
                 logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 logging.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close cursor for query.")
+                self.stats["end_time"] = time.time()
                 raise
 
         else:
             logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
             self.err.append("Unable to establish connection")
+            self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")
-        
+
+        self.stats["end_time"] = time.time()
+
     def _sql(self, category):
         category = str(category).lower().strip()
         

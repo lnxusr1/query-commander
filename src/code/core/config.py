@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import sys
 import os
 import yaml
 
@@ -35,7 +32,3 @@ def load_settings():
     return s
 
 settings = load_settings()
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

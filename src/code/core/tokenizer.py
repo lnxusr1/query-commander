@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import sys
 import os
 import datetime
 import tempfile
@@ -159,6 +156,12 @@ class Tokens:
         if self._is_loaded and self.token is not None and self.data is not None:
             cookie = http.cookies.SimpleCookie()
             cookie['token'] = self.token
+            
+            #if self.is_expired(self.data.get("expires")):
+            #    expiration_time = get_utc_now() - datetime.timedelta(days=365) # 1 year ago
+            #else:
+            #    expiration_time = get_utc_now() + datetime.timedelta(days=3650) # 10 years
+            
             expiration_time = datetime.datetime.strptime(self.data.get("expires"), '%a, %d-%b-%Y %H:%M:%S UTC')
             cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
             cookie['token']['secure'] = True
@@ -316,7 +319,3 @@ def get_tokenizer(connection_details, db_connections):
 
 
 tokenizer = get_tokenizer(cfg.sys_tokenizer, cfg.sys_connections)
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

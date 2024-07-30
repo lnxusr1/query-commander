@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-
 import sys
-import logging
 from core.interactions import Response
 from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
@@ -45,8 +42,3 @@ def get_info(request, data_type="meta"):
         tokenizer.update()
         resp.output({ "ok": True, "properties": details })
         sys.exit()
-    
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

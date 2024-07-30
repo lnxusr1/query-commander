@@ -17,7 +17,7 @@ nav:
       - '@ Code': 'https://github.com/lnxusr1/query-commander/'
       #- '@ Community': 'https://kenzy.ai/discussion'
       - '@ Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
-      - '@ Website': 'https://querycommander.com'
+      #- '@ Website': 'https://querycommander.com'
 
 plugins:
   - search

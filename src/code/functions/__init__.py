@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import os
 import sys
 import logging
 import json
@@ -145,9 +142,4 @@ def process_request(request):
     logging.error(f"Invalid request from {request.host}")
     resp = Response()
     resp.output({ "ok": False, "logout": True })
-    sys.exit()
-
-
-if __name__ == "__main__":
-    print("Location: /\n")
     sys.exit()

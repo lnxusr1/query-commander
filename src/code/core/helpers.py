@@ -1,9 +1,5 @@
-#!/usr/bin/env python
-
-import sys
-import re
-
 import os
+import re
 import datetime
 import hashlib
 import secrets
@@ -77,8 +73,3 @@ def decrypt(password, ciphertext):
     decryptor = cipher.decryptor()
     plaintext = decryptor.update(ciphertext) + decryptor.finalize()
     return plaintext.decode('utf-8')
-
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

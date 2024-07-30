@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-
-import sys
 import json
 import logging
 from core.config import settings as cfg
@@ -11,7 +8,7 @@ from core.tokenizer import tokenizer
 def get_db_connection(connection_name, database=None):
     if database == "":
         database = None
-        
+
     for conn_name in tokenizer.connections:
         if connection_name == conn_name:
             if conn_name in cfg.sys_connections:
@@ -42,7 +39,3 @@ def get_db_connection(connection_name, database=None):
                         return Postgres(**cfg.sys_connections.get(conn_name, {}), database=database, username=username, password=password)
 
     return None
-
-if __name__ == "__main__":
-    print("Location: /\n")
-    sys.exit()

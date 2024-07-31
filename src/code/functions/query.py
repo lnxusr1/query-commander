@@ -1,10 +1,11 @@
 import sys
+from core.config import settings as cfg
 from core.interactions import Response
 from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
 
 
-def get_query_results(connection_name, db_name, sql, query_type):
+def get_query_results(connection_name, db_name, sql, query_type, start_record=0):
     resp = Response()
 
     connection = get_db_connection(connection_name, database=db_name)
@@ -16,14 +17,23 @@ def get_query_results(connection_name, db_name, sql, query_type):
         resp.output({ "ok": False, "error": "Unable to connect to server.  Please check username/password." })
         sys.exit()
 
-    data = { "error": "", "headers": [], "records": [], "output": "", "stats": {} }
+    data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False }
     try:
         if query_type == "explain":
             sql = f"EXPLAIN {sql}"
 
+        i = 0
+        end_record = start_record + cfg.records_per_request
         for headers, record in connection.fetchmany(sql, params=None, size=1000):
             data["headers"] = headers
-            data["records"].append(record)
+            if i >= start_record and i < end_record:
+                data["records"].append(record)
+
+            i = i + 1
+            
+            if i > end_record:
+                data["has_more"] = True
+                break
 
         if len(data["headers"]) == 0:
             data["headers"] = connection.columns

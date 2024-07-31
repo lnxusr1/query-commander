@@ -9,14 +9,23 @@ theme:
     titles_only: true
     collapse_navigation: false
     logo: https://docs.querycommander.com/en/latest/images/logo-white.png
+    favicon: https://docs.querycommander.com/en/latest/images/favicon.svg
 
 nav:
     - Overview: 'index.md'
-    - About: 'about.md'
+    - Installation: 
+      - 'Apache 2.x (httpd)': 'installation/apache.md'
+      - 'AWS (Lambda)': 'installation/aws.md'
+    - Configuration:
+      - Authentication: 'configuration/authenticator.md'
+      - 'Session Management': 'configuration/tokenizer.md'
+      - Options: 'configuration/options.md'
+
     - Links:
+      - '@ About': 'about.md'
+      - '@ Report Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
       - '@ Code': 'https://github.com/lnxusr1/query-commander/'
-      #- '@ Community': 'https://kenzy.ai/discussion'
-      - '@ Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
+      #- '@ Community': 'https://github.com/lnxusr1/query-commander/discussion'
       #- '@ Website': 'https://querycommander.com'
 
 plugins:

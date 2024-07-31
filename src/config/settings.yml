@@ -1,3 +1,6 @@
+settings:
+  records_per_request: 200
+
 tokenizer:
   type: local
   timeout: 20 # minutes

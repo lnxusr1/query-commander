@@ -25,6 +25,10 @@ class Settings:
     @property
     def sys_mappings(self):
         return self.data.get("mappings", {})
+    
+    @property
+    def records_per_request(self):
+        return int(self.data.get("settings", {}).get("records_per_request", 200))
         
 
 def load_settings():

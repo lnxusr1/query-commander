@@ -237,7 +237,9 @@ function doManageTab(obj, is_shift) {
 }
 
 function doLoadMore(tab_id) {
-    console.log(tab_id);
+    if ($(tab_id + ' div.section.data').find('thead').first().hasClass('has-more')) {
+        doExecuteSQL(tab_id, 'query', $(tab_id + ' div.section.statement > div').text(), $(tab_id).attr('selected-db'), true);
+    }
 }
 
 function doGetSQL(tab_id) {
@@ -254,14 +256,19 @@ function doGetSQL(tab_id) {
     return sql;
 }
 
-function doExecuteSQL(tab_id, exec_type, sql_statement='') {
+function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=false) {
+
     $(tab_id + ' textarea.editor').focus(); 
-    let sql = doGetSQL(tab_id);
-    if (sql_statement != '') {
-        sql = sql_statement;
+    let sql = sql_statement
+    if (sql_statement == '') {
+        sql = doGetSQL(tab_id);
     }
+
     let connection_name = $('tablist > item > a.active > span').text();
-    let db_name = $(tab_id + ' select option:selected').val();
+    if (db_name == '') {
+        db_name = $(tab_id + ' select option:selected').val();
+        $(tab_id).attr('selected-db', db_name);
+    }
 
     if ((sql == '') || (connection_name == '')) { return; }
 
@@ -270,14 +277,21 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='') {
     }
 
     $(tab_id + ' .btn-tab-results').trigger('click');
+    let row_count = 0;
+    if (as_more) { row_count = $(tab_id + ' div.section.data table > tbody > tr').length; }
 
     let req_data = {
         command: "query",
         type: exec_type,
         statement: sql,
         connection: connection_name,
-        database: db_name
+        database: db_name,
+        row_count: row_count
     }
+
+    if ($(tab_id + ' div.section.data').hasClass('is-loading')) { console.log('data loading...'); return; }
+    
+    $(tab_id + ' div.section.data').addClass('is-loading');
 
     $.ajax({
         url: site_path,
@@ -292,7 +306,9 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='') {
             $(tab_id + ' div.section.statement div').text(req_data["statement"]);
         },
         success: function(data) {
-            doClearQueryResults($(tab_id + ' div.section.data'));
+            if (!as_more) {
+                doClearQueryResults($(tab_id + ' div.section.data'));
+            }
 
             if (!data.ok) {
                 if (data.error) { alert(data.error); }
@@ -301,7 +317,7 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='') {
             }
 
             if (data.data) {
-                doLoadQueryData($(tab_id + ' div.section.data'), data.data, true, true);
+                doLoadQueryData($(tab_id + ' div.section.data'), data.data, true, true, as_more);
             }
         },
         error: function(e) {
@@ -311,6 +327,7 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='') {
         },
         complete: function() {
             $(tab_id + ' .tab-loading').hide();
+            $(tab_id + ' div.section.data').removeClass('is-loading');
         }
     });
 }
@@ -377,6 +394,7 @@ function doGetTableContents(container, selection=false, delimiter="\t") {
 function doClearQueryResults(container) {
 
     //$(container).parent().find('div.section.statement div').text('');
+    $(container).parent().find('div.section.data div').scrollTop(0);
     $(container).parent().find('div.section.output div').text('');
     $(container).parent().parent().find('.btn-tab-export').prop('disabled', true);
     $(container).parent().parent().find('.btn-tab-copy').prop('disabled', true);
@@ -391,7 +409,7 @@ function doClearQueryResults(container) {
     $(container).find('resultsnav').find('.metrics').text('');
 }
 
-function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
+function doLoadQueryData(container, data, with_types=true, with_numbers=true, as_more=false) {
 
     if ((data["error"]) && (data["error"] != "")) {
         doClearQueryResults(container);
@@ -400,40 +418,37 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
         return;
     }
 
-    if (data["stats"]) {
-        let records = '';
-        if (data["records"]) {
-            records = data["records"].length;
-        }
-
-        let secs = '';
-        if (data["stats"]["exec_time"]) {
-            secs = parseFloat(data["stats"]["exec_time"]).toFixed(2);
-        }
-
-        $(container).parent().find('div.section.data .metrics').text(records + ' records - ' + doGetCurrentDate() + ' - ' + secs + ' secs')
+    if (data["has_more"]) {
+        $(container).find('thead').first().addClass('has-more');
+    } else {
+        $(container).find('thead').first().removeClass('has-more');
     }
 
     if (data["output"]) {
         $(container).parent().find('div.section.output div').first().text(data["output"]);
     }
 
+    let record_start_count = container.find('tbody').children('tr').length;
+    let records = record_start_count;
+
     if (data["headers"]) {
-        container.find('thead').append($('<tr></tr>'));
-        if ((data["headers"].length > 0) && (with_numbers)) {
-            container.find('thead').find('tr').append($('<th><data></data></th>'));
-        }
-        for (let h=0; h<data["headers"].length; h++) {
-            let el = $('<th><data><span></span></data></th>');
-            el.find('data > span').append(data["headers"][h]["name"]);
-            if (with_types) {
-                let data_type_class = "fa-font";
-                if (data["headers"][h]["type"] == "date") { data_type_class = "fa-clock"; }
-                if (data["headers"][h]["type"] == "number") { data_type_class = "fa-hashtag"; }
-                el.find('data').prepend($('<i class="data-type fas '+data_type_class+' fa-fw"></i>'));
-                el.find('data').append($('<i class="sort-order fas fa-caret-down fa-fw"></i>'));
+        if (!as_more) {
+            container.find('thead').append($('<tr></tr>'));
+            if ((data["headers"].length > 0) && (with_numbers)) {
+                container.find('thead').find('tr').append($('<th><data></data></th>'));
             }
-            container.find('thead').find('tr').append(el);
+            for (let h=0; h<data["headers"].length; h++) {
+                let el = $('<th><data><span></span></data></th>');
+                el.find('data > span').append(data["headers"][h]["name"]);
+                if (with_types) {
+                    let data_type_class = "fa-font";
+                    if (data["headers"][h]["type"] == "date") { data_type_class = "fa-clock"; }
+                    if (data["headers"][h]["type"] == "number") { data_type_class = "fa-hashtag"; }
+                    el.find('data').prepend($('<i class="data-type fas '+data_type_class+' fa-fw"></i>'));
+                    el.find('data').append($('<i class="sort-order fas fa-caret-down fa-fw"></i>'));
+                }
+                container.find('thead').find('tr').append(el);
+            }
         }
 
         if (data["records"]) {
@@ -441,7 +456,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
                 let tr = $('<tr></tr>');
                 if (with_numbers) {
                     tr.append($('<th><data></data></th>'));
-                    tr.find('data').text(r+1);
+                    tr.find('data').text(records+r+1);
                 }
                 for (let c=0; c<data["records"][r].length; c++) {
                     let el = $('<td><data></data></td>');
@@ -452,19 +467,36 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
                 container.find('tbody').append(tr);
             }
 
-            if (data["records"].length == 0) {
-                if ((data["output"]) && (data["output"].length > 0)) {
-                    $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+            if (!as_more) {
+                if (data["records"].length == 0) {
+                    if ((data["output"]) && (data["output"].length > 0)) {
+                        $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+                    }
+                    $(container).find('resultsnav').find('.btn-tab-refresh').prop('disabled', false);
+                } else {
+                    $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
+                    $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
+                    
+                    $(container).find('resultsnav').find('button').prop('disabled', false);
+                    $(container).find('resultsnav').find('.btn-tab-filter').prop('disabled', true);
                 }
-                $(container).find('resultsnav').find('.btn-tab-refresh').prop('disabled', false);
-            } else {
-                $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
-                $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
-                
-                $(container).find('resultsnav').find('button').prop('disabled', false);
-                $(container).find('resultsnav').find('.btn-tab-filter').prop('disabled', true);
             }
+
+            records = records + data["records"].length;
         }
+    }
+
+    if (data["stats"]) {
+        //if (data["records"]) {
+        //    records = data["records"].length;
+        //}
+
+        let secs = '';
+        if (data["stats"]["exec_time"]) {
+            secs = parseFloat(data["stats"]["exec_time"]).toFixed(2);
+        }
+
+        $(container).parent().find('div.section.data .metrics').text(records + ' records - ' + doGetCurrentDate() + ' - ' + secs + ' secs')
     }
 
     $(container).find('table th > data > i.sort-order').click(function(event) {
@@ -510,6 +542,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
         let ri_start = null;
         let table = $(container).find('table tbody');
 
+        table.find('td').off();
         table.find('td').mousedown(function(e) {
             is_mouse_down = true;
             let cell = $(this);
@@ -541,36 +574,39 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true) {
             return false;
         });
 
-        let table2 = $(container).find('table thead');
+        if (!as_more) {
+            let table2 = $(container).find('table thead');
 
-        table2.find('th data span').mousedown(function(e) {
-            is_mouse_down = true;
-            let cell = $(this).parent().parent();
+            table2.find('th data span').mousedown(function(e) {
+                is_mouse_down = true;
+                let cell = $(this).parent().parent();
 
-            table.find('.selected').removeClass('selected');
-            //$('box.active output controls button.copy').prop('disabled', false);
-            
-            if (e.shiftKey) {
+                table.find('.selected').removeClass('selected');
+                //$('box.active output controls button.copy').prop('disabled', false);
+                
+                if (e.shiftKey) {
+                    selectColumn(table, $(this).parent().parent(), ci_start);
+                } else {
+                    ci_start = cell.index();
+                    ri_start = cell.parent().index();
+                    selectColumn(table, $(this).parent().parent(), ci_start);
+                }
+
+                //return false;
+            })
+            .mouseover(function() {
+                if (!is_mouse_down) return;
+                //$('box.active output controls button.copy').prop('disabled', false);
+                //if ($(this).parent().index() == 0) { return; }
+                table2.find('.selected').removeClass('selected');
                 selectColumn(table, $(this).parent().parent(), ci_start);
-            } else {
-                ci_start = cell.index();
-                ri_start = cell.parent().index();
-                selectColumn(table, $(this).parent().parent(), ci_start);
-            }
+            })
+            .bind("selectstart", function() {
+                return false;
+            });
+        }
 
-            //return false;
-        })
-        .mouseover(function() {
-            if (!is_mouse_down) return;
-            //$('box.active output controls button.copy').prop('disabled', false);
-            //if ($(this).parent().index() == 0) { return; }
-            table2.find('.selected').removeClass('selected');
-            selectColumn(table, $(this).parent().parent(), ci_start);
-        })
-        .bind("selectstart", function() {
-            return false;
-        });
-
+        table.find('th data').off();
         table.find('th data').mousedown(function(e) {
             is_mouse_down = true;
             let cell = $(this).parent();
@@ -761,7 +797,7 @@ function doWireUpQueryTab(tab_id) {
     $(tab_id + ' .btn-tab-refresh').click(function() { 
         let sql_statement = $(tab_id + ' .section.statement > div').text();
         if (sql_statement.length > 0) {
-            doExecuteSQL(tab_id, "query", sql_statement);
+            doExecuteSQL(tab_id, "query", sql_statement, $(tab_id).attr('selected-db'));
         }
 
         return false; 
@@ -771,13 +807,12 @@ function doWireUpQueryTab(tab_id) {
         $(tab_id + ' > item > results .data > div > div:first-child table').css('top', '' + $(this).scrollTop() + 'px');
         $(tab_id + ' > item > results .data > div > div table tr > th:first-child').css('left', ($(this).scrollLeft()) + 'px');
 
-        if ($(this).scrollTop() >= ($(this).children('div').eq(1).height() - $(this).height())) { 
+        if ($(this).scrollTop() >= ($(this).children('div').eq(1).height() - Math.floor($(this).height()) + 26)) { 
             doLoadMore(tab_id);
         };
     });
 
     doClearQueryResults($(tab_id + ' .data'));
-    //doLoadQueryData($(tab_id + ' results .data'), { "headers": [], "records": [] });
 }
 
 function addQueryTab(check_exists=false) {

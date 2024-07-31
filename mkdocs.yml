@@ -17,6 +17,7 @@ nav:
       - 'Apache 2.x (httpd)': 'installation/apache.md'
       - 'AWS (Lambda)': 'installation/aws.md'
     - Configuration:
+      - Connections: 'configuration/connections.md'
       - Authentication: 'configuration/authenticator.md'
       - 'Session Management': 'configuration/tokenizer.md'
       - Options: 'configuration/options.md'

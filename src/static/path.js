@@ -1,1 +1,1 @@
-export var site_path = 'https://query-commander.lan/api/index';
+export var site_path = '/api/index';

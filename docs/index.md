@@ -41,9 +41,9 @@ Introducing **Query Commander**, the revolutionary *opensource* browser-based SQ
     Serverless hosting in AWS leverages the combination of **S3** file storage for static objects, **API Gateway** + **Lambda** for backend processing, and **DynamoDB** for secure token storage.
 
 !!! danger "SECURITY: SOX and HIPAA Compliance"
-    By enabling LDAP (Active Director or OpenLDAP) authentication Query Commander can leverage "Persona proxies" which allow for tying role-based access in the database to users authenticated via LDAP.  
+    By enabling LDAP authentication Query Commander can leverage "Persona proxies" which allow for linking role-based access in the database to users authenticated via LDAP.  
     
-    Persona proxies eliminate the need for users to be individually created/maintained inside the database.  This feature could produce significant time savings for user management and access pruning depnending on the size of your user-base.
+    Persona proxies eliminate the need for users to be individually created/maintained inside the database.  This feature can save time being wasted on database user management and access pruning which can be significant depending on the size of your userbase.
 
 
 

@@ -25,8 +25,8 @@ nav:
 
     - Links:
       - '@ Report Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
+      - '@ Join the Discussion': 'https://github.com/lnxusr1/query-commander/discussions'
       - '@ Code': 'https://github.com/lnxusr1/query-commander/'
-      #- '@ Community': 'https://github.com/lnxusr1/query-commander/discussion'
       #- '@ Website': 'https://querycommander.com'
 
 plugins:

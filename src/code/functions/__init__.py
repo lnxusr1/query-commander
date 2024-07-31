@@ -83,6 +83,7 @@ def process_request(request):
             resp.output(resp_data)
             sys.exit()
         else:
+            logging.debug(f"[{username}@{tokenizer.remote_addr}] Session extended - {tokenizer.token}")
             resp.output({ "ok": False })
             sys.exit()
 
@@ -97,7 +98,7 @@ def process_request(request):
 
     if not tokenizer.validate():
         resp = Response()
-        logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Not logged in. - {tokenizer.token}")
+        logging.error(f"[{username}@{tokenizer.remote_addr}] Failed validation")
         resp.output({ "ok": False, "logout": True })
         sys.exit()
 

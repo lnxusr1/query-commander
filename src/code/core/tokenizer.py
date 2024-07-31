@@ -147,7 +147,19 @@ class Tokens:
 
     @property
     def connections(self):
-        return []
+        if cfg.sys_authenticator.get("type", "local") == "local":
+            return [str(x) for x in cfg.sys_connections]
+        else:
+            self._get()
+            if self.role_selected != "":
+                conns = []
+                for x in cfg.sys_connections:
+                    for r in self.roles:
+                        if r in cfg.sys_connections.get(x).get("roles"):
+                            conns.append(str(x))
+                return conns
+            else:
+                return []
 
     @property
     def cookie(self):
@@ -238,14 +250,6 @@ class LocalTokens(Tokens):
                         logging.info(f"[{username}] Expired token purged. - {file_name_base}")
                         os.remove(os.path.join(self.path, file_name))
 
-    @property
-    def connections(self):
-        self._get()
-        if self.role_selected != "":
-            return [str(x) for x in cfg.sys_connections]
-        else:
-            return []
-
 
 class RedisTokens(Tokens):
     def __init__(self, **kwargs):
@@ -269,12 +273,6 @@ class RedisTokens(Tokens):
     def purge(self):
         return False
 
-    @property
-    def connections(self):
-        # OVERRIDE THIS METHOD
-        self._get()
-        return []
-
 
 class DynamoDBTokens(Tokens):
     def __init__(self, **kwargs):
@@ -297,12 +295,6 @@ class DynamoDBTokens(Tokens):
     
     def purge(self):
         return False
-
-    @property
-    def connections(self):
-        # OVERRIDE THIS METHOD
-        self._get()
-        return []
 
 
 def get_tokenizer(connection_details, db_connections):

@@ -1,4 +1,5 @@
 import json
+import copy
 import logging
 from core.config import settings as cfg
 from core.helpers import decrypt
@@ -16,26 +17,23 @@ def get_db_connection(connection_name, database=None):
                 if cfg.sys_connections.get(conn_name, {}).get("type") == "postgres":
                     username = None
                     password = None
-                    if str(cfg.sys_authenticator.get("type")) == "config":
-                        credentials = cfg.sys_connections.get(conn_name, {}).get("credentials", [])[0]
-                        if isinstance(credentials, dict):
-                            
-                            #TODO: Enable storing these in SecretsManager
-
-                            username = credentials.get("username")
-                            password = credentials.get("password")
-
-                    elif str(cfg.sys_authenticator.get("type")) == "local":
+                    if str(cfg.sys_authenticator.get("type")) == "local":
                         credentials = json.loads(decrypt(tokenizer.safe_password, tokenizer.credentials))
                         if isinstance(credentials, dict):
                             username = credentials.get("username")
                             password = credentials.get("password")
+                        
+                        cfg.sys_connections.get(conn_name)["username"] = username
+                        cfg.sys_connections.get(conn_name)["password"] = password
 
                     elif str(cfg.sys_authenticator.get("type")) in ["ldap", "openldap"]:
-                        raise Exception("NOT IMPLEMENTED (connectors.selector - ldap/openldap)")
+                        #raise Exception("NOT IMPLEMENTED (connectors.selector - ldap/openldap)")
+                        pass
 
-                    if username is not None and password is not None:
-                        from connectors.postgres import Postgres
-                        return Postgres(**cfg.sys_connections.get(conn_name, {}), database=database, username=username, password=password)
+                    from connectors.postgres import Postgres
+                    conn = cfg.sys_connections.get(conn_name, {})
+                    if "database" not in conn:
+                        conn["database"] = database
+                    return Postgres(**conn)
 
     return None

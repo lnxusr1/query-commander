@@ -4,7 +4,7 @@
     These instructions are targeted for Debian-based Linux distributions.  Other distributions may require minor adjustments.  
 
 !!! warning "Microsoft Windows Installations"
-    If you are installing on Windows you will at need to check the header in ```query-commander/src/code/index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussions.
+    If you are installing on Windows you will at least need to check the header in ```query-commander/src/code/index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussions.
 
 ## Setup the Python Runtime Environment
 

@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.0.1";
+var version = "v0.0.2";
 var timer;
 var is_mouse_down = false;
 var current_user = "";

@@ -14,8 +14,9 @@ class Tokens:
         self.token = None
         self.data = None
         self._is_loaded = False
-        self.safe_password = str(cfg.sys_tokenizer.get("safe_password", "default_password"))
+        self.safe_password = str(kwargs.get("safe_password", "default_password"))
         self.remote_addr = ""
+        self.timeout = int(kwargs.get("timeout", 20))
 
     def _get_token_data(self):
         # OVERRIDE THIS METHOD
@@ -91,7 +92,7 @@ class Tokens:
     def update(self):
         self._get()
         
-        expiration_time = get_utc_now() + datetime.timedelta(minutes=int(cfg.sys_tokenizer.get("timeout", 20)))
+        expiration_time = get_utc_now() + datetime.timedelta(minutes=int(self.timeout))
         self.set("expires", expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC'))
         self.set("token", self.token)
        
@@ -186,11 +187,11 @@ class LocalTokens(Tokens):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.path = cfg.sys_tokenizer.get("path", os.path.join(tempfile.gettempdir(), "tokens"))
+        self.path = kwargs.get("path", os.path.join(tempfile.gettempdir(), "tokens"))
 
     def _get_token_data(self):
         if self.token is None:
-            return False
+            return super()._get_token_data()
         
         data = None
 
@@ -201,7 +202,7 @@ class LocalTokens(Tokens):
                 with open(filename, "r", encoding="UTF-8") as fp:
                     data = json.load(fp)
         except:
-            return None
+            return super()._get_token_data()
 
         return data
 
@@ -249,6 +250,8 @@ class LocalTokens(Tokens):
                         file_name_base = file_name.rsplit('.', 1)[0]
                         logging.info(f"[{username}] Expired token purged. - {file_name_base}")
                         os.remove(os.path.join(self.path, file_name))
+        
+        return True
 
 
 class RedisTokens(Tokens):
@@ -258,7 +261,7 @@ class RedisTokens(Tokens):
     def _get_token_data(self):
         # OVERRIDE THIS METHOD
 
-        return None
+        return False
 
     def _put_token_data(self):
         # OVERRIDE THIS METHOD
@@ -278,36 +281,99 @@ class DynamoDBTokens(Tokens):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def _get_token_data(self):
-        # OVERRIDE THIS METHOD
+        import boto3
+        boto3.set_stream_logger('boto3', logging.WARNING)
+        boto3.set_stream_logger('botocore', logging.WARNING)
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-        return None
+        self.token = kwargs.get("token")
+        self.token_data = {}
+
+        self.table_name = kwargs.get("table")
+
+        aws_access_key = kwargs.get("aws_access_key", None)
+        aws_secret_key = kwargs.get("aws_secret_key", None)
+        profile_name = kwargs.get("profile_name", None)
+        region_name = kwargs.get("aws_region_name", "us-east-1")
+
+        if aws_access_key is not None and aws_secret_key is not None:
+            session = boto3.Session(aws_access_key_id=aws_access_key,aws_secret_access_key=aws_secret_key)
+        elif profile_name is not None:
+            session = boto3.Session(profile_name=profile_name)
+        else:
+            session = boto3.Session()
+
+        self.conn = session.client('dynamodb', region_name=region_name)
+
+    def _get_token_data(self):
+        if self.token is None:
+            return super()._get_token_data()
+        
+        data = super()._get_token_data()
+
+        try:
+            response = self.conn.get_item(TableName=self.table_name, Key={ "token": { "S": str(self.token) } })
+            d = response["Item"].get("data").get("S")
+            data = json.loads(d if isinstance(d, str) else "{}")
+        except:
+            return super()._get_token_data()
+
+        return data
 
     def _put_token_data(self):
-        # OVERRIDE THIS METHOD
-
-        return False
+        if self.token is None or self.data is None:
+            return False
+        
+        try:
+            self.conn.put_item(TableName=self.table_name, Item={ "token": { 'S': self.token}, "data": {'S': json.dumps(self.data) }})
+        except:
+            return False
+        
+        return True
 
     def _remove_token_data(self):
-        # OVERRIDE THIS METHOD
+        if self.token is None:
+            return False
 
-        return False 
+        try:
+            self.conn.delete_item(TableName=self.table_name, Key={ "token": { "S": self.token } })
+        except:
+            return False
+        
+        return True
     
     def purge(self):
-        return False
+        try:
+            response = self.conn.scan(TableName=self.table_name)
+            for item in response["Items"]:
+                data = json.loads(item.get("data").get("S"))
+                if data.get("type", "") == "token":
+                    if self.is_expired(data.get("expires")):
+                        username = data.get("username")
+                        token = item.get("token")
+                        
+                        try:
+                            self.conn.delete_item(TableName=self.table_name, Key={ "token": token })
+                            logging.info(f"[{username}] Expired token purged. - {token}")
+                        except:
+                            logging.error(f"[{username}] Unable to remove expired token - {token}")
+        except:
+            pass
+        
+        return True
 
 
 def get_tokenizer(connection_details, db_connections):
     if connection_details.get("type", "local") == "local":
-        return LocalTokens(db_conns=db_connections, **connection_details.get("connection", {}))
+        return LocalTokens(**cfg.sys_tokenizer)
     
     if connection_details.get("type", "local") == "redis":
-        return RedisTokens(db_conns=db_connections, **connection_details.get("connection", {}))
+        return RedisTokens(**cfg.sys_tokenizer)
     
     if connection_details.get("type", "local") == "dynamodb":
-        return DynamoDBTokens(db_conns=db_connections, **connection_details.get("connection", {}))
+        return DynamoDBTokens(**cfg.sys_tokenizer)
     
-    return Tokens(db_conns=db_connections, **connection_details["connection"])
+    return Tokens(**cfg.sys_tokenizer)
 
 
 tokenizer = get_tokenizer(cfg.sys_tokenizer, cfg.sys_connections)

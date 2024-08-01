@@ -24,6 +24,7 @@ nav:
       - Options: 'configuration/options.md'
 
     - Links:
+      - '@ Change Log': 'changelog.md'
       - '@ Report Bugs & Issues': 'https://github.com/lnxusr1/query-commander/issues'
       - '@ Join the Discussion': 'https://github.com/lnxusr1/query-commander/discussions'
       - '@ Code': 'https://github.com/lnxusr1/query-commander/'

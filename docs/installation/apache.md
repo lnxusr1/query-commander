@@ -1,10 +1,10 @@
 # Apache 2.x (httpd) Installation
 
-!!! note "Linux Installations"
-    These instructions are targeted for Debian-based Linux distributions.  Other distributions may require minor adjustments.  
+!!! important "SSL required"
+    The hosting of this service requires SSL to be employed.  Without it several features will not work properly.
 
-!!! warning "Microsoft Windows Installations"
-    If you are installing on Windows you will at least need to check the header in ```query-commander/src/code/index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussion on [GitHub](https://github.com/lnxusr1/query-commander/discussions).
+!!! note "Don't forget..."
+    Make sure to also update your [configuration](../../configuration/authenticator/)
 
 ## Setup the Python Runtime Environment
 
@@ -79,4 +79,20 @@ chmod a+x core/*.py
 chmod a+x functions/*.py
 ```
 
-Then be sure to update your [configuration](../../configuration/authenticator/)
+## Update the JavaScript path to the API
+
+To connect the static pages to the API you may need to adjust the URL the application uses to connect to the backend.  This is generally only required if you are locating the python files at a path different than the "api" sub path from the static code.  The Apache configuration above when used exactly as specified does not require this change, but as installations vary this path is configurable.
+
+To change it edit the file **path.js** in the static folder of the repository.
+
+``` javascript
+export var site_path = '/api/index';
+```
+
+Change **site_path** to point to any URL that will respond to the API requests.
+
+!!! note "Linux Installations"
+    These instructions are targeted for Debian-based Linux distributions.  Other distributions may require minor adjustments.  
+
+!!! warning "Microsoft Windows Installations"
+    If you are installing on Windows you will at least need to check the header in ```query-commander/src/code/index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussion on [GitHub](https://github.com/lnxusr1/query-commander/discussions).

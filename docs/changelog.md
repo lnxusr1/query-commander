@@ -4,8 +4,6 @@ All notable changes to this project will be documented in this file.
 
 ## [0.0.2] - 2024-08-01
 
-### Added
-
 - DynamoDB Session Token Storage (and related docs)
 
 ## [0.0.1] - 2024-07-31

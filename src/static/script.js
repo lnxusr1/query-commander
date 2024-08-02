@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.0.2";
+var version = "v0.0.3";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -343,8 +343,6 @@ function doGetTableContents(container, selection=false, delimiter="\t") {
             col_end = $(container).find('tbody > tr > td.selected').last().index();
         }
     }
-
-    console.log(col_start + ', ' + col_end);
 
     let content = '';
     $(container).find('thead tr:first-child > th > data').each(function(i, o) {
@@ -1297,11 +1295,21 @@ function doClearPage() {
 function doRefreshConnections() {
     $('sidebar > metadata > ul').empty();
     
-    connection_list.sort();
+    connection_list.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
     for (let i = 0; i < connection_list.length; i++) {
-        let el = $('<li data-type="connection"><a href="#"><i class="fa fa-server fa-fw"></i><span></span></a></li>');
-        el.find('span').text(connection_list[i]);
+        let el = $('<li data-type="connection"><a href="#"><i class="fa fa-server fa-fw"></i><span></span><server-type></server-type></a></li>');
+        el.find('span').text(connection_list[i]["name"]);
+        el.find('server-type').text(connection_list[i]["type"]);
         el.appendTo($('sidebar > metadata > ul'));
+        el.find('a').prop('title', connection_list[i]["type"]);
         el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh"]); return false; });        
         el.find('a').click(function() {
             doLoadMeta($(this));
@@ -1313,7 +1321,7 @@ function doRefreshConnections() {
 function doLoadPage() {
     doRefreshConnections();
     
-    if (connection_list.length == 1) { connection_selected = connection_list[0]; }
+    if (connection_list.length == 1) { connection_selected = connection_list[0]["name"]; }
     if (connection_selected != "") { 
         if ($('core > tablist').children().length == 2) {
             addQueryTab(true);
@@ -1322,17 +1330,30 @@ function doLoadPage() {
 }
 
 function doShowConnectionDialog() {
-    connection_list.sort();
+    connection_list.sort((a, b) => {
+        if (a.name < b.name) {
+          return -1;
+        }
+        if (a.name > b.name) {
+          return 1;
+        }
+        return 0;
+      });
     $('#chooser-select-connection .message').find('ul').empty();
 
     for (let i = 0; i < connection_list.length; i++) {
         let option = $('<li><input/><label></label></li>');
         option.find('input').prop('type','radio');
         option.find('input').prop('name','connection');
-        option.find('input').val(connection_list[i]);
+        option.find('input').val(connection_list[i]["name"]);
         option.find('input').prop('id','connection'+i);
         option.find('label').prop('for','connection'+i);
-        option.find('label').text(connection_list[i]);
+        let el1 = $('<span></span>');
+        el1.text(connection_list[i]["name"])
+        let el2 = $('<span></span>');
+        el2.text(connection_list[i]["type"])
+        option.find('label').append(el1);
+        option.find('label').append(el2);
 
         option.appendTo($('#chooser-select-connection .message').find('ul'));
     }
@@ -1416,7 +1437,7 @@ function doSelectRole() {
                 if (connection_list == 0) {
                     alert('No connections found!')
                 } else {
-                    connection_selected = connection_list[0];
+                    connection_selected = connection_list[0]["name"];
                     if (connection_list.length > 1) {
                         doShowConnectionDialog();
                     } else {
@@ -1461,7 +1482,7 @@ function doLoginSuccess(data, hide_login) {
 
         if (connection_selected == "") {
             if (connection_list.length == 1) {
-                connection_selected = connection_list[0];
+                connection_selected = connection_list[0]["name"];
                 doLoadPage();
             } else {
                 doRefreshConnections();
@@ -1649,7 +1670,7 @@ $(document).ready(function() {
     //TODO: FIX ABOVE ^^^
     
     $('#btn-new-tab').click(function() {
-        if ((connection_list.length == 1) && (connection_selected == connection_list[0])) {
+        if ((connection_list.length == 1) && (connection_selected == connection_list[0]["name"])) {
             addQueryTab();
         } else {
             doShowConnectionDialog();

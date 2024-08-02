@@ -256,12 +256,16 @@ overlay .message-box { max-width: 90%; max-height: 90%; }
 overlay .message { overflow: auto; }
 
 overlay.chooser#ddl-data .message-box .message { min-width: 350px; max-width: 100hw; overflow: scroll; min-height: 200px; max-height: 90%; font-family: monospace; font-size: 0.95rem; user-select: auto; white-space: pre; }
-
+overlay.chooser#chooser-select-connection label > span { display: inline-block; }
+overlay.chooser#chooser-select-connection label > span:last-child::before { content: "-"; display: inline-block; margin: 0 6px; }
+overlay.chooser#chooser-select-connection label > span:last-child { opacity: 0.4; }
 .sidebar-context-menu { display:none; position: absolute; z-index: 10000; border: 1px solid var(--toolbar-border-color); font-size: 0.75rem; min-width: 140px; background: var(--toolbar-bg); }
 .sidebar-context-menu ul { list-style: none; margin: 0; padding: 0; }
 .sidebar-context-menu a { text-decoration: none; display: block; padding: 4px 8px; color: var(--text-color); border-radius: 0; }
 .sidebar-context-menu a:hover { background: var(--button-hover); }
 
+server-type { display: inline; opacity: 0.4; font-size: 0.8rem; }
+server-type::before { content: "-"; display: inline-block; margin: 0 4px; }
 templates { display: none; }
 
 @keyframes rotation {

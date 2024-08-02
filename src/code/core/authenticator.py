@@ -45,9 +45,10 @@ class LDAPAuth(Authenticator):
         self.microsoft = kwargs.get("microsoft", False)
         self.use_friendly_names = kwargs.get("options", {}).get("use_friendly_names", True) # When False, requires full group DN to be specified as role in settings file
         self.host = kwargs.get("host", "localhost")
-        self.port = int(kwargs.get("port", 389))
+        self.port = kwargs.get("port")
         self.use_ssl = kwargs.get("options", {}).get("ssl", False)
         self.login_is_role = kwargs.get("options", {}).get("login_is_role", False)
+        self.conn_options = kwargs.get("extra_args", {})
 
         self.ldap_base_dn = kwargs.get("options", {}).get("base_dn")  # example only: "dc=example,dc=com"
         if self.ldap_base_dn is None:
@@ -70,6 +71,9 @@ class LDAPAuth(Authenticator):
             if self.user_pattern is None:
                 raise ValueError("No LDAP User Pattern was specified.")
 
+        if self.port is not None:
+            self.port = int(self.port)
+
         self.server = ldap3.Server(self.host, port=self.port, use_ssl=self.use_ssl)
         self.conn = None
 
@@ -78,7 +82,34 @@ class LDAPAuth(Authenticator):
         self.ldap_user = None
     
     def _get_groups_microsoft(self):
-        return []
+        if self.conn is None:
+            return []
+
+        groups = []
+
+        try:
+            self.conn.search(
+                search_base=self.ldap_base_dn,
+                search_filter=self.user_search_filter.format(USERNAME=self.username),
+                attributes=['sAMAccountName','memberOf']
+            )
+
+            if isinstance(self.conn.entries, list) and len(self.conn.entries) > 0:
+                #logging.debug(str([entry.cn.value for entry in self.conn.entries]))
+                for entry in self.conn.entries:
+                    if str(entry.sAMAccountName.value).lower() == str(self.username).lower():
+                        user_group_list = entry.memberOf.value
+                        for group_dn in user_group_list:
+                            groups.append(group_dn.split(",", 1)[0].split("=", 1)[1].replace("\\#","#"))
+
+                        break
+
+        except:
+            self.logger.error(f"[LDAP {self.host}] Group search failed")
+            self.logger.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
+            pass
+
+        return groups
 
     def _get_groups_openldap(self):
         if self.conn is None:
@@ -93,7 +124,7 @@ class LDAPAuth(Authenticator):
             )
 
             if isinstance(self.conn.entries, list) and len(self.conn.entries) > 0:
-                logging.debug(str([entry.cn.value for entry in self.conn.entries]))
+                #logging.debug(str([entry.cn.value for entry in self.conn.entries]))
                 return [entry.cn.value for entry in self.conn.entries]
 
         except Exception:
@@ -148,7 +179,7 @@ class LDAPAuth(Authenticator):
 
         try:
             if self.conn is None:
-                self.conn = ldap3.Connection(self.server, user=ldap_login, password=password, auto_bind=True)
+                self.conn = ldap3.Connection(self.server, user=ldap_login, password=password, auto_bind=True, **self.conn_options)
 
             # If we reach this line then the login was valid
 

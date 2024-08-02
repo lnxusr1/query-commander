@@ -149,7 +149,7 @@ class Tokens:
     @property
     def connections(self):
         if cfg.sys_authenticator.get("type", "local") == "local":
-            return [str(x) for x in cfg.sys_connections]
+            return [{ "name": str(x), "type": cfg.sys_connections.get(x).get("type") } for x in cfg.sys_connections]
         else:
             self._get()
             if self.role_selected != "":
@@ -157,7 +157,7 @@ class Tokens:
                 for x in cfg.sys_connections:
                     for r in self.roles:
                         if r in cfg.sys_connections.get(x).get("roles"):
-                            conns.append(str(x))
+                            conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
                 return conns
             else:
                 return []
@@ -258,23 +258,75 @@ class RedisTokens(Tokens):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def _get_token_data(self):
-        # OVERRIDE THIS METHOD
+        self.host = kwargs.get("host", "localhost")
+        self.port = kwargs.get("port", 6379)
 
-        return False
+        import redis
+        self.conn = redis.Redis(
+            host=self.host,
+            port=self.port,
+            ssl=kwargs.get("options", {}).get("ssl", False),
+            ssl_cert_reqs="none",
+            decode_responses=True
+        )
+
+    def _get_token_data(self):
+        if self.token is None:
+            return super()._get_token_data()
+        
+        data = None
+
+        try:
+            d = self.conn.get(self.token)
+            data = json.loads(d if isinstance(d, str) else "{}")
+            self.token = self.token
+
+        except:
+            return super()._get_token_data()
+
+        return data
 
     def _put_token_data(self):
-        # OVERRIDE THIS METHOD
-
-        return False
+        if self.token is None or self.data is None:
+            return False
+        
+        try:
+            self.conn.set(self.token, json.dumps(self.data))
+        except:
+            return False
+        
+        return True
 
     def _remove_token_data(self):
-        # OVERRIDE THIS METHOD
+        if self.token is None:
+            return False
+        
+        try:
+            self.conn.delete(self.token)
+        except:
+            return False
 
-        return False 
+        return True 
     
     def purge(self):
-        return False
+        cursor = 0
+        while True:
+            cursor, tokens = self.conn.scan(cursor=cursor)
+            for token in tokens:
+                data = json.loads(self.conn.get(token))
+                if data.get("type", "") == "token":
+                    if self.is_expired(data.get("expires")):
+                        username = data.get("username")
+                        try:
+                            self.conn.delete(token)
+                            logging.info(f"[{username}] Expired token purged. - {token}")
+                        except:
+                            logging.error(f"[{username}] Unable to remove expired token - {token}")
+
+            if cursor == 0:
+                break
+
+        return True
 
 
 class DynamoDBTokens(Tokens):
@@ -285,9 +337,6 @@ class DynamoDBTokens(Tokens):
         boto3.set_stream_logger('boto3', logging.WARNING)
         boto3.set_stream_logger('botocore', logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
-
-        self.token = kwargs.get("token")
-        self.token_data = {}
 
         self.table_name = kwargs.get("table")
 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.0.3] - 2024-08-02
+
+- Active Directory Authentication via LDAP/LDAPS
+- Redis Session Token Storage (and related docs)
+- MySQL/MariaDB Database Support (and related docs)
+
 ## [0.0.2] - 2024-08-01
 
 - DynamoDB Session Token Storage (and related docs)

@@ -9,6 +9,10 @@ class Connector:
     def exec_time(self):
         """ Execution time in seconds """
         return None
+    
+    @property
+    def notices(self):
+        return []
 
     def open(self):
         self.err.append("Not implemented.")

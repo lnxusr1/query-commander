@@ -4,8 +4,8 @@ settings:
 tokenizer:
   type: local
   timeout: 20 # minutes
-  path: /tmp/tokens
   safe_password: abc123456abcdef
+  path: /tmp/tokens
 
 authenticator:
   type: local
@@ -20,3 +20,8 @@ connections:
     type: postgres
     host: localhost
     port: 5432
+
+  - name: myconn3
+    type: mysql
+    host: localhost
+    port: 3306

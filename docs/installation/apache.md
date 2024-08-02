@@ -4,7 +4,7 @@
     The hosting of this service requires SSL to be employed.  Without it several features will not work properly.
 
 !!! note "Don't forget..."
-    Make sure to also update your [configuration](../../configuration/authenticator/)
+    Make sure to also update your [configuration](../configuration/authenticator.md)
 
 ## Setup the Python Runtime Environment
 

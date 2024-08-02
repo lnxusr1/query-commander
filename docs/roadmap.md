@@ -11,23 +11,24 @@ The application roadmap will continue to evolve over the next several months as 
     - Multi-Tab Support - **COMPLETE**
     - Query Results Downloads - **COMPLETE**
     - DB Session Viewer
+    - DB Lock Viewer
     - Rate Limits
     - Client-side Results Filtering
 
 - Authenticators
     - Local Database authentication - **COMPLETE**
     - OpenLDAP authentication - **COMPLETE**
-    - Active Directory authentication
+    - Active Directory authentication - **COMPLETE**
 
 - Session Managers
     - Local Tokens - **COMPLETE**
     - DynamoDB Tokens - **COMPLETE**
-    - Redis Tokens
+    - Redis Tokens - **COMPLETE**
 
 - Database Connectors
-    - Postgres database connector - **COMPLETE**
+    - PostgreSQL database connector - **COMPLETE**
     - Oracle database connector
-    - MySQL database connector
+    - MySQL/MariaDB database connector - **COMPLETE**
     - AWS Redshift database connector
 
 - Database Connector Managers
@@ -44,7 +45,7 @@ The application roadmap will continue to evolve over the next several months as 
     - AWS CloudFormation / CDK
 
 !!! note
-    The enabling of these features are being worked in parallel so as minor releases are published it may look a bit random as to which features on the list are enabled.  That will be directly driven by the time required to complete the integration and perform any reasonable testing.
+    These features are being worked in parallel so as minor releases are published it may look a bit random as to which features on the list are enabled.  That will be directly driven by the time required to complete the integration and perform any reasonable testing.
 
 ## Future Thinking
 
@@ -53,3 +54,5 @@ As no good tool is ever truly complete please find below the scratch-pad of feat
 - Integrated Intellisense
 - Syntax highlighting
 - SQL Autocomplete
+- Microsoft SQL Server
+- IBM DB2 (LUW)

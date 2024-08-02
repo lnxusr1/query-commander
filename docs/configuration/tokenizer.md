@@ -37,7 +37,7 @@ tokenizer:
 
 The table creation is quite straightforward and only requires that the primary parition key be a *String* and be named **token** as shown below:
 
-![DynamoDB Session Tokens Screenshot](../../images/dynamodb_table_create_tokens.png)
+![DynamoDB Session Tokens Screenshot](../images/dynamodb_table_create_tokens.png)
 
 Permissions are required for **GetItem**, **PutItem**, **UpdateItem**, **DeleteItem**, and **Scan** on the created table.  If you enable encryption (which is strongly *recommended*) then you need to insure that you also grant access to the KMS key selected for that feature to allow **Encrypt** and **Decrypt** operations.
 
@@ -69,4 +69,19 @@ tokenizer:
   aws_access_key: your_aws_access_key_here
   aws_secret_key: your_aws_secret_key_here
   aws_region_name: us-east-1
+```
+
+# Redis Tokens
+
+The minimum configuration for Redis requires a server name and will use the default port 6379.  You can also enable SSL connections as shown below:
+
+``` yaml
+tokenizer:
+  type: redis
+  timeout: 20 # minutes
+  safe_password: abc123456abcdef
+  host: localhost
+  port: 6379
+  options:
+    ssl: true
 ```

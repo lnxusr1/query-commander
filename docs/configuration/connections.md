@@ -73,3 +73,23 @@ The libraries used in the built-in connectors are listed below:
 | AWS Redshift   | psycopg 3.x            | [https://www.psycopg.org](https://www.psycopg.org) |
 | Oracle         | python-oracledb        | [https://oracle.github.io/python-oracledb/](https://oracle.github.io/python-oracledb/) |
 | MySQL          | mysql-connector-python | [https://dev.mysql.com/doc/connector-python/en/](https://dev.mysql.com/doc/connector-python/en/) |
+
+### Postgres / AWS Redshift
+
+``` shell
+pip install psycopg
+```
+
+``` yaml
+type: postgres
+```
+
+### MySQL/MariaDB
+
+``` shell
+pip install mysql-connector-python
+```
+
+``` yaml
+type: mysql
+```

@@ -35,7 +35,7 @@ Introducing **Query Commander**, the revolutionary *opensource* browser-based SQ
 
 7. **Modern Hosting Options**
     - Traditional installation with CGI executions
-    - Optional **Serverless** installation
+    - Optional **Serverless** installation (AWS API Gateway, Lambda, S3, DynamoDB, and Secrets Manager)
 
 ## Learn More
 

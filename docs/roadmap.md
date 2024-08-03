@@ -33,7 +33,7 @@ The application roadmap will continue to evolve over the next several months as 
 
 - Database Connector Managers
     - Static Settings file (*settings.yml*) - **COMPLETE**
-    - AWS Secrets Manager
+    - AWS Secrets Manager - **COMPLETE**
 
 - Profile Managers
     - Local Profiles

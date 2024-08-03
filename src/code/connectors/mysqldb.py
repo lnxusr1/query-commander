@@ -29,6 +29,10 @@ class MySQL(Connector):
 
         self._notices = []
         self.columns = []
+    
+    @property
+    def notices(self):
+        return "Query executed successfully."
 
     @property
     def exec_time(self):

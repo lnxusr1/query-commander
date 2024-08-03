@@ -41,7 +41,7 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
         data["output"] = connection.notices
         data["stats"]["exec_time"] = connection.exec_time
 
-        if query_type == "explain":
+        if query_type == "explain" and connection.explain_as_output:
             data["output"] = "\n".join(["\t".join(r) for r in data["records"]])
             data["records"] = []
             data["headers"] = []

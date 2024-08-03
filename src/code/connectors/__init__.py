@@ -6,6 +6,10 @@ class Connector:
         self.columns = []
 
     @property
+    def explain_as_output(self):
+        return False
+
+    @property
     def exec_time(self):
         """ Execution time in seconds """
         return None

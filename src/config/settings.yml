@@ -11,17 +11,19 @@ authenticator:
   type: local
 
 connections:
-  - name: myconn1
-    type: postgres
-    host: my-db-server.lan
-    port: 5432
+  type: local
+  items:
+    - name: myconn1
+      type: postgres
+      host: my-db-server.lan
+      port: 5432
 
-  - name: myconn2
-    type: postgres
-    host: localhost
-    port: 5432
+    - name: myconn2
+      type: postgres
+      host: localhost
+      port: 5432
 
-  - name: myconn3
-    type: mysql
-    host: localhost
-    port: 3306
+    - name: myconn3
+      type: mysql
+      host: localhost
+      port: 3306

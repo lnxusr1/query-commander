@@ -33,6 +33,10 @@ class Postgres(Connector):
         self._notices.append(f"{diag.severity} - {diag.message_primary}")
     
     @property
+    def explain_as_output(self):
+        return True
+
+    @property
     def exec_time(self):
         t = self.stats.get("end_time", self.stats.get("exec_time", 0)) - self.stats.get("start_time", 0)
         return t if t >= 0 else None

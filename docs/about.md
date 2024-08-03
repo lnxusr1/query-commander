@@ -8,7 +8,7 @@ The mission of Query Commander is to provide a cloud-friendly SQL query tool tha
 
 ### Cloud-Friendly
 
-Query Commander is designed to be able to execute in a serverless environment leveraging AWS components including **S3**, **API Gateway**, **Lambda**, and **DynamoDB**.  This serverless architecture allowes for a centrally installed and managed software platform while eliminating the need for traditional server management, reducing infrastructure costs and maintenance efforts. It can be deployed through an automated AWS CloudFormation Template (CFT).
+Query Commander is designed to be able to execute in a serverless environment leveraging AWS components including **S3**, **API Gateway**, **Lambda**, **DynamoDB**, and **Secrets Manager**.  This serverless architecture allows for a centrally installed and managed software platform while eliminating the need for traditional server management, reducing infrastructure costs and maintenance efforts. It can be deployed through an automated AWS CloudFormation Template (CFT).
 
 ### Simplified User Access & Management
 
@@ -20,4 +20,4 @@ In today's technology landscape, social engineering often exposes individual use
 
 ## Author
 
-Query Commander was originally developed by lnxusr1 in 2002 as a locally installed application.  It was designed at the time to be a universal database query tool as there were few options available to developers at the time.  As the years passed new tools were introduced to the market that filled this gap and Query Commander was eventually deprecated.  Over the years new gaps emerged in the tools available to developers and so in 2023 the original tool was reimagined into a browser-based query tool specifically to close the gaps in two areas:  (1) the lack of open source browser-based SQL tools that support the PostgreSQL database platform and (2) the poorly designed or outright lack of authentication and authorization mechanisms built into database engines that can leverage Microsoft's Active Directory platform.
+Query Commander was originally developed by lnxusr1 in 2002 as a locally installed application.  It was designed to be a universal database query tool as there were few options available to developers at the time.  As the years passed new tools were introduced to the market that filled this gap and Query Commander was eventually deprecated.  Over the years new gaps emerged in the tools available to developers and so in 2023 the original tool was reimagined into a browser-based query tool specifically to address two areas:  (1) the lack of open source browser-based SQL tools that support the PostgreSQL database platform and (2) the poorly designed or outright lack of authentication and authorization mechanisms built into database engines that can leverage Microsoft's Active Directory platform.

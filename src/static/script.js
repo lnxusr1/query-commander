@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.0.3";
+var version = "v0.1.0";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -467,7 +467,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true, as
 
             if (!as_more) {
                 if (data["records"].length == 0) {
-                    if ((data["output"]) && (data["output"].length > 0)) {
+                    if (((data["output"]) && (data["output"].length > 0)) && (data["headers"].length == 0)) {
                         $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
                     }
                     $(container).find('resultsnav').find('.btn-tab-refresh').prop('disabled', false);

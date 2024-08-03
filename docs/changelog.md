@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.0] - 2024-08-03
+
+- AWS Secrets Manager Integration for Connections Management
+- Updated global settings to support AWS authentication options
+- Bug fix for MySQL connector on DML statements not taking to output screen
+- Bug fix for MySQL explain plan generation/viewing
+- Updated versioning pattern  
+  *[Milestone ~ Major Features ~ Bug fixes/Minor Changes/Routine Builds]*
+
 ## [0.0.3] - 2024-08-02
 
 - Active Directory Authentication via LDAP/LDAPS

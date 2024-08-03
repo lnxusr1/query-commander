@@ -23,10 +23,13 @@ class Tokens:
 
         return { 
             "type": "token",
-            "expires": get_utc_now(), 
+            "expires": get_utc_now().strftime('%a, %d-%b-%Y %H:%M:%S UTC'), 
             "connections": [], 
             "username": None, 
-            "credentials": None 
+            "credentials": None,
+            "roles": [],
+            "connections": [],
+            "role_selected": ""
         }
 
     def _put_token_data(self):
@@ -340,19 +343,20 @@ class DynamoDBTokens(Tokens):
 
         self.table_name = kwargs.get("table")
 
-        aws_access_key = kwargs.get("aws_access_key", None)
-        aws_secret_key = kwargs.get("aws_secret_key", None)
-        profile_name = kwargs.get("profile_name", None)
-        region_name = kwargs.get("aws_region_name", "us-east-1")
+        #aws_access_key = kwargs.get("aws_access_key", None)
+        #aws_secret_key = kwargs.get("aws_secret_key", None)
+        #profile_name = kwargs.get("profile_name", None)
+        #region_name = kwargs.get("aws_region_name", "us-east-1")
 
-        if aws_access_key is not None and aws_secret_key is not None:
-            session = boto3.Session(aws_access_key_id=aws_access_key,aws_secret_access_key=aws_secret_key)
-        elif profile_name is not None:
-            session = boto3.Session(profile_name=profile_name)
-        else:
-            session = boto3.Session()
+        #if aws_access_key is not None and aws_secret_key is not None:
+        #    session = boto3.Session(aws_access_key_id=aws_access_key,aws_secret_access_key=aws_secret_key)
+        #elif profile_name is not None:
+        #    session = boto3.Session(profile_name=profile_name)
+        #else:
+        #    session = boto3.Session()
 
-        self.conn = session.client('dynamodb', region_name=region_name)
+        session = boto3.Session(**cfg.aws_credentials(kwargs))
+        self.conn = session.client('dynamodb', region_name=cfg.aws_region_name(kwargs))
 
     def _get_token_data(self):
         if self.token is None:
@@ -412,7 +416,7 @@ class DynamoDBTokens(Tokens):
         return True
 
 
-def get_tokenizer(connection_details, db_connections):
+def get_tokenizer(connection_details):
     if connection_details.get("type", "local") == "local":
         return LocalTokens(**cfg.sys_tokenizer)
     
@@ -425,4 +429,4 @@ def get_tokenizer(connection_details, db_connections):
     return Tokens(**cfg.sys_tokenizer)
 
 
-tokenizer = get_tokenizer(cfg.sys_tokenizer, cfg.sys_connections)
+tokenizer = get_tokenizer(cfg.sys_tokenizer)

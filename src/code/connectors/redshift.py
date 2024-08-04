@@ -11,11 +11,11 @@ from connectors import Connector
 from core.tokenizer import tokenizer
 
 
-class Postgres(Connector):
+class Redshift(Connector):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self._type = "postgres"
+        self._type = "redshift"
 
         self.host = kwargs.get("host", "localhost")
         self.port = kwargs.get("port", 5432)
@@ -804,8 +804,7 @@ class Postgres(Connector):
                         "order by acl_base.object_type, acl_base.object_schema, acl_base.object_name, acl_base.privilege_type"
                     ]
                 )
-            
-            if category == "grants":
+            else:
                 return " ".join(
                     [
                         in_str,
@@ -859,8 +858,8 @@ class Postgres(Connector):
             meta["classes"] = ["fas", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            return meta, ["Schemas", "Roles"]
-        
+            return meta, ["Schemas"]
+
         if type == "db-folder" and target == "Schemas":
             meta["type"] = "schema"
             meta["color"] = "purple"
@@ -868,16 +867,6 @@ class Postgres(Connector):
             meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
 
             sql = self._sql("schemas")
-            params = None
-
-        if type == "db-folder" and target == "Roles":
-            meta["type"] = "role"
-            meta["color"] = "gray"
-            meta["classes"] = ["fas", "fa-user"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "details"]
- 
-            sql = self._sql("roles")
             params = None
 
         if type == "schema":
@@ -915,16 +904,6 @@ class Postgres(Connector):
             sql = self._sql("mat_views")
             params = [path.get("schema")]
 
-        if type == "schema-folder" and target == "Sequences":
-            meta["type"] = "sequence"
-            meta["color"] = "navy"
-            meta["classes"] = ["fas", "fa-hashtag"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl", "details"]
-
-            sql = self._sql("sequences")
-            params = [path.get("schema")]
-
         if type == "schema-folder" and target == "Functions":
             meta["type"] = "function"
             meta["color"] = "navy"
@@ -951,7 +930,7 @@ class Postgres(Connector):
             meta["classes"] = ["far", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            return meta, ["Columns", "Constraints", "Indexes", "Policies", "Partitions", "Triggers"]
+            return meta, ["Columns", "Constraints", "Indexes", "Policies"]
         
         if type == "view":
             meta["type"] = "view-folder"
@@ -1038,26 +1017,6 @@ class Postgres(Connector):
             sql = self._sql("policies")
             params = [path.get("schema"), path.get("table")]
 
-        if type == "table-folder" and target == "Partitions":
-            meta["type"] = "table"
-            meta["color"] = "navy"
-            meta["classes"] = ["fas", "fa-table"]
-            meta["children"] = True
-            meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
-
-            sql = self._sql("partitions")
-            params = [path.get("schema"), path.get("table")]
-
-        if type == "table-folder" and target == "Triggers":
-            meta["type"] = "trigger"
-            meta["color"] = "purple"
-            meta["classes"] = ["far", "fa-file-lines"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl"]
-
-            sql = self._sql("triggers")
-            params = [path.get("schema"), path.get("table")]
-
         records = []
 
         if sql is not None:
@@ -1077,7 +1036,7 @@ class Postgres(Connector):
             sql = self._sql("schema")
             params = [target]
 
-        if type in ["table", "partition"]:
+        if type == "table":
             meta["type"] = "table"
 
             sql = self._sql("table")
@@ -1095,23 +1054,11 @@ class Postgres(Connector):
             sql = self._sql("mat_view")
             params = [path["schema"], path["mat_view"]]
 
-        if type == "sequence":
-            meta["type"] = "sequence"
-
-            sql = self._sql("sequence")
-            params = [path["schema"], path["sequence"]]
-
         if type == "policy":
             meta["type"] = "policy"
 
             sql = self._sql("policy")
             params = [path["schema"], path["table"], path["policy"]]
-
-        if type == "trigger":
-            meta["type"] = "trigger"
-            
-            sql = self._sql("trigger")
-            params = [path["schema"], path["table"], path["trigger"]]
 
         if type == "function":
             meta["type"] = "function"
@@ -1136,12 +1083,6 @@ class Postgres(Connector):
 
             sql = self._sql("constraint")
             params = [path["schema"], path["constraint"]]
-
-        if type == "partition":
-            meta["type"] = "partition"
-
-            sql = self._sql("partition")
-            params = [path["schema"], path["partition"]]
 
         statement = ""
 
@@ -1194,12 +1135,6 @@ class Postgres(Connector):
                 "meta": [], 
                 "sections": {
                     "Columns": { "type": "table", "headers": [], "records": [] },
-                    #"Constraints": { "type": "table", "headers": [], "records": [] },
-                    #"Indexes": { "type": "table", "headers": [], "records": [] },
-                    #"Partitions": { "type": "table", "headers": [], "records": [] },
-                    #"Triggers": { "type": "table", "headers": [], "records": [] },
-                    #"Policies": { "type": "table", "headers": [], "records": [] },
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
                     "Source": { "type": "code", "data": "" }
                 }
             }
@@ -1240,24 +1175,6 @@ class Postgres(Connector):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
 
-            #sql = self._sql("constraints")
-            #params = [path["schema"], target]
-            #for headers, record in self.fetchmany(sql, params, 1000):
-            #    data["sections"]["Constraints"]["headers"] = headers
-            #    data["sections"]["Constraints"]["records"].append(record)
-
-            #sql = self._sql("indexes")
-            #params = [path["schema"], target]
-            #for headers, record in self.fetchmany(sql, params, 1000):
-            #    data["sections"]["Indexes"]["headers"] = headers
-            #    data["sections"]["Indexes"]["records"].append(record)
-
-            sql = self._sql("grants")
-            params = ["table", path["schema"], target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
-
             sql = self._sql("table")
             params = [path["schema"], target]
             for headers, record in self.fetchmany(sql, params, 1000):
@@ -1268,7 +1185,6 @@ class Postgres(Connector):
                 "meta": [], 
                 "sections": {
                     "Columns": { "type": "table", "headers": [], "records": [] },
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
                     "Source": { "type": "code", "data": "" }
                 }
             }
@@ -1301,30 +1217,11 @@ class Postgres(Connector):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
 
-            #sql = self._sql("constraints")
-            #params = [path["schema"], target]
-            #for headers, record in self.fetchmany(sql, params, 1000):
-            #    data["sections"]["Constraints"]["headers"] = headers
-            #    data["sections"]["Constraints"]["records"].append(record)
-
-            #sql = self._sql("indexes")
-            #params = [path["schema"], target]
-            #for headers, record in self.fetchmany(sql, params, 1000):
-            #    data["sections"]["Indexes"]["headers"] = headers
-            #    data["sections"]["Indexes"]["records"].append(record)
-
-            sql = self._sql("grants")
-            params = ["view", path["schema"], target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
-        
         if type == "mat_view":
             data = { 
                 "meta": [], 
                 "sections": {
                     "Columns": { "type": "table", "headers": [], "records": [] },
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
                     "Source": { "type": "code", "data": "" }
                 }
             }
@@ -1362,64 +1259,10 @@ class Postgres(Connector):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
 
-            sql = self._sql("grants")
-            params = ["materialized view", path["schema"], target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
-
-        if type == "sequence":
-            data = { 
-                "meta": [], 
-                "sections": {
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
-                    "Source": { "type": "code", "data": "" }
-                }
-            }
-
-            sql = self._sql("sequence")
-            params = [path["schema"], target]
-
-            for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[2],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[3],
-                })
-
-
-                data["meta"].append({
-                    "name": "Schema",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Last Value",
-                    "value": record[4],
-                })
-
-                data["meta"].append({
-                    "name": "Data Type",
-                    "value": record[5],
-                })
-
-                data["sections"]["Source"]["data"] = record[0]
-
-            sql = self._sql("grants")
-            params = ["sequence", path["schema"], target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
-
         if type in ["function", "procedure"]:
             data = { 
                 "meta": [], 
                 "sections": {
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
                     "Source": { "type": "code", "data": "" }
                 }
             }
@@ -1454,58 +1297,6 @@ class Postgres(Connector):
                 })
 
                 data["sections"]["Source"]["data"] = record[0]
-
-            sql = self._sql("grants")
-            params = [type, path["schema"], target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
-
-        if type == "role":
-            data = { 
-                "meta": [], 
-                "sections": {
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
-                    "Source": { "type": "code", "data": "" }
-                }
-            }
-
-            sql = self._sql(type)
-            params = [target]
-
-            for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[2],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[3],
-                })
-
-                data["meta"].append({
-                    "name": "Schema",
-                    "value": record[1],
-                })
-                
-                data["meta"].append({
-                    "name": "Language",
-                    "value": record[4],
-                })
-
-                data["meta"].append({
-                    "name": "Arguments",
-                    "value": record[5],
-                })
-
-                data["sections"]["Source"]["data"] = record[0]
-
-            sql = self._sql("role-grants")
-            params = [target]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
 
         return data
         

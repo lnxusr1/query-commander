@@ -40,4 +40,14 @@ def get_db_connection(connection_name, database=None):
                         conn["database"] = database
                     return MySQL(**conn)
 
+                if cfg.sys_connections.get(conn_name, {}).get("type") in ["oracle", "oracledb"]:
+                    from connectors.oracle import Oracle
+                    conn = cfg.sys_connections.get(conn_name, {})
+                    return Oracle(**conn)
+                
+                if cfg.sys_connections.get(conn_name, {}).get("type") in ["redshift"]:
+                    from connectors.redshift import Redshift
+                    conn = cfg.sys_connections.get(conn_name, {})
+                    return Redshift(**conn)
+
     return None

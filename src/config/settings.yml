@@ -15,15 +15,16 @@ connections:
   items:
     - name: myconn1
       type: postgres
-      host: my-db-server.lan
+      host: localhost
       port: 5432
 
     - name: myconn2
-      type: postgres
-      host: localhost
-      port: 5432
-
-    - name: myconn3
       type: mysql
       host: localhost
       port: 3306
+
+    - name: myconn3
+      type: oracle
+      host: my-oracle-server.lan
+      port: 1521
+      service_name: freepdb1

@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2024-08-04
+
+- Oracle Database Support (and related docs)
+- New environment variable to move settings.yml to user-specified folder
+
 ## [0.1.0] - 2024-08-03
 
 - AWS Secrets Manager Integration for Connections Management

@@ -4,7 +4,7 @@ import yaml
 
 
 class Settings:
-    CONFIG_PATH = os.environ.get("DBSQL_PATH", os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
+    CONFIG_PATH = os.environ.get("QRYCOMM_CONFIG_PATH", os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
 
     def __init__(self):
         self.data = {}

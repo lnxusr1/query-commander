@@ -393,6 +393,7 @@ function doClearQueryResults(container) {
 
     //$(container).parent().find('div.section.statement div').text('');
     $(container).parent().find('div.section.data div').scrollTop(0);
+    $(container).parent().find('div.section.data div').scrollLeft(0);
     $(container).parent().find('div.section.output div').text('');
     $(container).parent().parent().find('.btn-tab-export').prop('disabled', true);
     $(container).parent().parent().find('.btn-tab-copy').prop('disabled', true);
@@ -647,8 +648,8 @@ function doWireUpQueryTab(tab_id) {
         }
 
         if (e.ctrlKey) {
-            if (e.keyCode == 81) {
-                $('.btn-execute').trigger('click');
+            if ((e.keyCode == 81) || (e.keyCode == 13)) {
+                $('#btn-execute').trigger('click');
             }
         }
 
@@ -854,6 +855,24 @@ function addQueryTab(check_exists=false) {
     $('core').append(tab);
     tab.addClass('active');
 
+    let do_load_conns = true;
+    for (let i=0; i<connection_list.length; i++) {
+        if (connection_list[i]["name"] == connection_selected) {
+            if (connection_list[i]["type"] == "oracle") {
+                tab.find('.editor-selector-area').hide();
+                do_load_conns = false;
+            }
+        }
+    }
+
+    doWireUpQueryTab('#' + tab_id);
+
+    $('#' + tab_id + ' textarea.editor').focus();
+
+    if (!do_load_conns) {
+        return;
+    }
+
     let meta_request = {
         command: "meta", 
         target: connection_selected, 
@@ -903,9 +922,6 @@ function addQueryTab(check_exists=false) {
         }
     });
 
-    doWireUpQueryTab('#' + tab_id);
-
-    $('#' + tab_id + ' textarea.editor').focus();
 }
 
 function doAddDetailTab(obj_details) {
@@ -1706,6 +1722,29 @@ $(document).ready(function() {
             $('.sidebar-context-menu').hide();
             $('overlay.chooser#chooser-select-connection').hide();
             $('overlay.chooser#ddl-data').hide();
+        }
+    });
+
+
+    $(document).keydown(function (e) {
+        if (["TEXTAREA","INPUT","A","BUTTON","LABEL"].includes($(document).find(':focus').prop('tagName'))) {
+            return true;
+        } else {
+            if (e.ctrlKey) {
+                if (e.keyCode == 65) {
+                    if ($('tab.active .btn-tab-results').hasClass('active')) {
+                        $('tab.active results table').find('td').addClass('selected');
+                        return false;
+                    }
+                } else {
+                    if (e.keyCode == 67) {
+                        if (($('tab.active .btn-tab-results').hasClass('active')) && ($('tab.active results table').find('.selected').length > 0)) {
+                            $('tab.active .btn-tab-copy').trigger('click');
+                            return false;
+                        }
+                    }
+                }
+            }
         }
     });
 });

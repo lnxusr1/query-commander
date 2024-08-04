@@ -20,11 +20,14 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
     data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False }
     try:
         if query_type == "explain":
-            sql = f"EXPLAIN {sql}"
+            if connection._type == "oracle":
+                sql = f"EXPLAIN PLAN FOR {sql}"
+            else:
+                sql = f"EXPLAIN {sql}"
 
         i = 0
         end_record = start_record + cfg.records_per_request
-        for headers, record in connection.fetchmany(sql, params=None, size=1000):
+        for headers, record in connection.fetchmany(sql, params=None, size=201):
             data["headers"] = headers
             if i >= start_record and i < end_record:
                 data["records"].append(record)

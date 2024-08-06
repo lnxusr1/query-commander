@@ -272,11 +272,14 @@ class Oracle(Connector):
         if category == "triggers":
             return "select trigger_name from sys.all_triggers where table_owner = :1 and table_name = :2 order by trigger_name"
 
-        if category == "partitions":
-            return "select partition_name from sys.all_tab_partitions where table_owner = :1 and table_name = :2 order by partition_position"
-        
         if category == "grants":
             return "select grantee as \"Role\", privilege as \"Privilege\", grantor as \"Granted By\", grantable as \"With Grant\" from sys.all_tab_privs where type = :1 and table_schema = :2 and table_name = :3 order by grantee, privilege"
+
+        if category == "partitions":
+            return "select PARTITION_NAME from sys.all_tab_partitions where table_owner = :1 and table_name = :2 order by PARTITION_POSITION"
+
+        if category == "subpartitions":
+            return "select subpartition_name from sys.all_tab_subpartitions where table_owner = :1 and table_name = :2 and partition_name = :3 order by SUBPARTITION_POSITION"
 
     def meta(self, type, target, path):
         sql = None
@@ -448,6 +451,24 @@ class Oracle(Connector):
 
             sql = self._sql("triggers")
             params = [path.get("database"), path.get("table")]
+
+        if type == "partition":
+            meta["type"] = "part-folder"
+            meta["color"] = "orange"
+            meta["classes"] = ["far", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            return meta, ["Subpartitions"]
+
+        if type == "part-folder" and target == "Subpartitions":
+            meta["type"] = "subpartition"
+            meta["color"] = "navy"
+            meta["classes"] = ["fas", "fa-table"]
+            meta["children"] = True
+            meta["menu_items"] = ["refresh", "copy"]
+
+            sql = self._sql("subpartitions")
+            params = [path.get("database"), path.get("table"), path.get("partition")]
 
         records = []
 

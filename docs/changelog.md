@@ -2,6 +2,10 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1] - 2024-08-06
+
+- Bug fix for Oracle Partitions and Subpartitions
+
 ## [0.2.0] - 2024-08-04
 
 - Oracle Database Support (and related docs)

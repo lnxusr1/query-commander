@@ -1,4 +1,5 @@
 import sys
+import os
 import logging
 import traceback
 
@@ -43,6 +44,9 @@ class Redshift(Connector):
     
     @property
     def notices(self):
+        if len(self._notices) == 0:
+            return "Query executed successfully."
+        
         return "\n".join([str(x) for x in self._notices])
 
     def open(self):
@@ -217,113 +221,29 @@ class Redshift(Connector):
             return " ".join(
                 [
                     "select tablename from (",
-                    "select nspname as schemaname, relname as tablename from pg_catalog.pg_class",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where pg_class.oid in (select partrelid from pg_catalog.pg_partitioned_table)",
-                    "and pg_class.oid not in (select inhrelid from pg_catalog.pg_inherits)",
-                    "union",
                     "select pg_tables.schemaname, pg_tables.tablename from pg_catalog.pg_tables",
                     "join pg_catalog.pg_namespace on pg_tables.schemaname = pg_namespace.nspname",
                     "join pg_catalog.pg_class on pg_tables.tablename = pg_class.relname and pg_namespace.oid = pg_class.relnamespace",
-                    "where pg_class.oid not in (select partrelid from pg_catalog.pg_partitioned_table)",
-                    "and pg_class.oid not in (select inhrelid from pg_catalog.pg_inherits)",
-                    ") x where schemaname = %s order by tablename"
+                    "where pg_class.relkind = 'r' and pg_class.oid not in (select inhrelid from pg_catalog.pg_inherits)",
+                    ") x where tablename not like 'mv\\_tbl\\_\\_%%\\_\\_%%' and schemaname = %s order by tablename"
                 ]
             )
         
         if category in ["table-detail", "partition-detail"]:
             return " ".join(
                 [
-                    "select schemaname, tablename, tableowner, tablespace, rowsecurity from pg_catalog.pg_tables where schemaname = %s and tablename = %s"
+                    "select schemaname, tablename, tableowner, tablespace from pg_catalog.pg_tables where schemaname = %s and tablename = %s"
                 ]
             )
 
         if category in ["table", "partition"]:
-            return " ".join(
-                [
-                    "WITH table_oid as (select CONCAT(schema_name, '.', table_name)::regclass as oid from (select %s as schema_name, %s as table_name) x), ",
-                    "attrdef AS (",
-                    "    SELECT",
-                    "        n.nspname,",
-                    "        c.relname,",
-                    "        pg_catalog.array_to_string(c.reloptions || array(select 'toast.' || x from pg_catalog.unnest(tc.reloptions) x), ', ') as relopts,",
-                    "        c.relpersistence,",
-                    "        a.attnum,",
-                    "        a.attname,",
-                    "        pg_catalog.format_type(a.atttypid, a.atttypmod) as atttype,",
-                    "        (SELECT substring(pg_catalog.pg_get_expr(d.adbin, d.adrelid, true) for 128) FROM pg_catalog.pg_attrdef d",
-                    "            WHERE d.adrelid = a.attrelid AND d.adnum = a.attnum AND a.atthasdef) as attdefault,",
-                    "        a.attnotnull,",
-                    "        (SELECT c.collname FROM pg_catalog.pg_collation c, pg_catalog.pg_type t",
-                    "            WHERE c.oid = a.attcollation AND t.oid = a.atttypid AND a.attcollation <> t.typcollation) as attcollation,",
-                    "        a.attidentity,",
-                    "        a.attgenerated",
-                    "    FROM pg_catalog.pg_attribute a",
-                    "    JOIN pg_catalog.pg_class c ON a.attrelid = c.oid",
-                    "    JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid",
-                    "    LEFT JOIN pg_catalog.pg_class tc ON (c.reltoastrelid = tc.oid)",
-                    "    WHERE a.attrelid = (select oid from table_oid limit 1)::regclass",
-                    "        AND a.attnum > 0",
-                    "        AND NOT a.attisdropped",
-                    "    ORDER BY a.attnum"
-                    "),",
-                    "coldef AS (",
-                    "    SELECT",
-                    "        attrdef.nspname,",
-                    "        attrdef.relname,",
-                    "        attrdef.relopts,",
-                    "        attrdef.relpersistence,",
-                    "        pg_catalog.format(",
-                    "            '%%I %%s%%s%%s%%s%%s',",
-                    "            attrdef.attname,",
-                    "            attrdef.atttype,",
-                    "            case when attrdef.attcollation is null then '' else pg_catalog.format(' COLLATE %%I', attrdef.attcollation) end,",
-                    "            case when attrdef.attnotnull then ' NOT NULL' else '' end,",
-                    "            case when attrdef.attdefault is null then ''",
-                    "                else case when attrdef.attgenerated = 's' then pg_catalog.format(' GENERATED ALWAYS AS (%%s) STORED', attrdef.attdefault)",
-                    "                    when attrdef.attgenerated <> '' then ' GENERATED AS NOT_IMPLEMENTED'",
-                    "                    else pg_catalog.format(' DEFAULT %%s', attrdef.attdefault)",
-                    "                end",
-                    "            end,",
-                    "            case when attrdef.attidentity<>'' then pg_catalog.format(' GENERATED %%s AS IDENTITY',",
-                    "                    case attrdef.attidentity when 'd' then 'BY DEFAULT' when 'a' then 'ALWAYS' else 'NOT_IMPLEMENTED' end)",
-                    "                else '' end",
-                    "        ) as col_create_sql",
-                    "    FROM attrdef",
-                    "    ORDER BY attrdef.attnum"
-                    "),",
-                    "tabdef AS (",
-                    "    SELECT",
-                    "        coldef.nspname,",
-                    "        coldef.relname,",
-                    "        coldef.relopts,",
-                    "        coldef.relpersistence,",
-                    "        string_agg(coldef.col_create_sql, E',\\n    ') as cols_create_sql",
-                    "    FROM coldef",
-                    "    GROUP BY",
-                    "        coldef.nspname, coldef.relname, coldef.relopts, coldef.relpersistence",
-                    ")",
-                    "SELECT",
-                    "    format(",
-                    "        'CREATE%%s TABLE %%I.%%I%%s%%s%%s;',",
-                    "        case tabdef.relpersistence when 't' then ' TEMP' when 'u' then ' UNLOGGED' else '' end,",
-                    "        tabdef.nspname,",
-                    "        tabdef.relname,",
-                    "        coalesce(",
-                    "            (SELECT format(E'\\n    PARTITION OF %%I.%%I %%s\\n', pn.nspname, pc.relname,",
-                    "                pg_get_expr(c.relpartbound, c.oid))",
-                    "                FROM pg_class c JOIN pg_inherits i ON c.oid = i.inhrelid",
-                    "                JOIN pg_class pc ON pc.oid = i.inhparent",
-                    "                JOIN pg_namespace pn ON pn.oid = pc.relnamespace",
-                    "                WHERE c.oid = (select oid from table_oid limit 1)::regclass),",
-                    "            format(E' (\\n    %%s\\n)', tabdef.cols_create_sql)",
-                    "        ),",
-                    "        case when tabdef.relopts <> '' then format(' WITH (%%s)', tabdef.relopts) else '' end,",
-                    "        coalesce(E'\\nPARTITION BY '||pg_get_partkeydef((select oid from table_oid limit 1)::regclass), '')",
-                    "    ) as table_create_sql",
-                    "FROM tabdef"
-                ]
-            )
+            file_name = os.path.join(os.path.dirname(__file__), "extra_sql", "redshift_tables.sql")
+            sql = None
+            if os.path.exists(file_name):
+                with open(file_name, "r", encoding="UTF-8") as fp:
+                    sql = fp.read()
+
+            return sql
 
         if category == "columns":
             return " ".join(
@@ -331,16 +251,40 @@ class Redshift(Connector):
                     "select a.attname as \"Column Name\",",
                     "a.attnum as \"#\", ",
                     "pg_catalog.format_type(a.atttypid, a.atttypmod) as \"Data Type\",",
-                    "case when a.attgenerated = 't' and a.attidentity = 't' then true else false end as \"Identity\","
                     "a.attnotnull as \"Not Null\",",
                     "pg_get_expr(d.adbin, d.adrelid) as \"Default\"",
                     "from pg_catalog.pg_attribute a",
                     "join pg_catalog.pg_class t on a.attrelid = t.oid",
+                    "join pg_catalog.pg_namespace ns on t.relnamespace = ns.oid",
                     "left join pg_catalog.pg_attrdef d on (a.attrelid, a.attnum) = (d.adrelid, d.adnum)",
                     "where a.attnum > 0 and not a.attisdropped",
-                    "and t.relnamespace::regnamespace::text = %s",
+                    "and ns.nspname = %s",
                     "and t.relname = %s",
                     "order by attnum"
+                ]
+            )
+        
+        if category == "view-columns":
+            return " ".join(
+                [
+                    "SELECT ",
+                    "    a.attname AS column_name,",
+                    "    a.atttypid::regtype AS data_type,",
+                    "    a.attnum AS ordinal_position,",
+                    "    a.attnotnull AS is_nullable",
+                    "FROM ",
+                    "    pg_attribute a",
+                    "JOIN ",
+                    "    pg_class c ON a.attrelid = c.oid",
+                    "JOIN ",
+                    "    pg_namespace n ON c.relnamespace = n.oid",
+                    "WHERE ",
+                    "    c.relkind = 'v'  ",
+                    "    AND n.nspname = %s",
+                    "    AND c.relname = %s",
+                    "    AND a.attnum > 0 ",
+                    "ORDER BY ",
+                    "    a.attnum"
                 ]
             )
         
@@ -354,487 +298,58 @@ class Redshift(Connector):
                 ]
             )
         
-        if category == "constraint":
-            return " ".join(
-                [
-                    "select CONCAT('ALTER TABLE ', pg_namespace.nspname, '.', pg_class.relname, ' ADD CONSTRAINT ', conname, ' ', pg_get_constraintdef(pg_constraint.oid), ';') as definition",
-                    "from pg_catalog.pg_constraint",
-                    "join pg_catalog.pg_namespace on pg_constraint.connamespace = pg_namespace.oid",
-                    "join pg_catalog.pg_class on pg_constraint.conrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace rns on pg_class.relnamespace = rns.oid",
-                    "where pg_namespace.nspname = %s and conname = %s;"
-                ]
-            )
+        #if category == "constraint":
+        #    return " ".join(
+        #        [
+        #            "select CONCAT('ALTER TABLE ', pg_namespace.nspname, '.', pg_class.relname, ' ADD CONSTRAINT ', conname, ' ', pg_get_constraintdef(pg_constraint.oid), ';') as definition",
+        #            "from pg_catalog.pg_constraint",
+        #            "join pg_catalog.pg_namespace on pg_constraint.connamespace = pg_namespace.oid",
+        #            "join pg_catalog.pg_class on pg_constraint.conrelid = pg_class.oid",
+        #            "join pg_catalog.pg_namespace rns on pg_class.relnamespace = rns.oid",
+        #            "where pg_namespace.nspname = %s and conname = %s;"
+        #        ]
+        #    )
         
-        if category == "indexes":
-            return " ".join(
-                [
-                    "select i.relname as \"Index Name\", case when pg_index.indisunique = 't' then true else false end as \"Unique\", CONCAT(pg_get_indexdef(indexrelid),';') as \"Expression\" from pg_catalog.pg_index",
-                    "join pg_catalog.pg_class t on pg_index.indrelid = t.oid",
-                    "join pg_catalog.pg_namespace on t.relnamespace = pg_namespace.oid",
-                    "join pg_catalog.pg_class i on pg_index.indexrelid = i.oid",
-                    "where not indisprimary and nspname = %s and t.relname = %s",
-                    "order by i.relname"
-                ]
-            )
-        
-        if category == "index":
-            return " ".join(
-                [
-                    "select CONCAT(pg_get_indexdef(indexrelid),';') as definition",
-                    "from pg_catalog.pg_index",
-                    "join pg_catalog.pg_class on pg_index.indexrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where nspname = %s and relname = %s;"
-                ]
-            )
-
         if category == "views":
-            return "select viewname from pg_catalog.pg_views where schemaname = %s order by viewname"
-        
+            return " ".join([
+                "select viewname ",
+                "from pg_catalog.pg_views", 
+                "    left join pg_catalog.stv_mv_info ",
+                "        on pg_views.schemaname = stv_mv_info.schema and pg_views.viewname = stv_mv_info.name and coalesce(stv_mv_info.db_name,'-1') in (%s,'-1')",
+                "where stv_mv_info.name is null and schemaname = %s order by viewname"
+            ])
+         
         if category == "view":
-            return "select CONCAT('CREATE OR REPLACE VIEW ', schemaname, '.', viewname, ' AS \n', definition) as definition, schemaname, viewname, viewowner from pg_catalog.pg_views where schemaname = %s and viewname = %s;"
+            return "select CONCAT(CONCAT(CONCAT(CONCAT(CONCAT('CREATE OR REPLACE VIEW ', schemaname), '.'), viewname), ' AS \n'), definition) as definition, schemaname, viewname, viewowner from pg_catalog.pg_views where schemaname = %s and viewname = %s;"
         
         if category == "mat_views":
-            return "select matviewname from pg_catalog.pg_matviews where schemaname = %s order by matviewname"
+            return "select name from pg_catalog.stv_mv_info where db_name = %s and schema = %s order by name"
         
         if category == "mat_view":
-            return "select CONCAT('CREATE MATERIALIZED VIEW ', schemaname, '.', matviewname, ' AS \n', definition) as definition, schemaname, matviewname, matviewowner, tablespace from pg_catalog.pg_matviews where schemaname = %s and matviewname = %s;"
-        
-        if category == "roles":
-            return "select rolname from pg_catalog.pg_roles order by rolname"
-
-        if category == "sequences":
-            return " ".join(
-                [
-                    "select relname from pg_catalog.pg_class",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where pg_class.relkind = 'S' and nspname = %s",
-                    "order by relname"
-                ]
-            )
-        
-        if category == "sequence":
-            return " ".join(
-                [
-                    "select CONCAT('CREATE SEQUENCE IF NOT EXISTS ', schemaname, '.', sequencename, ",
-                    "'\n INCREMENT BY ', increment_by, '\n MIN VALUE ', min_value, '\n MAX VALUE ', max_value, ",
-                    "'\n START WITH ', start_value, '\n CACHE ', cache_size, ",
-                    "case when not cycle then '\n NO CYCLE' else '' end, ",
-                    "case when owner_table is not null and owner_column is not null then CONCAT('\n OWNED BY ',owner_schema,'.',owner_table,'.',owner_column) else '' end,"
-                    "';') as definition, pg_sequences.schemaname, pg_sequences.sequencename, pg_sequences.sequenceowner, pg_sequences.last_value, pg_sequences.data_type",
-                    "from pg_catalog.pg_sequences ",
-                    "left join (",
-                    "select seq.relnamespace::regnamespace::text as seq_schema, seq.relname as seq_name,",
-                    "tab.relnamespace::regnamespace::text as owner_schema, ",
-                    "tab.relname as owner_table, attr.attname as owner_column",
-                    "from pg_class as seq",
-                    "join pg_depend as dep on (seq.relfilenode = dep.objid)",
-                    "join pg_class as tab on (dep.refobjid = tab.relfilenode)",
-                    "join pg_attribute as attr on (attr.attnum = dep.refobjsubid and attr.attrelid = dep.refobjid)",
-                    ") o on pg_sequences.schemaname = seq_schema and pg_sequences.sequencename = seq_name",
-                    "where schemaname = %s and sequencename = %s"
-                ]
-            )
-
-        if category == "partitions":
-            return " ".join(
-                [
-                    "select part.relname as partname from pg_catalog.pg_class base_part",
-                    "join pg_catalog.pg_inherits i on i.inhparent = base_part.oid",
-                    "join pg_catalog.pg_class part on part.oid = i.inhrelid",
-                    "where base_part.relnamespace::regnamespace::text = %s and base_part.relname = %s and part.relkind in ('r','p')",
-                    "order by part.relname"
-                ]
-            )
-        
-        if category == "policies":
-            return " ".join(
-                [
-                    "select polname from pg_catalog.pg_policy",
-                    "join pg_catalog.pg_class on pg_policy.polrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where nspname = %s and relname = %s",
-                    "order by polname"
-                ]
-            )
-        
-        if category == "policy":
-            return " ".join(
-                [
-                    "select CONCAT('CREATE POLICY ', polname, chr(10), '    ON ',",
-                    "nspname, '.', ",
-                    "relname, chr(10), '    AS ',",
-                    "case when polpermissive then 'PERMISSIVE' else 'RESTRICTIVE' end, chr(10), '    FOR ',",
-                    "case polcmd",
-                    "when 'r' then 'SELECT'",
-                    "when 'a' then 'INSERT'",
-                    "when 'w' then 'UPDATE'",
-                    "when 'd' then 'DELETE'",
-                    "when '*' then 'ALL'",
-                    "else null",
-                    "end, chr(10), '    TO ',",
-                    "array_to_string(case ",
-                    "when polroles = '{0}'::oid[] then string_to_array('public', '')::name[]",
-                    "else array(",
-                    "select rolname from pg_catalog.pg_roles where oid = ANY(polroles) order by rolname",
-                    ") end,', '), chr(10), '    USING (',",
-                    "pg_catalog.pg_get_expr(polqual, polrelid, false), ')',",
-                    "case when polwithcheck is not null then CONCAT(chr(10), '    WITH CHECK (',",
-                    "pg_catalog.pg_get_expr(polwithcheck, polrelid, false), ')') else '' end,",
-                    "';') as definition",
-                    "from pg_catalog.pg_policy",
-                    "join pg_catalog.pg_class on pg_policy.polrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where nspname::text = %s and relname::text = %s and polname::text = %s"
-                ]
-            )
-        
+            return "select definition, schemaname, viewname, viewowner from pg_catalog.pg_views where schemaname = %s and viewname = %s;"
+       
         if category == "functions":
             return " ".join(
                 [
-                    "select concat(proname, '(', pg_catalog.pg_get_function_identity_arguments(pg_proc.oid)::text, ')') as proname from pg_catalog.pg_proc ",
+                    "select proname from pg_catalog.pg_proc ",
                     "join pg_catalog.pg_namespace on pg_proc.pronamespace = pg_namespace.oid",
-                    "where nspname = %s and prokind = 'f' order by proname"
+                    "where nspname = %s AND proname not like 'mv\\_sp\\_\\_%%\\_\\_%%' ",
+                    "order by proname"
                 ]
             )
         
-        if category == "procedures":
-            return " ".join(
-                [
-                    "select concat(proname, '(', pg_catalog.pg_get_function_identity_arguments(pg_proc.oid)::text, ')') as proname from pg_catalog.pg_proc ",
-                    "join pg_catalog.pg_namespace on pg_proc.pronamespace = pg_namespace.oid",
-                    "where nspname = %s and prokind = 'p' order by proname"
-                ]
-            )
-
         if category in ["function", "procedure"]:
             return " ".join(
                 [
-                    "select CONCAT(trim(pg_catalog.pg_get_functiondef(pg_proc.oid)::text), ';') as definition, nspname, proname, proowner::regrole::text as ownername, pg_language.lanname, pg_catalog.pg_get_function_identity_arguments(pg_proc.oid) as arguments",
-                    "from pg_catalog.pg_proc",
+                    "select pg_catalog.pg_get_functiondef(pg_proc.oid) from pg_catalog.pg_proc ",
                     "join pg_catalog.pg_namespace on pg_proc.pronamespace = pg_namespace.oid",
-                    "left join pg_catalog.pg_language on pg_proc.prolang = pg_language.oid",
-                    "where nspname = %s and CONCAT(proname, '(', pg_catalog.pg_get_function_identity_arguments(pg_proc.oid), ')') = %s"
+                    "where nspname = %s AND proname not like 'mv\\_sp\\_\\_%%\\_\\_%%' ",
+                    "and proname = %s"
                 ]
             )
 
         if category == "sessions":
             return "select * from pg_catalog.pg_stat_activity"
-        
-        if category == "roles":
-            return "select rolname from pg_catalog.pg_roles order by rolname"
-        
-        if category == "role":
-            return " ".join(
-                [
-                    "select ",
-                    "CONCAT(",
-                    "    'CREATE ROLE ', rolname, ' WITH',",
-                    "    case when rolsuper = 't' then CONCAT(chr(10), '    SUPERUSER') else '' end,"
-                    "    case when rolcreatedb = 't' then CONCAT(chr(10), '    CREATEDB') else '' end,"
-                    "    case when rolcreaterole = 't' then CONCAT(chr(10), '    CREATEROLE') else '' end,"
-                    "    case when rolinherit = 'f' then CONCAT(chr(10), '    NOINHERIT') else '' end,"
-                    "    case when rolcanlogin = 't' then CONCAT(chr(10), '    LOGIN') else '' end,"
-                    "    case when rolreplication = 't' then CONCAT(chr(10), '    REPLICATION') else '' end,"
-                    "    case when rolbypassrls = 't' then CONCAT(chr(10), '    BYPASSRLS') else '' end,"
-                    "    case when rolvaliduntil is not null then CONCAT(chr(10), '    VALID UNTIL ', cast(rolvaliduntil as text)) else '' end,"
-                    "    case when rolconnlimit is not null then CONCAT(chr(10), '    CONNECTION LIMIT ', cast(rolconnlimit as text)) else '' end,"
-                    "    ';'"
-                    ") as definition,"
-                    "rolname, ",
-                    "case when rolsuper = 't' then true else false end as superuser, ",
-                    "case when rolinherit = 't' then true else false end as caninherit, ",
-                    "case when rolcreaterole = 't' then true else false end as createrole, ",
-                    "case when rolcreatedb = 't' then true else false end as createdb, ",
-                    "case when rolcanlogin = 't' then true else false end as canlogin, ",
-                    "case when rolreplication = 't' then true else false end as replication, ",
-                    "case when rolbypassrls = 't' then true else false end as bypassrls, ",
-                    "case when rolconnlimit <= 0 then null else rolconnlimit end as connlimit ",
-                    "from pg_catalog.pg_roles where rolname = %s"
-                ]
-            )
-        
-        if category == "triggers":
-            return " ".join(
-                [
-                    "select tgname from pg_catalog.pg_trigger",
-                    "join pg_catalog.pg_class on pg_trigger.tgrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where not tgisinternal and nspname = %s and pg_class.relname = %s",
-                    "order by tgname"
-                ]
-            )
-        
-        if category == "trigger":
-            return " ".join(
-                [
-                    "select CONCAT(trim(pg_catalog.pg_get_triggerdef(pg_trigger.oid)), ';') as definition",
-                    "from pg_catalog.pg_trigger",
-                    "join pg_catalog.pg_class on pg_trigger.tgrelid = pg_class.oid",
-                    "join pg_catalog.pg_namespace on pg_class.relnamespace = pg_namespace.oid",
-                    "where nspname = %s and relname = %s and tgname = %s"
-                ]
-            )
-        
-        if category in ["grants", "role-grants"]:
-            in_str = " ".join(
-                [
-                    "WITH rol AS (",
-                    "    SELECT oid,",
-                    "            rolname::text AS role_name",
-                    "        FROM pg_roles",
-                    "    UNION",
-                    "    SELECT 0::oid AS oid,",
-                    "            'public'::text",
-                    "),",
-                    "schemas AS ( ",
-                    "    SELECT oid AS schema_oid,",
-                    "            n.nspname::text AS schema_name,",
-                    "            n.nspowner AS owner_oid,",
-                    "            'schema'::text AS object_type,",
-                    "            coalesce ( n.nspacl, acldefault ( 'n'::\"char\", n.nspowner ) ) AS acl",
-                    "        FROM pg_catalog.pg_namespace n",
-                    "        WHERE n.nspname !~ '^pg_'",
-                    "            AND n.nspname <> 'information_schema'",
-                    "),",
-                    "classes AS ( ",
-                    "    SELECT schemas.schema_oid,",
-                    "            schemas.schema_name AS object_schema,",
-                    "            c.oid,",
-                    "            c.relname::text AS object_name,",
-                    "            c.relowner AS owner_oid,",
-                    "            CASE",
-                    "                WHEN c.relkind = 'r' THEN 'table'",
-                    "                WHEN c.relkind = 'v' THEN 'view'",
-                    "                WHEN c.relkind = 'm' THEN 'materialized view'",
-                    "                WHEN c.relkind = 'c' THEN 'type'",
-                    "                WHEN c.relkind = 'i' THEN 'index'",
-                    "                WHEN c.relkind = 'S' THEN 'sequence'",
-                    "                WHEN c.relkind = 's' THEN 'special'",
-                    "                WHEN c.relkind = 't' THEN 'TOAST table'",
-                    "                WHEN c.relkind = 'f' THEN 'foreign table'",
-                    "                WHEN c.relkind = 'p' THEN 'partitioned table'",
-                    "                WHEN c.relkind = 'I' THEN 'partitioned index'",
-                    "                ELSE c.relkind::text",
-                    "                END AS object_type,",
-                    "            CASE",
-                    "                WHEN c.relkind = 'S' THEN coalesce ( c.relacl, acldefault ( 's'::\"char\", c.relowner ) )",
-                    "                ELSE coalesce ( c.relacl, acldefault ( 'r'::\"char\", c.relowner ) )",
-                    "                END AS acl",
-                    "        FROM pg_class c",
-                    "        JOIN schemas",
-                    "            ON ( schemas.schema_oid = c.relnamespace )",
-                    "        WHERE c.relkind IN ( 'r', 'v', 'm', 'S', 'f', 'p' )",
-                    "),",
-                    "cols AS ( ",
-                    "    SELECT c.object_schema,",
-                    "            null::integer AS oid,",
-                    "            c.object_name || '.' || a.attname::text AS object_name,",
-                    "            'column' AS object_type,",
-                    "            c.owner_oid,",
-                    "            coalesce ( a.attacl, acldefault ( 'c'::\"char\", c.owner_oid ) ) AS acl",
-                    "        FROM pg_attribute a",
-                    "        JOIN classes c",
-                    "            ON ( a.attrelid = c.oid )",
-                    "        WHERE a.attnum > 0",
-                    "            AND NOT a.attisdropped",
-                    "),",
-                    "procs AS (",
-                    "    SELECT schemas.schema_oid,",
-                    "            schemas.schema_name AS object_schema,",
-                    "            p.oid,",
-                    "            p.proname::text AS object_name,",
-                    "            p.proowner AS owner_oid,",
-                    "            CASE p.prokind",
-                    "                WHEN 'a' THEN 'aggregate'",
-                    "                WHEN 'w' THEN 'window'",
-                    "                WHEN 'p' THEN 'procedure'",
-                    "                ELSE 'function'",
-                    "                END AS object_type,",
-                    "            pg_catalog.pg_get_function_arguments ( p.oid ) AS calling_arguments,",
-                    "            coalesce ( p.proacl, acldefault ( 'f'::\"char\", p.proowner ) ) AS acl",
-                    "        FROM pg_proc p",
-                    "        JOIN schemas",
-                    "            ON ( schemas.schema_oid = p.pronamespace )",
-                    "),",
-                    "udts AS (",
-                    "    SELECT schemas.schema_oid,",
-                    "            schemas.schema_name AS object_schema,",
-                    "            t.oid,",
-                    "            t.typname::text AS object_name,",
-                    "            t.typowner AS owner_oid,",
-                    "            CASE t.typtype",
-                    "                WHEN 'b' THEN 'base type'",
-                    "                WHEN 'c' THEN 'composite type'",
-                    "                WHEN 'd' THEN 'domain'",
-                    "                WHEN 'e' THEN 'enum type'",
-                    "                WHEN 't' THEN 'pseudo-type'",
-                    "                WHEN 'r' THEN 'range type'",
-                    "                WHEN 'm' THEN 'multirange'",
-                    "                ELSE t.typtype::text",
-                    "                END AS object_type,",
-                    "            coalesce ( t.typacl, acldefault ( 'T'::\"char\", t.typowner ) ) AS acl",
-                    "        FROM pg_type t",
-                    "        JOIN schemas",
-                    "            ON ( schemas.schema_oid = t.typnamespace )",
-                    "        WHERE ( t.typrelid = 0",
-                    "                OR ( SELECT c.relkind = 'c'",
-                    "                        FROM pg_catalog.pg_class c",
-                    "                        WHERE c.oid = t.typrelid ) )",
-                    "            AND NOT EXISTS (",
-                    "                SELECT 1",
-                    "                    FROM pg_catalog.pg_type el",
-                    "                    WHERE el.oid = t.typelem",
-                    "                        AND el.typarray = t.oid )",
-                    "),",
-                    "fdws AS (",
-                    "    SELECT null::oid AS schema_oid,",
-                    "            null::text AS object_schema,",
-                    "            p.oid,",
-                    "            p.fdwname::text AS object_name,",
-                    "            p.fdwowner AS owner_oid,",
-                    "            'foreign data wrapper' AS object_type,",
-                    "            coalesce ( p.fdwacl, acldefault ( 'F'::\"char\", p.fdwowner ) ) AS acl",
-                    "        FROM pg_foreign_data_wrapper p",
-                    "),",
-                    "fsrvs AS (",
-                    "    SELECT null::oid AS schema_oid,",
-                    "            null::text AS object_schema,",
-                    "            p.oid,",
-                    "            p.srvname::text AS object_name,",
-                    "            p.srvowner AS owner_oid,",
-                    "            'foreign server' AS object_type,",
-                    "            coalesce ( p.srvacl, acldefault ( 'S'::\"char\", p.srvowner ) ) AS acl",
-                    "        FROM pg_foreign_server p",
-                    "),",
-                    "all_objects AS (",
-                    "    SELECT schema_name AS object_schema,",
-                    "            object_type,",
-                    "            schema_name AS object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM schemas",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM classes",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM cols",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM procs",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM udts",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM fdws",
-                    "    UNION",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            null::text AS calling_arguments,",
-                    "            owner_oid,",
-                    "            acl",
-                    "        FROM fsrvs",
-                    "),",
-                    "acl_base AS (",
-                    "    SELECT object_schema,",
-                    "            object_type,",
-                    "            object_name,",
-                    "            calling_arguments,",
-                    "            owner_oid,",
-                    "            ( aclexplode ( acl ) ).grantor AS grantor_oid,",
-                    "            ( aclexplode ( acl ) ).grantee AS grantee_oid,",
-                    "            ( aclexplode ( acl ) ).privilege_type AS privilege_type,",
-                    "            ( aclexplode ( acl ) ).is_grantable AS is_grantable",
-                    "        FROM all_objects",
-                    ")"
-                ]
-            )
-
-            if category == "role-grants":
-                return " ".join(
-                    [
-                        in_str,
-                        "SELECT ",
-                        "        acl_base.object_type as \"Type\",",
-                        "        acl_base.object_schema as \"Schema\","
-                        "        acl_base.object_name as \"Object\",",
-                        "        acl_base.calling_arguments as \"Arguments\", ",
-                        "        owner.role_name AS \"Owner\", ",
-                        "        acl_base.privilege_type as \"Privilege\",",
-                        "        grantor.role_name AS \"Granted By\",",
-                        "        acl_base.is_grantable as \"With Grant\"",
-                        "    FROM acl_base",
-                        "    JOIN rol owner",
-                        "        ON ( owner.oid = acl_base.owner_oid )",
-                        "    JOIN rol grantor",
-                        "        ON ( grantor.oid = acl_base.grantor_oid )",
-                        "    JOIN rol grantee",
-                        "        ON ( grantee.oid = acl_base.grantee_oid )",
-                        "    WHERE grantee.role_name = %s ",
-                        "order by acl_base.object_type, acl_base.object_schema, acl_base.object_name, acl_base.privilege_type"
-                    ]
-                )
-            else:
-                return " ".join(
-                    [
-                        in_str,
-                        "SELECT /*acl_base.object_schema,",
-                        "        acl_base.object_type,",
-                        "        acl_base.object_name,",
-                        "        acl_base.calling_arguments, ",
-                        "        owner.role_name AS object_owner, */",
-                        "        grantee.role_name AS \"Role\",",
-                        "        acl_base.privilege_type as \"Privilege\",",
-                        "        grantor.role_name AS \"Granted By\",",
-                        "        acl_base.is_grantable as \"With Grant\"",
-                        "    FROM acl_base",
-                        "    JOIN rol owner",
-                        "        ON ( owner.oid = acl_base.owner_oid )",
-                        "    JOIN rol grantor",
-                        "        ON ( grantor.oid = acl_base.grantor_oid )",
-                        "    JOIN rol grantee",
-                        "        ON ( grantee.oid = acl_base.grantee_oid )",
-                        "    WHERE case when acl_base.object_type = 'partitioned table' then 'table' else acl_base.object_type end = %s ",
-                        "        and acl_base.object_schema = %s ",
-                        "        and CASE ",
-                        "            WHEN acl_base.object_type in ('function', 'procedure') then ",
-                        "                CONCAT(acl_base.object_name, '(', COALESCE(acl_base.calling_arguments,''), ')')",
-                        "            else ",
-                        "                acl_base.object_name ",
-                        "            end = %s",
-                        "order by acl_base.object_type, grantee.role_name, acl_base.privilege_type"
-                    ]
-                )
         
         return None
 
@@ -845,38 +360,21 @@ class Redshift(Connector):
 
         if type == "connection":
             meta["type"] = "database"
-            meta["color"] = "brown"
-            meta["classes"] = ["fa", "fa-database"]
-            meta["menu_items"] = ["refresh", "copy"]
-
-            sql = self._sql("databases")
-            params = None
-
-        if type == "database":
-            meta["type"] = "db-folder"
-            meta["color"] = "orange"
-            meta["classes"] = ["fas", "fa-folder"]
-            meta["menu_items"] = ["refresh"]
-
-            return meta, ["Schemas"]
-
-        if type == "db-folder" and target == "Schemas":
-            meta["type"] = "schema"
             meta["color"] = "purple"
             meta["classes"] = ["fas", "fa-file-lines"]
-            meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
+            meta["menu_items"] = ["refresh", "copy"]
 
             sql = self._sql("schemas")
             params = None
 
-        if type == "schema":
+        if type == "database":
             meta["type"] = "schema-folder"
             meta["color"] = "orange"
             meta["classes"] = ["fas", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            return meta, ["Tables", "Views", "Materialized Views", "Sequences", "Functions", "Procedures"]
-        
+            return meta, ["Tables", "Views", "Materialized Views", "Procedures"]
+
         if type == "schema-folder" and target == "Tables":
             meta["type"] = "table"
             meta["color"] = "navy"
@@ -884,7 +382,7 @@ class Redshift(Connector):
             meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
 
             sql = self._sql("tables")
-            params = [path.get("schema")]
+            params = [path.get("database")]
 
         if type == "schema-folder" and target == "Views":
             meta["type"] = "view"
@@ -893,7 +391,7 @@ class Redshift(Connector):
             meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
 
             sql = self._sql("views")
-            params = [path.get("schema")]
+            params = [self.database, path.get("database")]
 
         if type == "schema-folder" and target == "Materialized Views":
             meta["type"] = "mat_view"
@@ -902,27 +400,17 @@ class Redshift(Connector):
             meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
 
             sql = self._sql("mat_views")
-            params = [path.get("schema")]
-
-        if type == "schema-folder" and target == "Functions":
-            meta["type"] = "function"
-            meta["color"] = "navy"
-            meta["classes"] = ["fas", "fa-code"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl", "details"]
-
-            sql = self._sql("functions")
-            params = [path.get("schema")]
+            params = [self.database, path.get("database")]
 
         if type == "schema-folder" and target == "Procedures":
             meta["type"] = "procedure"
             meta["color"] = "navy"
             meta["classes"] = ["fas", "fa-code-fork"]
             meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl", "details"]
+            meta["menu_items"] = ["copy", "ddl"]
 
-            sql = self._sql("procedures")
-            params = [path.get("schema")]
+            sql = self._sql("functions")
+            params = [path.get("database")]
 
         if type == "table":
             meta["type"] = "table-folder"
@@ -930,7 +418,7 @@ class Redshift(Connector):
             meta["classes"] = ["far", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            return meta, ["Columns", "Constraints", "Indexes", "Policies"]
+            return meta, ["Columns", "Constraints"]
         
         if type == "view":
             meta["type"] = "view-folder"
@@ -946,7 +434,7 @@ class Redshift(Connector):
             meta["classes"] = ["far", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            return meta, ["Columns", "Indexes"]
+            return meta, ["Columns"]
 
         if type == "table-folder" and target == "Columns":
             meta["type"] = "column"
@@ -956,7 +444,7 @@ class Redshift(Connector):
             meta["menu_items"] = ["copy"]
 
             sql = self._sql("columns")
-            params = [path.get("schema"), path.get("table")]
+            params = [path.get("database"), path.get("table")]
 
         if type == "view-folder" and target == "Columns":
             meta["type"] = "column"
@@ -965,8 +453,8 @@ class Redshift(Connector):
             meta["children"] = False
             meta["menu_items"] = ["copy"]
 
-            sql = self._sql("columns")
-            params = [path.get("schema"), path.get("view")]
+            sql = self._sql("view-columns")
+            params = [path.get("database"), path.get("view").rstrip()]
 
         if type == "mat_view-folder" and target == "Columns":
             meta["type"] = "column"
@@ -975,47 +463,18 @@ class Redshift(Connector):
             meta["children"] = False
             meta["menu_items"] = ["copy"]
 
-            sql = self._sql("columns")
-            params = [path.get("schema"), path.get("mat_view")]
-
-        if type == "mat_view-folder" and target == "Indexes":
-            meta["type"] = "index"
-            meta["color"] = "purple"
-            meta["classes"] = ["far", "fa-file-lines"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl"]
-
-            sql = self._sql("indexes")
-            params = [path.get("schema"), path.get("mat_view")]
+            sql = self._sql("view-columns")
+            params = [path.get("database"), path.get("mat_view").rstrip()]
 
         if type == "table-folder" and target == "Constraints":
             meta["type"] = "constraint"
             meta["color"] = "purple"
             meta["classes"] = ["far", "fa-file-lines"]
             meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl"]
+            meta["menu_items"] = ["copy"]
 
             sql = self._sql("constraints")
-            params = [path.get("schema"), path.get("table")]
-
-        if type == "table-folder" and target == "Indexes":
-            meta["type"] = "index"
-            meta["color"] = "purple"
-            meta["classes"] = ["far", "fa-file-lines"]
-            meta["children"] = False
-            meta["menu_items"] = ["copy", "ddl"]
-
-            sql = self._sql("indexes")
-            params = [path.get("schema"), path.get("table")]
-
-        if type == "table-folder" and target == "Policies":
-            meta["type"] = "policy"
-            meta["color"] = "purple"
-            meta["classes"] = ["far", "fa-file-lines"]
-            meta["menu_items"] = ["copy", "ddl"]
-
-            sql = self._sql("policies")
-            params = [path.get("schema"), path.get("table")]
+            params = [path.get("database"), path.get("table")]
 
         records = []
 
@@ -1030,103 +489,48 @@ class Redshift(Connector):
         params = None
         meta = { "type": None }
 
-        if type == "schema":
-            meta["type"] = "schema"
-
-            sql = self._sql("schema")
-            params = [target]
-
         if type == "table":
             meta["type"] = "table"
 
             sql = self._sql("table")
-            params = [path["schema"], target]
+            params = [path.get("database"), target]
 
         if type == "view":
             meta["type"] = "view"
 
             sql = self._sql("view")
-            params = [path["schema"], path["view"]]
+            params = [path.get("database"), path.get("view").rstrip()]
 
         if type == "mat_view":
             meta["type"] = "mat_view"
 
             sql = self._sql("mat_view")
-            params = [path["schema"], path["mat_view"]]
-
-        if type == "policy":
-            meta["type"] = "policy"
-
-            sql = self._sql("policy")
-            params = [path["schema"], path["table"], path["policy"]]
-
-        if type == "function":
-            meta["type"] = "function"
-
-            sql = self._sql("function")
-            params = [path["schema"], path["function"]]
+            params = [path.get("database"), path.get("mat_view").rstrip()]
 
         if type == "procedure":
             meta["type"] = "procedure"
 
             sql = self._sql("procedure")
-            params = [path["schema"], path["procedure"]]
-
-        if type == "index":
-            meta["type"] = "index"
-
-            sql = self._sql("index")
-            params = [path["schema"], path["index"]]
+            params = [path.get("database"), path.get("procedure")]
 
         if type == "constraint":
             meta["type"] = "constraint"
 
             sql = self._sql("constraint")
-            params = [path["schema"], path["constraint"]]
+            params = [path.get("database"), path.get("constraint")]
 
-        statement = ""
+        statement = []
 
         if sql is not None:
             for _, record in self.fetchmany(sql, params, 1000):
-                statement = str(record[0])
+                statement.append(str(record[0]))
 
-        return meta, statement
+        return meta, "\n".join(statement)
 
     def details(self, type, target, path):
         sql = None
         params = None
         data = None
-
-        if type == "schema":
-            data = { 
-                "meta": [], 
-                "sections": {
-                    "Permissions": { "type": "table", "headers": [], "records": [] },
-                    "Source": { "type": "code", "data": "" }
-                }
-            }
-
-            sql = self._sql("schema")
-            params = [target]
-
-            for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[2],
-                })
-
-                data["sections"]["Source"]["data"] = record[0]
-
-            sql = self._sql("grants")
-            params = ["schema", record[1], record[1]]
-            for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Permissions"]["headers"] = headers
-                data["sections"]["Permissions"]["records"].append(record)
 
         if type == "table":
             #tables: name, owner, object id, has row level security, partition by, tablespace
@@ -1140,7 +544,7 @@ class Redshift(Connector):
             }
 
             sql = self._sql("table-detail")
-            params = [path["schema"], target]
+            params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
                 data["meta"].append({
@@ -1152,7 +556,6 @@ class Redshift(Connector):
                     "name": "Owner",
                     "value": record[2],
                 })
-
 
                 data["meta"].append({
                     "name": "Schema",
@@ -1164,21 +567,19 @@ class Redshift(Connector):
                     "value": record[3],
                 })
 
-                data["meta"].append({
-                    "name": "RLS Enabled",
-                    "value": record[4],
-                })
-
             sql = self._sql("columns")
-            params = [path["schema"], target]
+            params = [path.get("database"), target]
             for headers, record in self.fetchmany(sql, params, 1000):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
 
             sql = self._sql("table")
-            params = [path["schema"], target]
+            params = [path.get("database"), target]
+            statement = []
             for headers, record in self.fetchmany(sql, params, 1000):
-                data["sections"]["Source"]["data"] = record[0]
+                statement.append(str(record[0]))
+
+            data["sections"]["Source"]["data"] = "\n".join(statement)
     
         if type == "view":
             data = { 
@@ -1190,7 +591,7 @@ class Redshift(Connector):
             }
 
             sql = self._sql("view")
-            params = [path["schema"], target]
+            params = [path.get("database"), target.rstrip()]
 
             for _, record in self.fetchmany(sql, params, 1000):
                 data["meta"].append({
@@ -1211,8 +612,8 @@ class Redshift(Connector):
 
                 data["sections"]["Source"]["data"] = record[0]
 
-            sql = self._sql("columns")
-            params = [path["schema"], target]
+            sql = self._sql("view-columns")
+            params = [path.get("database"), target.rstrip()]
             for headers, record in self.fetchmany(sql, params, 1000):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
@@ -1227,7 +628,7 @@ class Redshift(Connector):
             }
 
             sql = self._sql("mat_view")
-            params = [path["schema"], target]
+            params = [path.get("database"), target.rstrip()]
 
             for _, record in self.fetchmany(sql, params, 1000):
                 data["meta"].append({
@@ -1246,15 +647,10 @@ class Redshift(Connector):
                     "value": record[1],
                 })
 
-                data["meta"].append({
-                    "name": "Tablespace",
-                    "value": record[4],
-                })
-
                 data["sections"]["Source"]["data"] = record[0]
 
-            sql = self._sql("columns")
-            params = [path["schema"], target]
+            sql = self._sql("view-columns")
+            params = [path.get("database"), target.rstrip()]
             for headers, record in self.fetchmany(sql, params, 1000):
                 data["sections"]["Columns"]["headers"] = headers
                 data["sections"]["Columns"]["records"].append(record)
@@ -1268,7 +664,7 @@ class Redshift(Connector):
             }
 
             sql = self._sql(type)
-            params = [path["schema"], target]
+            params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
                 data["meta"].append({

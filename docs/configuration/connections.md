@@ -127,7 +127,7 @@ The libraries used in the built-in connectors are listed below:
 | Oracle         | oracledb               | [https://oracle.github.io/python-oracledb/](https://oracle.github.io/python-oracledb/) |
 | MySQL          | mysql-connector-python | [https://dev.mysql.com/doc/connector-python/en/](https://dev.mysql.com/doc/connector-python/en/) |
 
-### Postgres / AWS Redshift
+### Postgres
 
 ``` shell
 pip install psycopg
@@ -136,6 +136,37 @@ pip install psycopg
 ``` yaml
 type: postgres
 ```
+
+### AWS Redshift
+
+``` shell
+pip install psycopg
+```
+
+``` yaml
+type: redshift
+```
+
+#### Example For Redshift Connection
+
+Note that Redshift requires a database be specified.
+
+``` yaml
+connections:
+  type: local
+  items:
+    - name: myconn1
+      type: redshift
+      host: my-redshift-server.amazonaws.com
+      port: 5439
+      database: mydbname
+      username: mydblogin
+      password: mydbpassword
+      options:
+        client_encoding: utf-8
+
+```
+
 
 ### MySQL/MariaDB
 
@@ -155,4 +186,23 @@ pip install oracledb
 
 ``` yaml
 type: oracle
+```
+
+#### Example for Oracle
+
+Note that oracle requires a service name be specified.
+
+``` yaml
+connections:
+  type: local
+  items:
+    - name: myconn3
+      type: oracle
+      host: my-oracle-server.lan
+      port: 1521
+      service_name: my_db_service_name
+      username: mydblogin
+      password: mydbpassword
+      roles:
+        - MyGroup
 ```

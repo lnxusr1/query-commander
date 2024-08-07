@@ -2,7 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.1] - 2024-08-06
+## [0.3.0] - 2024-08-06
+
+**MILESTONE:** All core databases that will be part of v1.0 are now supported!
+
+- AWS Redshift Database Support (and related docs)
+- Updated docs for successful Oracle connection
+
+## [0.2.1] - 2024-08-05
 
 - Bug fix for Oracle Partitions and Subpartitions
 

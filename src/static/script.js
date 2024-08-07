@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.2.1";
+var version = "v0.3.0";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -858,7 +858,7 @@ function addQueryTab(check_exists=false) {
     let do_load_conns = true;
     for (let i=0; i<connection_list.length; i++) {
         if (connection_list[i]["name"] == connection_selected) {
-            if (connection_list[i]["type"] == "oracle") {
+            if (["oracle","redshift"].includes(connection_list[i]["type"])) {
                 tab.find('.editor-selector-area').hide();
                 do_load_conns = false;
             }

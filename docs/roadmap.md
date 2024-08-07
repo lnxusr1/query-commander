@@ -29,7 +29,7 @@ The application roadmap will continue to evolve over the next several months as 
     - PostgreSQL database connector - **COMPLETE**
     - Oracle database connector - **COMPLETE**
     - MySQL/MariaDB database connector - **COMPLETE**
-    - AWS Redshift database connector
+    - AWS Redshift database connector - **COMPLETE**
 
 - Database Connector Managers
     - Static Settings file (*settings.yml*) - **COMPLETE**

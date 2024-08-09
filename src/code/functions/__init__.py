@@ -53,14 +53,24 @@ def process_request(request):
             tokenizer.set("roles", authenticator.roles)
             resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, }
 
-            if len(authenticator.roles) > 1:
-                resp_data["role_selected"] = ""
-                tokenizer.set("role_selected", resp_data["role_selected"])
-                resp_data["connections"] = []
-            else:    
-                resp_data["role_selected"] = authenticator.roles[0]
-                tokenizer.set("role_selected", resp_data["role_selected"])
-                resp_data["connections"] = tokenizer.connections
+            #if len(authenticator.roles) > 1:
+            #    resp_data["role_selected"] = ""
+            #    tokenizer.set("role_selected", resp_data["role_selected"])
+            #    resp_data["connections"] = []
+            #else:    
+            #    resp_data["role_selected"] = authenticator.roles[0]
+            #    tokenizer.set("role_selected", resp_data["role_selected"])
+            #    resp_data["connections"] = tokenizer.connections
+            #    if len(tokenizer.connections) == 0:
+            #        # No roles for this login.
+            #        resp.output({ "ok": False })
+            #        sys.exit()
+            resp_data["role_selected"] = authenticator.roles[0]
+            tokenizer.set("role_selected", resp_data["role_selected"])
+            resp_data["connections"] = tokenizer.connections
+            if len(tokenizer.connections) == 0:
+                resp.output({ "ok": False })
+                sys.exit()
 
             if authenticator.use_token:
                 tokenizer.set(

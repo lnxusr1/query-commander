@@ -88,7 +88,7 @@ core > tab.query > item > navmenu *:first-child { flex: 1; }
 core > tab.query > item > navmenu button { display: block; border: none; margin: 0; padding: 6px 0; text-align: center; width: 25px; background: transparent; font-size: 0.85rem; }
 core > tab.query > item > navmenu button:hover { background: var(--button-hover); }
 core > tab.query > item > navmenu button.active { background-color: var(--button-active); }
-core > tab.query .editor { border: none; border-radius: 0; overflow: scroll; outline: 0; margin: 0; padding: 4px; white-space: pre; resize: none; }
+core > tab.query .editor { border: none; border-radius: 0; overflow: scroll; outline: 0; margin: 0; padding: 4px; white-space: pre; resize: none; font-size: 0.95rem; }
 core > tab.query > item > results { display: flex; flex-direction: row; position: relative; width: calc(100% - 26px); }
 core > tab.query > item > results > * { flex: 1; }
 core > tab.query > item > results .statement,

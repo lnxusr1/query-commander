@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2024-08-08
+
+- Bug fix for multiple roles
+- Removed role chooser
+
 ## [0.3.0] - 2024-08-06
 
 **MILESTONE:** All core databases that will be part of v1.0 are now supported!

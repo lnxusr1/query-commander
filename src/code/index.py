@@ -13,6 +13,8 @@ logging.basicConfig(
     level=logging.DEBUG)
 
 logging.getLogger("psycopg.pq").setLevel(logging.INFO)
+logging.getLogger("botocore").setLevel(logging.INFO)
+logging.getLogger("urllib3").setLevel(logging.INFO)
 
 request = Request(**os.environ)
 if request.headers.get("CONTENT_LENGTH", 0) > 0:

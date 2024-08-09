@@ -1,6 +1,7 @@
 import os
 import json
 import yaml
+import logging
 
 
 class Settings:
@@ -28,7 +29,7 @@ class Settings:
                 
                 self._connections = conns
 
-            if self.data.get("connections", {}).get("type", "local") == "secretsmanager":
+            if self.data.get("connections", {}).get("type", "local") in ["secretsmanager", "secretmanager"]:
                 import boto3
                 from botocore.exceptions import ClientError
 

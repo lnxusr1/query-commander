@@ -155,12 +155,20 @@ class Tokens:
             return [{ "name": str(x), "type": cfg.sys_connections.get(x).get("type") } for x in cfg.sys_connections]
         else:
             self._get()
-            if self.role_selected != "":
+            if True:
+#            if self.role_selected != "":
+#                if self.role_selected not in self.roles:
+#                    return []
+
                 conns = []
                 for x in cfg.sys_connections:
+#                    if self.role_selected in cfg.sys_connections.get(x).get("roles"):
+#                        conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
                     for r in self.roles:
                         if r in cfg.sys_connections.get(x).get("roles"):
                             conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
+                            break
+
                 return conns
             else:
                 return []

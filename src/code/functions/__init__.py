@@ -28,9 +28,9 @@ def process_request(request):
             resp.output({ 
                 "ok": True, 
                 "username": tokenizer.username,
-                "roles": tokenizer.roles, 
-                "role_selected": tokenizer.role_selected, 
-                "connections": tokenizer.connections 
+                #"roles": [tokenizer.role_selected], # tokenizer.roles as list
+                #"role_selected": tokenizer.role_selected, 
+                "connections": tokenizer.connections()
             })
 
             sys.exit()
@@ -51,6 +51,7 @@ def process_request(request):
 
             tokenizer.set("username", username)
             tokenizer.set("roles", authenticator.roles)
+            tokenizer.set("connections", tokenizer.connections())
             resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, }
 
             #if len(authenticator.roles) > 1:
@@ -67,9 +68,9 @@ def process_request(request):
             #        sys.exit()
             resp_data["role_selected"] = authenticator.roles[0]
             tokenizer.set("role_selected", resp_data["role_selected"])
-            resp_data["connections"] = tokenizer.connections
-            if len(tokenizer.connections) == 0:
-                resp.output({ "ok": False })
+            resp_data["connections"] = tokenizer.connections()
+            if len(resp_data["connections"]) == 0:
+                resp.output({ "ok": False, "error": "No connections." })
                 sys.exit()
 
             if authenticator.use_token:
@@ -108,7 +109,11 @@ def process_request(request):
 
     if not tokenizer.validate():
         resp = Response()
-        logging.error(f"[{username}@{tokenizer.remote_addr}] Failed validation")
+        username = tokenizer.username
+        if username is None:
+            logging.error(f"[{tokenizer.remote_addr}] Invalid token - {tokenizer.token}")
+        else:
+            logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed validation - {tokenizer.token}")
         resp.output({ "ok": False, "logout": True })
         sys.exit()
 
@@ -127,6 +132,60 @@ def process_request(request):
 
         logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Role not found - {tokenizer.token}")
         resp.output({ "ok": False })
+        sys.exit()
+
+    if command == "get-profile":
+        try:
+            prf = tokenizer.get_profiler()
+            resp = Response()
+
+            tabs = prf.get("tabs", [])
+            page_settings = prf.get("settings", {})
+
+            resp.output({
+                "ok": True,
+                "tabs": tabs,
+                "settings": page_settings
+            })
+
+        except:
+            resp.output({ "ok": False })
+        
+        sys.exit()
+
+    if command == "save-profile":
+        try:
+            prf = tokenizer.get_profiler()
+            resp = Response()
+
+            prf.set("tabs", request.json_data.get("tabs", []))
+            prf.set("settings", request.json_data.get("settings", {}))
+            ret = prf.update()
+
+            resp.output({
+                "ok": ret
+            })
+
+        except:
+            raise
+            resp.output({ "ok": False })
+
+        sys.exit()
+
+    if command == "delete-profile":
+        try:
+            prf = tokenizer.get_profiler()
+            resp = Response()
+
+            ret = prf.remove()
+
+            resp.output({
+                "ok": ret
+            })
+
+        except:
+            resp.output({ "ok": False })
+
         sys.exit()
 
     if command == "meta":

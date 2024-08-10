@@ -8,6 +8,7 @@ var connection_list = [];
 var connection_selected = "";
 var tab_counter = 0;
 var escape_key = false;
+var fade_login = false;
 
 function doGetCurrentDate() {
     var now = new Date();
@@ -814,7 +815,7 @@ function doWireUpQueryTab(tab_id) {
     doClearQueryResults($(tab_id + ' .data'));
 }
 
-function addQueryTab(check_exists=false) {
+function addQueryTab(check_exists, connection_name, database="") {
 
     if (check_exists) {
         if ($('core > tablist').children().length > 2) { return; }
@@ -828,7 +829,7 @@ function addQueryTab(check_exists=false) {
     tab.html($('templates > tab_query').html())
     tab.prop('id', tab_id);
     
-    tab_button.find('span').text(connection_selected);
+    tab_button.find('span').text(connection_name);
     tab_button.find('a').attr('data-target', '#'+tab_id);
     tab_button.find('button').click(function() {
         let t_id = $(this).parent().attr('data-target');
@@ -857,7 +858,7 @@ function addQueryTab(check_exists=false) {
 
     let do_load_conns = true;
     for (let i=0; i<connection_list.length; i++) {
-        if (connection_list[i]["name"] == connection_selected) {
+        if (connection_list[i]["name"] == connection_name) {
             if (["oracle","redshift"].includes(connection_list[i]["type"])) {
                 tab.find('.editor-selector-area').hide();
                 do_load_conns = false;
@@ -875,10 +876,10 @@ function addQueryTab(check_exists=false) {
 
     let meta_request = {
         command: "meta", 
-        target: connection_selected, 
+        target: connection_name, 
         type: "connection", 
         path: {
-            connection: connection_selected
+            connection: connection_name
         }
     };
 
@@ -910,6 +911,7 @@ function addQueryTab(check_exists=false) {
                     let o = $('<option></option>');
                     o.val(data.items[i]);
                     o.text(data.items[i]);
+                    if (data.items[i] == database) { o.prop('selected', true); }
                     $('#' + tab_id + ' > item:first-child select').append(o);
                 }
             }
@@ -926,7 +928,7 @@ function addQueryTab(check_exists=false) {
 
 function doAddDetailTab(obj_details) {
     
-    let data_encoded = JSON.stringify(obj_details);
+    //let data_encoded = JSON.stringify(obj_details);
     obj_details["command"] = "details";
 
     $.ajax({
@@ -981,13 +983,6 @@ function doAddDetailTab(obj_details) {
 
             obj_details["breadcrumbs"].reverse();
             tab.find('breadcrumbs').text(obj_details["breadcrumbs"].join(' : '));
-
-            //TODO: FIX THIS
-            /*
-            $(tab).find('.section.table').each(function(i, o) {
-                doLoadQueryData($(this), {}, false);
-            });
-            */
 
             $('#' + tab_id + ' settings > div').empty();
             for (let i=0; i < data.properties.meta.length; i++) {
@@ -1334,17 +1329,6 @@ function doRefreshConnections() {
     }
 }
 
-function doLoadPage() {
-    doRefreshConnections();
-    
-    if (connection_list.length == 1) { connection_selected = connection_list[0]["name"]; }
-    if (connection_selected != "") { 
-        if ($('core > tablist').children().length == 2) {
-            addQueryTab(true);
-        }
-    }
-}
-
 function doShowConnectionDialog() {
     connection_list.sort((a, b) => {
         if (a.name < b.name) {
@@ -1391,136 +1375,31 @@ function doShowConnectionDialog() {
     $('#chooser-select-connection').fadeIn('fast');
 }
 
-function doShowRoleDialog() {
-    role_list.sort();
-    $('#chooser-select-role .message').find('ul').empty();
-
-    for (let i = 0; i < role_list.length; i++) {
-        let option = $('<li><input/><label></label></li>');
-        option.find('input').prop('type','radio');
-        option.find('input').prop('name','role');
-        option.find('input').val(role_list[i]);
-        option.find('input').prop('id','role'+i);
-        option.find('label').prop('for','role'+i);
-        option.find('label').text(role_list[i]);
-
-        option.appendTo($('#chooser-select-role .message').find('ul'));
-    }
-
-    if ($('#role_selected').text() == "<default>") {
-        $('#chooser-select-role').find('ul').find('input').first().prop('checked', true);
-    } else {
-        $('#chooser-select-role').find('ul').find('input').each(function(i,o) {
-            if ($(o).val() == $('#role_selected').text()) {
-                $(o).prop('checked', true);
-            }
-        });
-    }
-
-    if ($('#role_selected').text() == "<default>") { 
-        $('#chooser-select-role .btn-chooser-close').hide(); 
-    } else { 
-        $('#chooser-select-role .btn-chooser-close').show(); 
-    }
-    
-    $('#chooser-select-role').fadeIn('fast');
-}
-
-function doSelectRole() {
-    let role_chosen = $('input[name="role"]:checked').val();
-    let data = {
-        "command": "select-role",
-        "role": role_chosen
-    }
-    
-    $.ajax({
-        url: site_path,
-        dataType: "json",
-        method: "POST",
-        crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
-        data: JSON.stringify(data),
-        contentType: "application/json",
-        beforeSend: function(xhr) {
-            $('#chooser-select-role button').prop('disabled', true);
-        },
-        success: function(data) {
-            if (data.ok) {
-                $('#role_selected').text(role_chosen);
-                connection_list = data.connections;
-                doLoadPage();
-                $('#chooser-select-role').fadeOut('fast');
-                if (connection_list == 0) {
-                    alert('No connections found!')
-                } else {
-                    connection_selected = connection_list[0]["name"];
-                    if (connection_list.length > 1) {
-                        doShowConnectionDialog();
-                    } else {
-                        addQueryTab(true);
-                    }
-                }
-            } else {
-                alert("Unable to change active role to selected value.");
-                if (data.logout) { doLogout(); }
-            }
-        },
-        complete: function(data) {
-            $('#chooser-select-role button').prop('disabled', false);
-        },
-        error: function() {
-
-        }
-    });
-}
-
 function doLoginSuccess(data, hide_login) {
     if (current_user != data.username) {
         doClearPage();
         current_user = data.username;
     }
 
-    role_list = data.roles;
     connection_list = data.connections;
 
-    if (role_list.length == 0) {
-        $('#login-error').text('Unable to determine available roles.');
-        $('#login-error').show();
-        $('#login').show();
-        return false;
-    }
-
     doStartTimer();
-    if (data.role_selected != "") {
-        $('#role_selected').text(data.role_selected);
-        $('#chooser-select-role').hide();
-        if (role_list.length == 1) { $('.btn-open-role-chooser').hide(); }
 
-        if (connection_selected == "") {
-            if (connection_list.length == 1) {
-                connection_selected = connection_list[0]["name"];
-                doLoadPage();
-            } else {
-                doRefreshConnections();
-                doShowConnectionDialog();
-            }
+    if (connection_selected == "") {
+        doRefreshConnections();
+
+        if (connection_list.length == 1) {
+            connection_selected = connection_list[0]["name"];
         }
-    } else {
-        $('#role_selected').text('<default>');
-        doShowRoleDialog();
     }
 
-    //doLoadPage();
-    if (hide_login) {
-        $('#login').hide();
-    } else {
-        $('#login').fadeOut('fast');
-    }
+    doLoadProfile();
 
 }
 
 function doLogin() { 
 
+    fade_login = true;
     role_list = [];
     connection_list = [];
     connection_selected = "";
@@ -1652,6 +1531,100 @@ function doCheckSession(extend=false) {
     });
 }
 
+function doLoadProfile() {
+
+    let data = {
+        command: 'get-profile'
+    }
+
+    $.ajax({
+        url: site_path,
+        dataType: "json",
+        method: "POST",
+        crossDomain: true,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        error: function() {
+        },
+        success: function(data) {
+            if (!data.ok) {
+                alert("Unable to get profile.");
+                if (data.logout) { doLogout(); }
+                return;
+            }
+
+            if (data.tabs) {
+                for (let i=data.tabs.length-1; i>=0; i--) {
+                    addQueryTab(false, data.tabs[i]["name"], data.tabs[i]["database"]);
+                    $('core > tab.active textarea.editor').val(data.tabs[i]["content"]);
+                }
+            }
+        },
+        complete: function() {
+            if ($('core > tablist').children().length == 2) {
+                if (connection_selected != "") { 
+                    addQueryTab(true, connection_selected);
+                } else {
+                    doShowConnectionDialog();
+                }
+            }
+
+            if (!fade_login) {
+                $('#login').hide();
+            } else {
+                $('#login').fadeOut('fast');
+            }
+        }
+    })
+}
+
+function doSaveProfile() {
+    let tab_items = [];
+    $('tablist').find('item').each(function(i,o) {
+        let tab_name = $(o).find('a').text();
+        let tab_content = $($(o).find('a').attr('data-target')).find('.editor').val();
+        let tab_db_name = $($(o).find('a').attr('data-target')).find('select option:selected').val();
+        if (tab_name != '') {
+            console.log(tab_name);
+            let tab_data = {
+                name: tab_name,
+                database: tab_db_name,
+                content: tab_content
+            }
+
+            tab_items.push(tab_data);
+        }
+    });
+
+    let data = {
+        command: "save-profile",
+        tabs: tab_items,
+        settings: {}
+    }
+
+    $.ajax({
+        url: site_path,
+        dataType: "json",
+        method: "POST",
+        crossDomain: true,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        error: function() {
+        },
+        success: function(data) {
+            if (data.ok) {
+            } else {
+                alert("Unable to save profile.");
+                if (data.logout) { doLogout(); }
+            }
+        },
+        complete: function() {
+        }
+    })
+}
+
 $(document).ready(function() {
     $('version').text(version);
 
@@ -1671,23 +1644,17 @@ $(document).ready(function() {
         return false;
     });
 
-    //TODO: FIX THESE vvv
-    $('#chooser-select-role .btn-chooser-close').click(function() { $('#chooser-select-role').fadeOut('fast'); return false; });
-    $('.btn-open-role-chooser').click(function() { doShowRoleDialog(); return false; });
-    $('#chooser-select-role .btn-chooser-select').click(function() { doSelectRole(); return false; });
-    
     $('#chooser-select-connection .btn-chooser-close').click(function() { $('#chooser-select-connection').fadeOut('fast'); return false; });
     $('#chooser-select-connection .btn-chooser-select').click(function() { 
         connection_selected = $('input[name="connection"]:checked').val(); 
-        addQueryTab();
+        addQueryTab(false, connection_selected);
         $('#chooser-select-connection').fadeOut('fast');
         return false; 
     });
-    //TODO: FIX ABOVE ^^^
     
     $('#btn-new-tab').click(function() {
         if ((connection_list.length == 1) && (connection_selected == connection_list[0]["name"])) {
-            addQueryTab();
+            addQueryTab(false, connection_selected);
         } else {
             doShowConnectionDialog();
         }
@@ -1707,6 +1674,11 @@ $(document).ready(function() {
             $('tab.active textarea.editor').focus();
             doManageTab($('tab.active textarea.editor'), false);
         }
+        return false;
+    });
+
+    $('#btn-save-profile').click(function() {
+        doSaveProfile();
         return false;
     });
 

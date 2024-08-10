@@ -18,6 +18,7 @@ The settings file is broken up into sections as follows:
 | :------ | :---------- |
 | [**settings**](options.md) | Stores general settings and defaults for other sections |
 | [**authenticator**](authenticator.md) | Authentication and Authorization options |
+| [**profiler**](profiler.md) | User Profile storage (Local, DynamoDB) |
 | [**tokenizer**](tokenizer.md) | Session token storage (Local, DynamoDB, Redis) |
 | [**connections**](connections.md) | Connection list definition and connector options |
 
@@ -29,17 +30,21 @@ Below is a simple example of a self-contained installation:
 settings:
   records_per_request: 200
 
+authenticator:
+  type: local
+
+profiler:
+  type: local
+  path: /tmp/profiles
+
 tokenizer:
   type: local
   timeout: 20 
   safe_password: abc123456abcdef
   path: /tmp/tokens
 
-authenticator:
-  type: local
-
 connections:
-  type: local
+  type: config
   items:
     - name: myconn1
       type: postgres
@@ -58,12 +63,6 @@ settings:
   aws_access_key: your-access-key-here
   aws_secret_key: your-secret-key-here
 
-tokenizer:
-  type: dynamodb
-  timeout: 20
-  safe_password: abc123456abcdef
-  table: session_tokens
-
 authenticator:
     type: ldap
     host: your-microsoft-domain-server
@@ -75,7 +74,20 @@ authenticator:
         base_dn: dc=example,dc=com
         user_search_filter: (&(objectClass=user)(aAMAccountName={USERNAME}))
 
+profiler:
+  type: dynamodb
+  table: profiles
+
+tokenizer:
+  type: dynamodb
+  timeout: 20
+  safe_password: abc123456abcdef
+  table: session_tokens
+
 connections:
   type: secretsmanager
-  prefix: secret-group-name
+  filters:
+    - Key: name
+      Values:
+        - secret-group-name
 ```

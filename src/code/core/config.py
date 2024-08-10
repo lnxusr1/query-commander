@@ -3,75 +3,37 @@ import json
 import yaml
 import logging
 
+from core.connections import Connections
 
 class Settings:
     CONFIG_PATH = os.environ.get("QRYCOMM_CONFIG_PATH", os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
 
     def __init__(self):
         self.data = {}
-        self._connections = None
+
         with open(os.path.join(self.CONFIG_PATH, "settings.yml"), "r", encoding="UTF-8") as fp:
             self.data = yaml.safe_load(fp)
 
-    @property
-    def sys_connections(self):
-        if self._connections is None:
-            if self.data.get("connections", {}).get("type", "local") == "local":
-                src_conns = self.data.get("connections", {}).get("items")
-                conns = {}
-                if src_conns is not None:
-                    if isinstance(src_conns, list):
-                        for conn in src_conns:
-                            if isinstance(conn, dict):
-                                c_name = conn.get("name", conn.get("host"))
-                                if c_name is not None:
-                                    conns[c_name] = conn
-                
-                self._connections = conns
+        self._connections = Connections(global_settings=self, **self.data.get("connections", {}))
 
-            if self.data.get("connections", {}).get("type", "local") in ["secretsmanager", "secretmanager"]:
-                import boto3
-                from botocore.exceptions import ClientError
-
-                session = boto3.session.Session(**self.aws_credentials(self.data.get("connections", {})))
-                client = session.client(
-                    service_name='secretsmanager',
-                    region_name=self.aws_region_name(self.data.get("connections", {}))
-                )
-
-                prefix_text = self.data.get("connections", {}).get("prefix")
-
-                conns = {}
-                response = client.list_secrets()
-                for secret in response['SecretList']:
-                    if prefix_text is None:
-                        sv = client.get_secret_value(
-                            SecretId=secret.get("Name")
-                        )
-                        
-                        svd = json.loads(sv['SecretString'])
-                        conns[svd.get("name")] = svd
-                    else:
-                        if str(secret.get("Name")).startswith(str(prefix_text)):
-                            sv = client.get_secret_value(
-                                SecretId=secret.get("Name")
-                            )
-                            
-                            svd = json.loads(sv['SecretString'])
-                            conns[svd.get("name")] = svd
-                        
-                self._connections = conns
-
-        return self._connections
+    def sys_connections(self, conn_name=None):
+        if conn_name is None:
+            return self._connections.list()
+        else:
+            return self._connections.get(conn_name)
     
     @property
     def sys_authenticator(self):
-        return self.data.get("authenticator", { "type": "config" })
+        return self.data.get("authenticator", { "type": "local" })
     
     @property
     def sys_tokenizer(self):
         return self.data.get("tokenizer", { "type": "local" })
     
+    @property
+    def sys_profiler(self):
+        return self.data.get("profiler", { "type": "local" })
+
     @property
     def sys_mappings(self):
         return self.data.get("mappings", {})

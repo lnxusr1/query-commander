@@ -7,7 +7,7 @@ import logging
 import http.cookies
 from core.helpers import get_utc_now, generate_session_token, validate_string
 from core.config import settings as cfg
-
+from core.profiler import profiler as prf
 
 class Tokens:
     def __init__(self, **kwargs):
@@ -17,6 +17,7 @@ class Tokens:
         self.safe_password = str(kwargs.get("safe_password", "default_password"))
         self.remote_addr = ""
         self.timeout = int(kwargs.get("timeout", 20))
+        self._connections = None
 
     def _get_token_data(self):
         # OVERRIDE THIS METHOD
@@ -92,6 +93,16 @@ class Tokens:
         self._remove_token_data()
         return False
     
+    def validate_connection(self, connection_data):
+        if not isinstance(connection_data, dict):
+            return False
+        
+        for r in self.roles:
+            if r in connection_data.get("roles", []):
+                return True
+            
+        return False
+    
     def update(self):
         self._get()
         
@@ -149,10 +160,16 @@ class Tokens:
         self._get()
         return self.data.get("role_selected", None)
 
-    @property
     def connections(self):
+        if self._connections is not None:
+            return self._connections
+        
+        if len(self.data.get("connections", [])) > 0:
+            return self.data.get("connections", [])
+        
         if cfg.sys_authenticator.get("type", "local") == "local":
-            return [{ "name": str(x), "type": cfg.sys_connections.get(x).get("type") } for x in cfg.sys_connections]
+            self._connections = [{ "name": str(x), "type": cfg.sys_connections(x).get("type") } for x in cfg.sys_connections()]
+            return self._connections
         else:
             self._get()
             if True:
@@ -161,15 +178,16 @@ class Tokens:
 #                    return []
 
                 conns = []
-                for x in cfg.sys_connections:
+                for x in cfg.sys_connections():
 #                    if self.role_selected in cfg.sys_connections.get(x).get("roles"):
 #                        conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
                     for r in self.roles:
-                        if r in cfg.sys_connections.get(x).get("roles"):
-                            conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
+                        if r in cfg.sys_connections(x).get("roles"):
+                            conns.append({ "name": str(x), "type": cfg.sys_connections(x).get("type")})
                             break
 
-                return conns
+                self._connections = conns
+                return self._connections
             else:
                 return []
 
@@ -192,7 +210,10 @@ class Tokens:
             ret = cookie.output()
 
         return ret
-
+    
+    def get_profiler(self):
+        prf.set_username(self.username)
+        return prf
 
 class LocalTokens(Tokens):
     def __init__(self, **kwargs):
@@ -349,19 +370,7 @@ class DynamoDBTokens(Tokens):
         boto3.set_stream_logger('botocore', logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-        self.table_name = kwargs.get("table")
-
-        #aws_access_key = kwargs.get("aws_access_key", None)
-        #aws_secret_key = kwargs.get("aws_secret_key", None)
-        #profile_name = kwargs.get("profile_name", None)
-        #region_name = kwargs.get("aws_region_name", "us-east-1")
-
-        #if aws_access_key is not None and aws_secret_key is not None:
-        #    session = boto3.Session(aws_access_key_id=aws_access_key,aws_secret_access_key=aws_secret_key)
-        #elif profile_name is not None:
-        #    session = boto3.Session(profile_name=profile_name)
-        #else:
-        #    session = boto3.Session()
+        self.table_name = kwargs.get("table", "tokens")
 
         session = boto3.Session(**cfg.aws_credentials(kwargs))
         self.conn = session.client('dynamodb', region_name=cfg.aws_region_name(kwargs))
@@ -426,15 +435,15 @@ class DynamoDBTokens(Tokens):
 
 def get_tokenizer(connection_details):
     if connection_details.get("type", "local") == "local":
-        return LocalTokens(**cfg.sys_tokenizer)
+        return LocalTokens(**connection_details)
     
     if connection_details.get("type", "local") == "redis":
-        return RedisTokens(**cfg.sys_tokenizer)
+        return RedisTokens(**connection_details)
     
     if connection_details.get("type", "local") == "dynamodb":
-        return DynamoDBTokens(**cfg.sys_tokenizer)
+        return DynamoDBTokens(**connection_details)
     
-    return Tokens(**cfg.sys_tokenizer)
+    return Tokens(**connection_details)
 
 
 tokenizer = get_tokenizer(cfg.sys_tokenizer)

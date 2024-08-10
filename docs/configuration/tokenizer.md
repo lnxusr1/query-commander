@@ -1,11 +1,11 @@
-# Session Management
+# Session Management (a.k.a. Tokenizer)
 
 Tokens are used to store temporary session-specific information for logged in users.
 
 !!! danger "Set a Strong Safe Password"
     The ```safe_password``` is used to encrypt any **local** database authentication credentials when storing them on the session token so be sure to use a strong password.
 
-# Local Tokens
+## Local Tokens
 
 The most basic method of token storage is to save them in a folder on the local server.  To enable local token storage enter the following in the *settings.yml* file:
 
@@ -20,9 +20,9 @@ tokenizer:
 !!! warning "Cloud Installations"
     Cloud-based installations must use a cloud-compatible session management option.  Local tokens are not supported in cloud-based installations.
 
-# DynamoDB Tokens
+## DynamoDB Tokens
 
-## Basic Configuration
+### &raquo; Basic Configuration
 
 The minimum configuration for AWS DynamoDB requires a table name and a region.
 
@@ -32,7 +32,6 @@ tokenizer:
   timeout: 20 # minutes
   safe_password: abc123456abcdef
   table: session_tokens
-  aws_region_name: us-east-1
 ```
 
 The table creation is quite straightforward and only requires that the primary parition key be a *String* and be named **token** as shown below:
@@ -42,7 +41,7 @@ The table creation is quite straightforward and only requires that the primary p
 Permissions are required for **GetItem**, **PutItem**, **UpdateItem**, **DeleteItem**, and **Scan** on the created table.  If you enable encryption (which is strongly *recommended*) then you need to insure that you also grant access to the KMS key selected for that feature to allow **Encrypt** and **Decrypt** operations.
 
 
-## Using AWS Profiles
+### &raquo; Using AWS Profiles
 
 If you use the AWS-CLI to configure a profile you can reference that profile using the ```profile_name``` option as demonstrated below:
 
@@ -56,7 +55,7 @@ tokenizer:
   aws_region_name: us-east-1
 ```
 
-## Using Access Keys and Secret Keys (not recommended)
+### &raquo; Using Access Keys and Secret Keys (not recommended)
 
 If you absolutely must use access keys and secret keys then you can do so using the example below:
 
@@ -71,7 +70,7 @@ tokenizer:
   aws_region_name: us-east-1
 ```
 
-# Redis Tokens
+## Redis Tokens
 
 The minimum configuration for Redis requires a server name and will use the default port 6379.  You can also enable SSL connections as shown below:
 

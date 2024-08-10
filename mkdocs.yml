@@ -19,11 +19,12 @@ nav:
       - 'Apache 2.x (httpd)': 'installation/apache.md'
       - 'AWS (Lambda)': 'installation/aws.md'
     - Configuration:
-      - Structure: 'configuration/basic.md'
-      - Connections: 'configuration/connections.md'
+      - 'Basic Setup': 'configuration/basic.md'
+      - Settings: 'configuration/options.md'
       - Authentication: 'configuration/authenticator.md'
+      - 'User Profiles': 'configuration/profiler.md'
       - 'Session Management': 'configuration/tokenizer.md'
-      - Options: 'configuration/options.md'
+      - Connections: 'configuration/connections.md'
 
     - Links:
       - '@ Change Log': 'changelog.md'

@@ -11,7 +11,7 @@ authenticator:
   type: local
 
 connections:
-  type: local
+  type: config
   items:
     - name: myconn1
       type: postgres

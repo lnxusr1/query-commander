@@ -1,12 +1,40 @@
 # Connections
 
-## Basic Setup
+Database connections can be specified in several different ways in the ```settings.yml``` file.
 
-If using local authentication then no credentials are required so the most basic example of connection configurations in the *settings.yml* file is as follows:
+## Authentication Options
+
+There are two main ways to specific login credentials to the database hosts.  The first is to simply use the end-user's credentials they supply when logging into the interface.  This is the *local* type that is specified in the [Authenticator](authenticator.md) section.
+
+The second option is to specify static account credentials for the connection using *username*/*password* attributes and then use the *roles* lists to specify which end-user groups have access to the connection.  For **LDAP** connections these settings are required and the roles listing translates to user group names.  You'll need to use the netbios style friendly name and not the full distinguished name when specifying entries in the roles list (e.g. use "MyGroup" instead of "cn=MyGroup,ou=groups,dc=example,dc=com").
 
 ``` yaml
+authenticator:
+  type: local  # <-- determines how the end-user authenticates (local, openldap, microsoft)
+  ...
+
 connections:
-  type: local
+  type: config  # <-- determines where the connections are stored (config, secretsmanager)
+  ...
+```
+
+!!! reminder
+    Authenticator types of anything other than ```local``` require that you specify **username**, **password**, and **roles** attributes on all connections.
+
+## Using the Configuration File
+
+Likely the easiest way to get started is to use the ```settings.yml``` file to specify connections directly.  This method handles everything internally and simply requires you to specify each connection as a list of dictionary items.
+
+### &raquo; Simple Example
+Here is an example of using a *local* [**authenticator**](authenticator.md) with a *config* list of **connections**.
+
+``` yaml
+authenticator:
+  type: local  # <-- determines how the end-user authenticates
+  ...
+
+connections:
+  type: config  # <-- determines where the connections are stored (config = settings.yml file)
   items:
     - name: myconn1
       type: postgres
@@ -19,7 +47,23 @@ connections:
       port: 5432
 ```
 
-This example creates two postgres database connections under the names *myconn1* and *myconn2* respectively.
+### &raquo; Connection Attributes
+
+| Attribute | Req'd | Type | Notes |
+| :-------- | :---- | :--- | :----- |
+| name      | Yes   | String | Name to display in sidebar for connection |
+| type<br>&nbsp; | All<br>&nbsp; | String<br>&nbsp; | Specifies the type of connection as:<br>postgres, mysql, oracle, redshift |
+| host      | All   | String | Host or IP address of the server or endpoint |
+| port<br>&nbsp; | No<br>&nbsp; | Number<br>&nbsp; | The TCP port (1 - 65535) to initiation the<br>connection |
+| database | redshift | String | **Redshift Only**: Name of database for connection |
+| service_name | oracle | String | **Oracle Only**: Service Name for connection |
+| options | No | Dictionary | Extra arguments to send to constructor |
+| username<br>&nbsp; | *Auth<br>&nbsp; | String<br>&nbsp; | Username for connection.  **Req.** if using Authenticator<br> type other than *local*. |
+| password<br>&nbsp; | *Auth<br>&nbsp; | String<br>&nbsp; | Password for connection.  **Req.** if using Authenticator<br> type other than *local*. |
+| roles<br>&nbsp; | *Auth<br>&nbsp; | List<br>&nbsp; | List of group names with permission to use connection.<br> **Req.** if using Authenticator type other than *local*. |
+
+!!! note 
+    If using **local authenticator type** then credentials supplied by the end-user during login will be used for all connections *regardless* of any username/password values specified in the configuration file.
 
 !!! warning
     Make sure your connection **name** values are unique across *all* connections listed or else the application will use the *last* connection segment specified for the given name.
@@ -28,7 +72,7 @@ If your connection requires additional options to be specified in the connector 
 
 ``` yaml
 connections:
-  type: local
+  type: config
   items:
     - name: myconn1
       type: postgres
@@ -39,65 +83,84 @@ connections:
         application_name: querycommander
 ```
 
-## Connecting User Groups to Connections
+## Alternative Connection Configurations
 
-To tie user groups to connections when using authenticators like **LDAP** you must specify an additional "roles" key and list out the group(s) that should have access to the parent connection.  Additionally, username and password values must be set.
+### &raquo; OpenLDAP and Microsoft Active Directory
+If you are using an authenticator type other than *local* (such as openldap or microsoft) then you will need to include the three additional attributes of **username**, **password**, and **roles** in your connections.  Here's what that would look like if we take the simple example from [above](connections.md#using-the-configuration-file) and expand on it:
 
 ``` yaml
+authenticator:
+  type: microsoft  # <-- determines how the end-user authenticates
+  ...
+
 connections:
-  type: local
+  type: config  # <-- determines where the connections are stored (config = settings.yml file)
   items:
     - name: myconn1
       type: postgres
       host: my-db-server.lan
       port: 5432
-      username: mydblogin
-      password: mydbpassword
+      username: mydbuser
+      password: mydbpass
       roles:
-        - MyGroupNameHere
-        - MySecondGroupNameHere
+        - MyGroupName1
+        - MyGroupName2
+      options:
+        sslmode: require
 
     - name: myconn2
       type: postgres
       host: localhost
       port: 5432
-      username: mydblogin
-      password: mydbpassword
+      username: mydbuser
+      password: mydbpass
       roles:
-        - MyGroupNameHere
-        - MyThirdGroupNameHere
+        - MyGroupName1
+        - MyGroupName3
+      options:
+        sslmode: require
 ```
 
-## Using AWS Secrets Manager
+### &raquo; Storing Connections in AWS Secrets Manager
 
-You can link to AWS Secrets Manager with the following:
+One additional option to improve the security of your deployment is to store your database connections in a password value.  At present there is built-in support for using AWS Secrets Manager to store the connection details.  To leveral this you would change the **connections** *type* to **secretsmanager**.  You can also *optionally* filter for specific secrets using the filtering options provided by AWS in their [list_secrets](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/secretsmanager/client/list_secrets.html) API.
+
+Here's a quick example of the ```settings.yml``` configuration:
 
 ``` yaml
 connections:
   type: secretsmanager
-  prefix: secret-group-name
+  aws_region_name: us-east-1
+  aws_access_key: your-access-key-here
+  aws_secret_key: your-secret-key-here
+  filters:
+    - Key: name
+      Values:
+        - secret-group-name
 ```
 
-Additional options of *aws_access_key*, *aws_secret_key*, *aws_profile_name*, and *aws_region_name* are available for specifying here or they will default to values set in the global [settings](options.md).
+If you want to list all secrets then omit the **filters** attribute in the example above.  Likewise, if you want to use your global [settings](basic.md) for pulling your AWS credentials (or rely on instance-style authentication) then you can omit the aws_* attributes.
 
-The *prefix* can be specified to limit which secrets are referenced.  If specified then only secrets that match the prefix in their name will be pulled.
+Within AWS Secrets Manager the secret must be formated so that Query Commander can read it.  This requires permissions and value updates.
 
-An example JSON entry in Secrets Manager is as follows:
-
+The secret values must be in JSON format and follow the structure below:
 ``` json
 {
-  "name":"myconn2",
   "type":"mysql",
   "host":"localhost",
   "port":"3306",
   "username":"mydbusername",
   "password":"mydbpassword",
-  "roles":["MyGroupNameHere","MySecondGroupNameHere"]
+  "roles":["MyGroupName1","MySecondGroupName2"]
 }
 ```
-Settings and options follow the same pattern as stored in the settings.yml file, however they must be written in JSON when storing in AWS Secrets Manager.
 
-Permissions for AWS Secrets Manager must include ListSecrets and GetSecretValue.  A simple example is shown below:
+The same options listed at the top of this page are available, but they are specified in JSON syntax and stored inside the secret rather than in the settings configuration file.
+
+!!! note
+    When using AWS Secrets Manager the Secret Name is substituted for the Connection Name so you do not need to specify a "name" attribute separately in the JSON data.
+
+Permissions for AWS Secrets Manager access to the Query Commander runtime must include **ListSecrets** and **GetSecretValue**.  A simple policy example is shown below:
 
 ``` json
 {
@@ -120,89 +183,90 @@ Permissions for AWS Secrets Manager must include ListSecrets and GetSecretValue.
 
 The libraries used in the built-in connectors are listed below:
 
-| Database       | Connector              | Link                                               |
-| :------------- | :--------------------- | :------------------------------------------------- |
-| PostgreSQL     | psycopg 3.x            | [https://www.psycopg.org](https://www.psycopg.org) |
-| AWS Redshift   | psycopg 3.x            | [https://www.psycopg.org](https://www.psycopg.org) |
-| Oracle         | oracledb               | [https://oracle.github.io/python-oracledb/](https://oracle.github.io/python-oracledb/) |
-| MySQL          | mysql-connector-python | [https://dev.mysql.com/doc/connector-python/en/](https://dev.mysql.com/doc/connector-python/en/) |
+| Database                                                | PyPy Module            | Version | 
+| :------------------------------------------------------ | :--------------------- | :------ | 
+| [PostgreSQL](https://www.psycopg.org)                   | psycopg                | 3.2.1+  | 
+| [AWS Redshift](https://www.psycopg.org)                 | psycopg                | 3.2.1+  | 
+| [Oracle](https://oracle.github.io/python-oracledb/)     | oracledb               | 2.3.0+  |
+| [MySQL](https://dev.mysql.com/doc/connector-python/en/) | mysql-connector-python | 9.0.0+  |
 
-### Postgres
+## Examples
 
-``` shell
-pip install psycopg
-```
+### &raquo; Example For PostgreSQL Connection
 
 ``` yaml
-type: postgres
+connections:
+  type: config
+  items:
+    - name: myconn1
+      type: postgres
+      host: my-postgresql-server
+      port: 5439
+      username: mydblogin
+      password: mydbpassword
+      options:
+        sslmode: require
+        application_name: querycommander
+      roles:
+        - MyGroup1
+        - MyGroup2
 ```
 
-### AWS Redshift
-
-``` shell
-pip install psycopg
-```
-
-``` yaml
-type: redshift
-```
-
-#### Example For Redshift Connection
+### &raquo; Example For Redshift Connection
 
 Note that Redshift requires a database be specified.
 
 ``` yaml
 connections:
-  type: local
+  type: config
   items:
-    - name: myconn1
+    - name: myconn2
       type: redshift
       host: my-redshift-server.amazonaws.com
       port: 5439
-      database: mydbname
       username: mydblogin
       password: mydbpassword
+      database: mydbname
       options:
         client_encoding: utf-8
-
+      roles:
+        - MyGroup1
+        - MyGroup2
 ```
 
-
-### MySQL/MariaDB
-
-``` shell
-pip install mysql-connector-python
-```
+### &raquo; Example For MySQL &amp; MariaDB Connections
 
 ``` yaml
-type: mysql
+connections:
+  type: config
+  items:
+    - name: myconn3
+      type: mysql
+      host: my-mysql-server-name
+      port: 5439
+      username: mydblogin
+      password: mydbpassword
+      roles:
+        - MyGroup1
+        - MyGroup2
 ```
 
-### Oracle
-
-``` shell
-pip install oracledb
-```
-
-``` yaml
-type: oracle
-```
-
-#### Example for Oracle
+### &raquo; Example For Oracle Connections
 
 Note that oracle requires a service name be specified.
 
 ``` yaml
 connections:
-  type: local
+  type: config
   items:
-    - name: myconn3
+    - name: myconn4
       type: oracle
-      host: my-oracle-server.lan
+      host: my-oracle-server-name
       port: 1521
       service_name: my_db_service_name
       username: mydblogin
       password: mydbpassword
       roles:
-        - MyGroup
+        - MyGroup1
+        - MyGroup2
 ```

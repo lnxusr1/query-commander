@@ -54,5 +54,8 @@ authenticator:
 
 The **login_is_role** option when set to ```true``` will use the login username as the only group name when selecting connections.  Standard practice would be to use group names when tying users to connections so this setting should generally be left as the default value of ```False```.
 
+!!! warning
+    When using Active Directory you must sign in using the netbios style format **domain\username**.
+
 !!! important "Make sure to update connections"
-    When using LDAP as an authentication type you **must** add a list of groups to the roles section of the connection objects in order to link the users to which connection(s) they can access.  See the section *Connecting User Groups to Connections* in the [Authentication](connections.md#connecting-user-groups-to-connections) section.
+    When using LDAP as an authentication type you **must** add a list of groups to the roles section of the connection objects in order to link the users to which connection(s) they can access.  See the *OpenLDAP and Microsoft Active Directory* section in the [Connections](connections.md#openldap-and-microsoft-active-directory) area.

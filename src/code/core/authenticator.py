@@ -201,14 +201,14 @@ class LDAPAuth(Authenticator):
                 return self._get_groups_openldap()
 
 
-def get_authenticator():
-    if cfg.sys_authenticator.get("type", "local") == "local":
-        return LocalAuth(**cfg.sys_authenticator)
-    elif cfg.sys_authenticator.get("type", "local") in ["ldap", "microsoft"]:
-        return LDAPAuth(microsoft=True, **cfg.sys_authenticator)
-    elif cfg.sys_authenticator.get("type", "local") == "openldap":
-        return LDAPAuth(**cfg.sys_authenticator)
+def get_authenticator(connection_details):
+    if connection_details.get("type", "local") == "local":
+        return LocalAuth(**connection_details)
+    elif connection_details.get("type", "local") in ["ldap", "microsoft"]:
+        return LDAPAuth(microsoft=True, **connection_details)
+    elif connection_details.get("type", "local") == "openldap":
+        return LDAPAuth(**connection_details)
     
-    return Authenticator()
+    return Authenticator(**connection_details)
 
-authenticator = get_authenticator()
+authenticator = get_authenticator(cfg.sys_authenticator)

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2024-08-10
+
+- Local User Profile Manager
+- DynamoDB User Profile Manager
+- Bug fixes in role handling
+- Changed connections type option from *local* to *config* to avoid confusion
+- Split out connections processing into separate connections module 
+- Added valid connections to token processing (now possible with recent role changes) for streamlined operations
+- Connections: SecretsManager
+    - Optimization to streamline calls to get secrets
+    - Added filtering mechanism for AWS-supported [filtering criteria](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/secretsmanager/client/list_secrets.html)
+    - Switched to use secret name for connection name
+
 ## [0.3.1] - 2024-08-08
 
 - Bug fix for multiple roles

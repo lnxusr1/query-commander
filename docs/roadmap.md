@@ -36,8 +36,8 @@ The application roadmap will continue to evolve over the next several months as 
     - AWS Secrets Manager - **COMPLETE**
 
 - Profile Managers
-    - Local Profiles
-    - DynamoDB Profiles
+    - Local Profiles - **COMPLETE**
+    - DynamoDB Profiles - **COMPLETE**
     - Redis Profiles
 
 - Installers

@@ -59,8 +59,8 @@
             <div></div>
         </div>
     </overlay>
-
-    <overlay class="chooser" id="chooser-select-role" style="display: block;">
+<!--
+    <overlay class="chooser" id="chooser-select-role" style="display: none;">
         <form>
             <div class="message-box">
                 <div class="title">
@@ -84,7 +84,7 @@
             </div>
         </form>
     </overlay>
-
+-->
     <overlay class="chooser" id="chooser-select-connection">
         <form>
             <div class="message-box">
@@ -137,7 +137,8 @@
                 <a target="_new" title="Query Commander" href="https://www.querycommander.com"><img alt="Query Commander" src="favicon.svg" /></a>
             </item>
             <item>
-                <button class="btn-open-role-chooser" title="Role"><i class="fas fa-shield-halved"></i><span id="role_selected">&lt;default&gt;</span></button>
+                <button id="btn-save-profile" title="Save"><i class="fas fa-floppy-disk fa-fw"></i></button>
+                <button class="btn-open-role-chooser" title="Role" style="display: none;"><i class="fas fa-shield-halved"></i><span id="role_selected">&lt;default&gt;</span></button>
                 <button id="btn-new-tab" title="New SQL Script"><i class="fas fa-scroll fa-fw"></i><span>SQL</span></button>
                 <button title="Settings"><i class="fas fa-screwdriver-wrench fa-fw"></i></button>
                 <button id="btn-outdent" title="Decrease Indent"><i class="fas fa-outdent fa-fw"></i></button>

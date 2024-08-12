@@ -3,13 +3,15 @@ import tempfile
 import hashlib
 import json
 import logging
+import datetime
 
+from core.helpers import get_utc_now
 from core.config import settings as cfg
 
 
 class Profiler:
     def __init__(self, **kwargs):
-        self.format_version = 1
+        self.format_version = 2
         self.username = None
         self.settings = kwargs
         self.data = None
@@ -35,10 +37,36 @@ class Profiler:
     def get(self, name, default_value=None):
         self._get()
         return self.data.get(name, default_value)
+    
+    def get_records_remaining(self):
+        if cfg.rate_limit_period <= 0 and cfg.rate_limit_records <= 0:
+            return cfg.records_per_request
+        
+        timestamp = get_utc_now() - datetime.timedelta(minutes=cfg.rate_limit_period)
+        history_data = self.get("history", [])
+        r_count = 0
+        i = len(history_data) - 1
+        while i >= 0:
+            item = history_data[i]
+            ts = datetime.datetime.strptime(str(item[0]), "%Y-%m-%d %H:%M:%S")
+            if ts > timestamp:
+                r_count = r_count + item[1]
+            else:
+                del history_data[i]
+
+            i = i - 1
+
+        # Put it back for next time
+        self.set("history", history_data)
+
+        r_count = cfg.rate_limit_records - r_count
+        return r_count if r_count > 0 else 0
 
     def update(self):
         self._get()
         self.set("format_version", self.format_version)
+        self.set("type", "profile")
+
         return self._put_profile_data()
     
     def remove(self):
@@ -67,11 +95,29 @@ class Profiler:
                     x["content"] = str(x.get("content"))[0:20000]
             else:
                 return
+
         if name == "settings":
             if isinstance(value, dict) and len(value) == 0:
                 pass
             else:
                 return
+
+        if name == "history":
+            if isinstance(value, list):
+                for x in value:
+                    if not isinstance(x, list):
+                        return
+                    
+                    if len(x) != 2:
+                        return
+                    
+                    if isinstance(x[1], int):
+                        return
+                    
+                    try:
+                        s = datetime.datetime.strptime(str(x[0]), "%Y-%m-%d %H:%M:%S")
+                    except:
+                        return
 
         self.data[name] = value
 

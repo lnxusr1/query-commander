@@ -1,11 +1,21 @@
 import sys
 from core.config import settings as cfg
+from core.helpers import get_utc_now
 from core.interactions import Response
 from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
 
-
 def get_query_results(connection_name, db_name, sql, query_type, start_record=0):
+
+    records_per_request = cfg.records_per_request
+
+    prf = None
+    if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
+        prf = tokenizer.get_profiler()
+        remaining_records = prf.get_records_remaining()
+        if records_per_request > remaining_records:
+            records_per_request = remaining_records
+
     resp = Response()
 
     connection = get_db_connection(connection_name, database=db_name)
@@ -26,17 +36,18 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
                 sql = f"EXPLAIN {sql}"
 
         i = 0
-        end_record = start_record + cfg.records_per_request
-        for headers, record in connection.fetchmany(sql, params=None, size=201):
-            data["headers"] = headers
-            if i >= start_record and i < end_record:
-                data["records"].append(record)
+        end_record = start_record + records_per_request
+        if records_per_request > 0:
+            for headers, record in connection.fetchmany(sql, params=None, size=201):
+                data["headers"] = headers
+                if i >= start_record and i < end_record:
+                    data["records"].append(record)
 
-            i = i + 1
-            
-            if i > end_record:
-                data["has_more"] = True
-                break
+                i = i + 1
+                
+                if i > end_record:
+                    data["has_more"] = True
+                    break
 
         if len(data["headers"]) == 0:
             data["headers"] = connection.columns
@@ -51,6 +62,16 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
             
     except Exception as e:
         data["error"] = str(e)
+
+    if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
+        if len(data["records"]) > 0:
+            history_data = prf.get("history", [])
+            history_data.append([get_utc_now().strftime("%Y-%m-%d %H:%M:%S"), len(data["records"])])
+            prf.set("history", history_data)
+            if not prf.update():
+                data["output"] = "Error validating profile data."
+                data["records"] = []
+                data["headers"] = []
 
     resp.output({ 
         "ok": True, 

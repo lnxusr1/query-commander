@@ -12,6 +12,9 @@ profiler:
   path: /tmp/profiles
 ```
 
+!!! warning "Cloud Installations"
+    Cloud-based installations must use a cloud-compatible user profiles option.  Local profiles are not supported in cloud-based installations.
+
 ## DynamoDB Profiles
 
 ### &raquo; Basic Configuration
@@ -24,7 +27,9 @@ profiler:
   table: profiles
 ```
 
-The table creation is quite straightforward and only requires that the primary parition key be a *String* and be named **username**.
+The table creation is quite straightforward and only requires that the primary parition key be a *String* and be named **username** as shown below:
+
+![DynamoDB Profile Management Screenshot](../images/dynamodb_table_create_profiles.png)
 
 Permissions are required for **GetItem**, **PutItem**, **UpdateItem**, **DeleteItem**, and **Scan** on the created table.  If you enable encryption (which is strongly *recommended*) then you need to insure that you also grant access to the KMS key selected for that feature to allow **Encrypt** and **Decrypt** operations.
 

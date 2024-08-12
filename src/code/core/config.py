@@ -42,6 +42,14 @@ class Settings:
     def records_per_request(self):
         return int(self.data.get("settings", {}).get("records_per_request", 200))
     
+    @property
+    def rate_limit_records(self):
+        return int(self.data.get("settings", {}).get("rate_limit", {}).get("records", -1))
+
+    @property
+    def rate_limit_period(self):
+        return int(self.data.get("settings", {}).get("rate_limit", {}).get("period", -1))
+
     def sys_settings(self, name, default=None):
         return self.data.get("settings", {}).get(name, default)
 

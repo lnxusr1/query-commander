@@ -88,7 +88,7 @@ class Tokens:
 
         if str(self.data.get("type", "")) == "token" and self.data.get("expires") is not None:
             if not self.is_expired(self.data.get("expires")):
-                return True
+                return self.update()
 
         self._remove_token_data()
         return False

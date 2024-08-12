@@ -12,7 +12,7 @@ The application roadmap will continue to evolve over the next several months as 
     - Query Results Downloads - **COMPLETE**
     - DB Session Viewer
     - DB Lock Viewer
-    - Rate Limits
+    - Rate Limits - **COMPLETE**
     - Client-side Results Filtering
 
 - Authenticators

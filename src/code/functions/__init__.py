@@ -167,7 +167,6 @@ def process_request(request):
             })
 
         except:
-            raise
             resp.output({ "ok": False })
 
         sys.exit()

@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2024-08-11
+
+- Added feature for records over time limits
+- Updated token format for storage
+- Bug Fixes:
+    - Session time extension not being properly updated on validation
+    - API: save-profile trapped errors now return valid error response
+
 ## [0.4.0] - 2024-08-10
 
 - Local User Profile Manager

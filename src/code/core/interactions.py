@@ -17,7 +17,7 @@ class Response:
 
         return True
 
-    def output(self, data=None):
+    def output(self, data=None, extend=None):
 
         if len(self.headers) == 0:
             print("Content-Type: text/html")
@@ -27,7 +27,7 @@ class Response:
         for item in self.headers:
             print(str(item.rstrip()) + ":", str(self.headers.get(item)))
         
-        cookie = tokenizer.cookie
+        cookie = tokenizer.cookie(extend=extend)
         if cookie is not None:
             print(str(cookie).strip())
     
@@ -49,6 +49,7 @@ class Request:
         self.raw_data = None
         self.json_data = {}
         self.token = None
+        self.username = None
 
         self.headers = {}
 
@@ -68,6 +69,12 @@ class Request:
         try:
             if "token" in self.cookies:
                 self.token = self.cookies["token"].value
+        except:
+            pass
+
+        try:
+            if "username" in self.cookies:
+                self.username = self.cookies["username"].value
         except:
             pass
 

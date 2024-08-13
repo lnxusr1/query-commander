@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2024-08-12
+
+- Migrated Token storage to allow one active login per user
+- Migrated rate limits to token from profile
+- Added visual confirmation on save
+- Bug Fixes:
+    - Auto-load results on scroll failing to load next segment
+
 ## [0.4.1] - 2024-08-11
 
 - Added feature for records over time limits

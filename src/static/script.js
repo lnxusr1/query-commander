@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.4.1";
+var version = "v0.4.2";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -491,7 +491,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true, as
         //    records = data["records"].length;
         //}
 
-        let secs = '';
+        let secs = parseFloat('0.00').toFixed(2);
         if (data["stats"]["exec_time"]) {
             secs = parseFloat(data["stats"]["exec_time"]).toFixed(2);
         }
@@ -648,7 +648,7 @@ function doWireUpQueryTab(tab_id) {
             e.preventDefault();
         }
 
-        if (e.ctrlKey) {
+        if (e.ctrlKey || e.metaKey) {
             if ((e.keyCode == 81) || (e.keyCode == 13)) {
                 $('#btn-execute').trigger('click');
             }
@@ -807,7 +807,7 @@ function doWireUpQueryTab(tab_id) {
         $(tab_id + ' > item > results .data > div > div:first-child table').css('top', '' + $(this).scrollTop() + 'px');
         $(tab_id + ' > item > results .data > div > div table tr > th:first-child').css('left', ($(this).scrollLeft()) + 'px');
 
-        if ($(this).scrollTop() >= ($(this).children('div').eq(1).height() - Math.floor($(this).height()) + 26)) { 
+        if ($(this).scrollTop() >= ($(this).children('div').eq(1).height() - Math.floor($(this).height()) + 25)) { 
             doLoadMore(tab_id);
         };
     });
@@ -1611,16 +1611,33 @@ function doSaveProfile() {
         headers: { 'Access-Control-Allow-Origin': '*' },
         data: JSON.stringify(data),
         contentType: "application/json",
+        beforeSend: function(xhr) {
+            $('#btn-save-profile').children().eq(0).show();
+            $('#btn-save-profile').children().eq(0).removeClass('fa-floppy-disk');
+            $('#btn-save-profile').children().eq(0).removeClass('fa-check');                
+            $('#btn-save-profile').children().eq(0).addClass('fa-spinner');
+            $('#btn-save-profile').children().eq(0).addClass('fa-spin');
+        },
         error: function() {
         },
         success: function(data) {
             if (data.ok) {
             } else {
+                if (data.logout) { doLogout(); return; }
                 alert("Unable to save profile.");
-                if (data.logout) { doLogout(); }
             }
         },
         complete: function() {
+            $('#btn-save-profile').children().eq(0).addClass('fa-check');
+            $('#btn-save-profile').children().eq(0).removeClass('fa-spinner');
+            $('#btn-save-profile').children().eq(0).removeClass('fa-spin');
+            setTimeout(function() {
+                $('#btn-save-profile').children().eq(0).fadeTo(300, .1, function() { 
+                    $('#btn-save-profile').children().eq(0).removeClass('fa-check');                
+                    $('#btn-save-profile').children().eq(0).addClass('fa-floppy-disk');
+                }).delay(100).fadeTo(100, 1);
+                
+            }, 400);
         }
     })
 }
@@ -1702,19 +1719,26 @@ $(document).ready(function() {
         if (["TEXTAREA","INPUT","A","BUTTON","LABEL"].includes($(document).find(':focus').prop('tagName'))) {
             return true;
         } else {
-            if (e.ctrlKey) {
+            if (e.ctrlKey || e.metaKey) {
                 if (e.keyCode == 65) {
                     if ($('tab.active .btn-tab-results').hasClass('active')) {
                         $('tab.active results table').find('td').addClass('selected');
+                        e.preventDefault();
                         return false;
                     }
-                } else {
-                    if (e.keyCode == 67) {
-                        if (($('tab.active .btn-tab-results').hasClass('active')) && ($('tab.active results table').find('.selected').length > 0)) {
-                            $('tab.active .btn-tab-copy').trigger('click');
-                            return false;
-                        }
+                }
+
+                if (e.keyCode == 67) {
+                    if (($('tab.active .btn-tab-results').hasClass('active')) && ($('tab.active results table').find('.selected').length > 0)) {
+                        $('tab.active .btn-tab-copy').trigger('click');
+                        e.preventDefault();
+                        return false;
                     }
+                }
+
+                if (e.keyCode == 83) {
+                    e.preventDefault();
+                    $('#btn-save-profile').trigger('click');
                 }
             }
         }

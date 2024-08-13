@@ -9,10 +9,9 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
 
     records_per_request = cfg.records_per_request
 
-    prf = None
+    limit_exceeded = False
     if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
-        prf = tokenizer.get_profiler()
-        remaining_records = prf.get_records_remaining()
+        remaining_records = tokenizer.get_records_remaining()
         if records_per_request > remaining_records:
             records_per_request = remaining_records
 
@@ -48,6 +47,8 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
                 if i > end_record:
                     data["has_more"] = True
                     break
+        else:
+            data["error"] = "Record rate limit exceeded."
 
         if len(data["headers"]) == 0:
             data["headers"] = connection.columns
@@ -65,13 +66,9 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
 
     if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
         if len(data["records"]) > 0:
-            history_data = prf.get("history", [])
+            history_data = tokenizer.history()
             history_data.append([get_utc_now().strftime("%Y-%m-%d %H:%M:%S"), len(data["records"])])
-            prf.set("history", history_data)
-            if not prf.update():
-                data["output"] = "Error validating profile data."
-                data["records"] = []
-                data["headers"] = []
+            tokenizer.set("history", history_data)
 
     resp.output({ 
         "ok": True, 

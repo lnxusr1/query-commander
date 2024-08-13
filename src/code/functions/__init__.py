@@ -10,6 +10,7 @@ from core.tokenizer import tokenizer
 def process_request(request):
     command = str(request.json_data.get("command", "auth")).lower()
     tokenizer.set_token(request.token)
+    tokenizer.set_username(request.username)
     tokenizer.set_remote_addr(request.host)
 
     if command == "check":
@@ -17,7 +18,7 @@ def process_request(request):
         # check-init: same as "check" but if a valid token is found it auto-extends the session length
         resp = Response()
         if not tokenizer.validate():
-            resp.output({ "ok": False, "logout": True })
+            resp.output({ "ok": False, "logout": True }, extend=False)
             sys.exit()
         else:
             if request.json_data.get("extend", False):
@@ -31,7 +32,7 @@ def process_request(request):
                 #"roles": [tokenizer.role_selected], # tokenizer.roles as list
                 #"role_selected": tokenizer.role_selected, 
                 "connections": tokenizer.connections()
-            })
+            }, extend=False)
 
             sys.exit()
 
@@ -39,7 +40,7 @@ def process_request(request):
         from core.authenticator import authenticator
 
         resp = Response()
-        username = str(request.json_data.get("username", ""))[0:100]
+        username = str(request.json_data.get("username", "")).strip()[0:100]
         password = str(request.json_data.get("password", ""))[0:256]
 
         if authenticator.validate(username, password):
@@ -49,23 +50,12 @@ def process_request(request):
                 resp.output({ "ok": False })
                 sys.exit()
 
+            tokenizer.set_username(username)
             tokenizer.set("username", username)
             tokenizer.set("roles", authenticator.roles)
             tokenizer.set("connections", tokenizer.connections())
             resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, }
 
-            #if len(authenticator.roles) > 1:
-            #    resp_data["role_selected"] = ""
-            #    tokenizer.set("role_selected", resp_data["role_selected"])
-            #    resp_data["connections"] = []
-            #else:    
-            #    resp_data["role_selected"] = authenticator.roles[0]
-            #    tokenizer.set("role_selected", resp_data["role_selected"])
-            #    resp_data["connections"] = tokenizer.connections
-            #    if len(tokenizer.connections) == 0:
-            #        # No roles for this login.
-            #        resp.output({ "ok": False })
-            #        sys.exit()
             resp_data["role_selected"] = authenticator.roles[0]
             tokenizer.set("role_selected", resp_data["role_selected"])
             resp_data["connections"] = tokenizer.connections()
@@ -82,7 +72,7 @@ def process_request(request):
                     )
                 )
 
-            tokenizer.purge()
+            #tokenizer.purge()
             if not tokenizer.update():
                 logging.error(f"[{username}@{tokenizer.remote_addr}] Unable to create token")
                 resp.output({ "ok": False })

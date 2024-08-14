@@ -1,5 +1,5 @@
 import { site_path } from './path.js';
-var version = "v0.4.2";
+var version = "v0.4.3";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -1100,6 +1100,31 @@ function doGenerateDDL(obj_details) {
     });
 }
 
+function doLoadContextData(obj, type_name) {
+    let target = $(obj).find('span').text();
+    let data = { command: "details", type: type_name, target: "sql", path: { connection: target } }
+
+    $.ajax({
+        url: site_path,
+        dataType: "json",
+        method: "POST",
+        crossDomain: true,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        data: JSON.stringify(data),
+        contentType: "application/json",
+        success: function(data) {
+            let sql_statement = data["properties"]["sections"]["Source"]["data"];
+            addQueryTab(false, target);
+            $('tab.active').children().eq(0).css('height','0px');        
+            $('tab.active').find('.editor').val(sql_statement);
+            $('#btn-execute').trigger("click");
+        }
+    });
+
+    $(obj).removeClass("highlight");
+    $('.sidebar-context-menu').hide();
+}
+
 function doLoadContextMenu(obj, event, menu_items) {
     doCloseContextMenu();
     $(obj).addClass('highlight');
@@ -1109,6 +1134,7 @@ function doLoadContextMenu(obj, event, menu_items) {
     for (let z=0; z < menu_items.length; z++) {
         if (menu_items[z] == "refresh") { $('#btn-context-refresh-item').parent().show(); }
         if (menu_items[z] == "copy") { $('#btn-context-copy-name').parent().show(); }
+        if (menu_items[z] == "extra") { $('.context-extra').show(); }
         if (menu_items[z] == "ddl") { $('#btn-context-generate-ddl').parent().show(); }
         if (menu_items[z] == "details") { $('#btn-context-view-details').parent().show(); }
     }
@@ -1120,6 +1146,16 @@ function doLoadContextMenu(obj, event, menu_items) {
         $(obj).parent().children('ul').remove();
         $(obj).trigger('click');
         $('.sidebar-context-menu').hide();
+        return false;
+    });
+
+    $('#btn-context-sessions').click(function() {
+        doLoadContextData(obj, "sessions");
+        return false;        
+    });
+
+    $('#btn-context-locks').click(function() {
+        doLoadContextData(obj, "locks");
         return false;
     });
 
@@ -1321,7 +1357,7 @@ function doRefreshConnections() {
         el.find('server-type').text(connection_list[i]["type"]);
         el.appendTo($('sidebar > metadata > ul'));
         el.find('a').prop('title', connection_list[i]["type"]);
-        el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh"]); return false; });        
+        el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh", "extra"]); return false; });        
         el.find('a').click(function() {
             doLoadMeta($(this));
             return false; 
@@ -1586,7 +1622,6 @@ function doSaveProfile() {
         let tab_content = $($(o).find('a').attr('data-target')).find('.editor').val();
         let tab_db_name = $($(o).find('a').attr('data-target')).find('select option:selected').val();
         if (tab_name != '') {
-            console.log(tab_name);
             let tab_data = {
                 name: tab_name,
                 database: tab_db_name,

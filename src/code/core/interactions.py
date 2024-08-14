@@ -5,11 +5,14 @@ from core.tokenizer import tokenizer
 
 class Response:
     def __init__(self, **kwargs):
-        hdrs = kwargs.get("headers", { "Content-Type": "application/json"})
+        hdrs = kwargs.get("headers", { "Content-Type": "application/json" })
         if isinstance(hdrs, dict):
             self.headers = hdrs
 
         self.data = kwargs.get("data")
+        self.raw_data = None
+        self.extend = None
+        self.cookie = None
 
     def add_header(self, name, value):
         if name is not None and value is not None:
@@ -18,18 +21,25 @@ class Response:
         return True
 
     def output(self, data=None, extend=None):
+        self.raw_data = data
+        self.extend = extend
+
+        self.add_header("Access-Control-Allow-Origin", "*")
+        cookie = tokenizer.cookie(extend=self.extend)
+        if cookie is not None:
+            self.add_header(cookie.split(":", 1)[0].strip(), cookie.split(":", 1)[1].strip())
+
+    def send(self):
+        data = self.raw_data
 
         if len(self.headers) == 0:
             print("Content-Type: text/html")
 
-        self.add_header("Access-Control-Allow-Origin", "*")
-
         for item in self.headers:
-            print(str(item.rstrip()) + ":", str(self.headers.get(item)))
+            print(f"{str(item.rstrip())}: {str(self.headers.get(item))}")
         
-        cookie = tokenizer.cookie(extend=extend)
-        if cookie is not None:
-            print(str(cookie).strip())
+#        if self.cookie is not None:
+#            print(str(self.cookie).strip())
     
         print("")
         if data is None and self.data is None:
@@ -84,8 +94,8 @@ class Request:
             if (str(self.headers.get("CONTENT_TYPE"))).lower() == "application/json" and len(self.raw_data) > 0:
                 self.json_data = json.loads(self.raw_data)
 
-    def set_user(self, username):
-        self.json_data["username"] = username
+    #def set_user(self, username):
+    #    self.json_data["username"] = username
 
     @property
     def host(self):

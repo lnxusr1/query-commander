@@ -60,6 +60,8 @@ class Oracle(Connector):
                     **self.options
                 )
 
+                cursor = self.connection.cursor()
+                cursor.callproc("DBMS_APPLICATION_INFO.SET_MODULE", (f"Query Commander [{tokenizer.username}]", "Initialization"))
             except:
                 logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 logging.debug(str(traceback.format_exc()))
@@ -280,6 +282,77 @@ class Oracle(Connector):
 
         if category == "subpartitions":
             return "select subpartition_name from sys.all_tab_subpartitions where table_owner = :1 and table_name = :2 and partition_name = :3 order by SUBPARTITION_POSITION"
+        
+        if category == "sessions":
+            return "\n".join(
+                [
+                    "SELECT",
+                    "    s.sid,",
+                    "    s.serial#,",
+                    "    s.username AS user_name,",
+                    "    s.osuser,",
+                    "    s.program AS application_name,",
+                    "    s.machine AS client_machine,",
+                    "    s.terminal,",
+                    "    s.status,",
+                    "    s.schemaname AS schema_name,",
+                    "    s.logon_time,",
+                    "    s.module,",
+                    "    s.action,",
+                    "    s.client_info,",
+                    "    s.event,",
+                    "    s.wait_class,",
+                    "    s.seconds_in_wait,",
+                    "    s.state,",
+                    "    s.sql_id,",
+                    "    q.sql_text",
+                    "FROM",
+                    "    sys.v$session s",
+                    "LEFT JOIN",
+                    "    sys.v$sql q",
+                    "    ON s.sql_id = q.sql_id",
+                    "WHERE s.status = 'ACTIVE'",
+                    "ORDER BY",
+                    "    s.sid"
+                ]
+            )
+        
+        if category == "locks":
+            return "\n".join(
+                [
+                    "SELECT",
+                    "    waiting_session.sid AS wait_sid,",
+                    "    waiting_session.username AS wait_user,",
+                    "    holding_session.sid AS hold_sid,",
+                    "    holding_session.username AS hold_user,",
+                    "    waiting_sql.sql_text AS wait_statement,",
+                    "    holding_sql.sql_text AS hold_statement",
+                    "FROM",
+                    "    sys.v$lock waiting_lock",
+                    "JOIN",
+                    "    sys.v$session waiting_session",
+                    "    ON waiting_lock.sid = waiting_session.sid",
+                    "JOIN",
+                    "    sys.v$lock holding_lock",
+                    "    ON waiting_lock.id1 = holding_lock.id1",
+                    "    AND waiting_lock.id2 = holding_lock.id2",
+                    "    AND holding_lock.block = 1",
+                    "JOIN",
+                    "    sys.v$session holding_session",
+                    "    ON holding_lock.sid = holding_session.sid",
+                    "LEFT JOIN",
+                    "    sys.v$sql waiting_sql",
+                    "    ON waiting_session.sql_id = waiting_sql.sql_id",
+                    "LEFT JOIN",
+                    "    sys.v$sql holding_sql",
+                    "    ON holding_session.sql_id = holding_sql.sql_id",
+                    "WHERE",
+                    "    waiting_lock.block = 0",
+                    "    AND waiting_lock.request > 0",
+                    "ORDER BY",
+                    "    wait_sid"
+                ]
+            )
 
     def meta(self, type, target, path):
         sql = None
@@ -549,6 +622,14 @@ class Oracle(Connector):
         sql = None
         params = None
         data = None
+
+        if type in ["sessions", "locks"]:
+            data = {
+                "meta": [], 
+                "sections": {
+                    "Source": { "type": "code", "data": self._sql(type) }
+                }
+            }
 
         if type == "table":
             data = { 

@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.3] - 2024-08-13
+
+- Added active sessions view to sidebar context
+- Added active locks view to sidebar context
+- Updated output process for AWS Lambda compatibility
+
 ## [0.4.2] - 2024-08-12
 
 - Migrated Token storage to allow one active login per user

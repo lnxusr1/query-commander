@@ -10,8 +10,8 @@ The application roadmap will continue to evolve over the next several months as 
     - Meta Data Viewer - **COMPLETE**
     - Multi-Tab Support - **COMPLETE**
     - Query Results Downloads - **COMPLETE**
-    - DB Session Viewer
-    - DB Lock Viewer
+    - DB Session Viewer - **COMPLETE**
+    - DB Lock Viewer - **COMPLETE**
     - Rate Limits - **COMPLETE**
     - Client-side Results Filtering
 

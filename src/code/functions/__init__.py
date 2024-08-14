@@ -1,13 +1,12 @@
-import sys
 import logging
 import json
 
 from core.config import settings as cfg
 from core.helpers import encrypt
-from core.interactions import Response
 from core.tokenizer import tokenizer
 
-def process_request(request):
+def process_request(request, response):
+
     command = str(request.json_data.get("command", "auth")).lower()
     tokenizer.set_token(request.token)
     tokenizer.set_username(request.username)
@@ -16,17 +15,16 @@ def process_request(request):
     if command == "check":
         # check: allow browser to check if session is still valid (does not auto-extend session length)
         # check-init: same as "check" but if a valid token is found it auto-extends the session length
-        resp = Response()
         if not tokenizer.validate():
-            resp.output({ "ok": False, "logout": True }, extend=False)
-            sys.exit()
+            response.output({ "ok": False, "logout": True }, extend=False)
+            return
         else:
             if request.json_data.get("extend", False):
                 username = tokenizer.username
                 logging.debug(f"[{username}@{tokenizer.remote_addr}] Session extended - {tokenizer.token}")
                 tokenizer.update() # Auto extend session
             
-            resp.output({ 
+            response.output({ 
                 "ok": True, 
                 "username": tokenizer.username,
                 #"roles": [tokenizer.role_selected], # tokenizer.roles as list
@@ -34,12 +32,11 @@ def process_request(request):
                 "connections": tokenizer.connections()
             }, extend=False)
 
-            sys.exit()
+            return
 
     if command == "login":
         from core.authenticator import authenticator
 
-        resp = Response()
         username = str(request.json_data.get("username", "")).strip()[0:100]
         password = str(request.json_data.get("password", ""))[0:256]
 
@@ -47,8 +44,8 @@ def process_request(request):
 
             if len(authenticator.roles) == 0:
                 # No roles for this login.
-                resp.output({ "ok": False })
-                sys.exit()
+                response.output({ "ok": False })
+                return
 
             tokenizer.set_username(username)
             tokenizer.set("username", username)
@@ -60,8 +57,8 @@ def process_request(request):
             tokenizer.set("role_selected", resp_data["role_selected"])
             resp_data["connections"] = tokenizer.connections()
             if len(resp_data["connections"]) == 0:
-                resp.output({ "ok": False, "error": "No connections." })
-                sys.exit()
+                response.output({ "ok": False, "error": "No connections." })
+                return
 
             if authenticator.use_token:
                 tokenizer.set(
@@ -75,127 +72,121 @@ def process_request(request):
             #tokenizer.purge()
             if not tokenizer.update():
                 logging.error(f"[{username}@{tokenizer.remote_addr}] Unable to create token")
-                resp.output({ "ok": False })
-                sys.exit()
+                response.output({ "ok": False })
+                return
 
             logging.info(f"[{username}@{tokenizer.remote_addr}] Login successful - {tokenizer.token}")
 
             # If only 1 role then return connections
-            resp.output(resp_data)
-            sys.exit()
+            response.output(resp_data)
+            return
         else:
             logging.debug(f"[{username}@{tokenizer.remote_addr}] Session extended - {tokenizer.token}")
-            resp.output({ "ok": False })
-            sys.exit()
+            response.output({ "ok": False })
+            return
 
     if command == "logout":
-        resp = Response()
         logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Logout successful - {tokenizer.token}")
         tokenizer.remove()
-        resp.output({ "ok": False, "logout": True })
-        sys.exit()
+        response.output({ "ok": False, "logout": True })
+        return
 
     # ==============================================================================================================================
 
     if not tokenizer.validate():
-        resp = Response()
         username = tokenizer.username
         if username is None:
             logging.error(f"[{tokenizer.remote_addr}] Invalid token - {tokenizer.token}")
         else:
             logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed validation - {tokenizer.token}")
-        resp.output({ "ok": False, "logout": True })
-        sys.exit()
+        response.output({ "ok": False, "logout": True })
+        return
 
     # ==============================================================================================================================
     # EVERYTHING BELOW THIS LINE MUST BE LOGGED IN WITH VALID TOKEN
 
     if command == "select-role":
-        resp = Response()
         for role_name in tokenizer.roles:
             if role_name == str(request.json_data.get("role", "")):
                 tokenizer.set("role_selected", role_name)
                 tokenizer.update()
                 logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Role changed to {role_name} - {tokenizer.token}")
-                resp.output({ "ok": True, "connections": tokenizer.connections })
-                sys.exit()
+                response.output({ "ok": True, "connections": tokenizer.connections })
+                return
 
         logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Role not found - {tokenizer.token}")
-        resp.output({ "ok": False })
-        sys.exit()
+        response.output({ "ok": False })
+        return
 
     if command == "get-profile":
         try:
             prf = tokenizer.get_profiler()
-            resp = Response()
 
             tabs = prf.get("tabs", [])
             page_settings = prf.get("settings", {})
 
-            resp.output({
+            response.output({
                 "ok": True,
                 "tabs": tabs,
                 "settings": page_settings
             })
 
         except:
-            resp.output({ "ok": False })
+            response.output({ "ok": False })
         
-        sys.exit()
+        return
 
     if command == "save-profile":
         try:
             prf = tokenizer.get_profiler()
-            resp = Response()
 
             prf.set("tabs", request.json_data.get("tabs", []))
             prf.set("settings", request.json_data.get("settings", {}))
             ret = prf.update()
 
-            resp.output({
+            response.output({
                 "ok": ret
             })
 
         except:
-            resp.output({ "ok": False })
+            response.output({ "ok": False })
 
-        sys.exit()
+        return
 
     if command == "delete-profile":
         try:
             prf = tokenizer.get_profiler()
-            resp = Response()
-
             ret = prf.remove()
 
-            resp.output({
+            response.output({
                 "ok": ret
             })
 
         except:
-            resp.output({ "ok": False })
+            response.output({ "ok": False })
 
-        sys.exit()
+        return
 
     if command == "meta":
         #logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] meta request [{tokenizer.token}]")
         from functions.meta import get_info
-        get_info(request, "meta")
+        return get_info(request, response, "meta")
 
     if command == "ddl":
         #logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] ddl request [{tokenizer.token}]")
         from functions.meta import get_info
-        get_info(request, "ddl")
+        return get_info(request, response, "ddl")
 
     if command == "details":
         #logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from functions.meta import get_info
-        get_info(request, "details")
+        return get_info(request, response, "details")
 
     if command == "query":
         #logging.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from functions.query import get_query_results
-        get_query_results(
+        return get_query_results(
+            response, 
             request.json_data.get("connection"), 
             request.json_data.get("database"), 
             request.json_data.get("statement"), 
@@ -205,6 +196,5 @@ def process_request(request):
 
     # Default response... not valid, client should initiate logout procedures
     logging.error(f"Invalid request from {request.host}")
-    resp = Response()
-    resp.output({ "ok": False, "logout": True })
-    sys.exit()
+    response.output({ "ok": False, "logout": True })
+    return

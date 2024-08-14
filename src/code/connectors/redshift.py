@@ -21,7 +21,9 @@ class Redshift(Connector):
         self.host = kwargs.get("host", "localhost")
         self.port = kwargs.get("port", 5432)
         self.options = kwargs.get("options", {})
-        
+        if "application_name" not in self.options:
+            self.options["application_name"] = f"Query Commander [{str(tokenizer.username)[0:50]}]"
+
         self.user = kwargs.get("username")
         self.password = kwargs.get("password")
         self.database = kwargs.get("database")
@@ -349,8 +351,45 @@ class Redshift(Connector):
             )
 
         if category == "sessions":
-            return "select * from pg_catalog.pg_stat_activity"
-        
+            return "\n".join([
+                "SELECT",
+                "    pid,",
+                "    usename AS user_name,",
+                "    datname AS database_name,",
+                "    client_addr AS client_address,",
+                "    application_name,",
+                "    state,",
+                "    backend_start,",
+                "    query_start,",
+                "    query",
+                "FROM",
+                "    pg_stat_activity",
+                "WHERE state = 'active'",
+                "ORDER BY",
+                "    pid"
+            ]) 
+       
+        if category == "locks":
+            return "\n".join([
+                "SELECT",
+                "    bl.pid AS wait_pid,",
+                "    bl.usename AS wait_user,",
+                "    wl.pid AS hold_pid,",
+                "    wl.usename AS hold_user,",
+                "    wl.text AS hold_statement,",
+                "    bl.text AS wait_statement",
+                "FROM",
+                "    pg_catalog.stv_blocklist bl",
+                "JOIN",
+                "    stv_sessions wl",
+                "    ON bl.locks = wl.process",
+                "JOIN",
+                "    stv_sessions ws",
+                "    ON bl.pid = ws.pid",
+                "ORDER BY",
+                "    bl.pid"
+            ])
+
         return None
 
     def meta(self, type, target, path):
@@ -531,6 +570,14 @@ class Redshift(Connector):
         sql = None
         params = None
         data = None
+
+        if type in ["sessions", "locks"]:
+            data = {
+                "meta": [], 
+                "sections": {
+                    "Source": { "type": "code", "data": self._sql(type) }
+                }
+            }
 
         if type == "table":
             #tables: name, owner, object id, has row level security, partition by, tablespace

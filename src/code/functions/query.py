@@ -1,12 +1,11 @@
-import sys
 from core.config import settings as cfg
 from core.helpers import get_utc_now
-from core.interactions import Response
 from core.tokenizer import tokenizer
 from connectors.selector import get_db_connection
 
-def get_query_results(connection_name, db_name, sql, query_type, start_record=0):
+def get_query_results(response, connection_name, db_name, sql, query_type, start_record=0):
 
+    resp = response
     records_per_request = cfg.records_per_request
 
     limit_exceeded = False
@@ -15,16 +14,14 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
         if records_per_request > remaining_records:
             records_per_request = remaining_records
 
-    resp = Response()
-
     connection = get_db_connection(connection_name, database=db_name)
     if connection is None:
         resp.output({ "ok": False, "error": "Invalid connection specified." })
-        sys.exit()
+        return
 
     if not connection.open():
         resp.output({ "ok": False, "error": "Unable to connect to server.  Please check username/password." })
-        sys.exit()
+        return
 
     data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False }
     try:
@@ -75,4 +72,4 @@ def get_query_results(connection_name, db_name, sql, query_type, start_record=0)
         "data": data
     })
 
-    sys.exit()
+    return

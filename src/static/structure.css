@@ -267,7 +267,7 @@ overlay.chooser#chooser-select-connection label > span:last-child { opacity: 0.4
 server-type { display: inline; opacity: 0.4; font-size: 0.8rem; }
 server-type::before { content: "-"; display: inline-block; margin: 0 4px; }
 templates { display: none; }
-
+hr { border: none; border-top: 1px solid var(--toolbar-border-color-dark); }
 @keyframes rotation {
     from {
         transform:rotate(0deg);

@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 - Added active sessions view to sidebar context
 - Added active locks view to sidebar context
 - Updated output process for AWS Lambda compatibility
+- Initial lambda_function.lambda_handler
 
 ## [0.4.2] - 2024-08-12
 

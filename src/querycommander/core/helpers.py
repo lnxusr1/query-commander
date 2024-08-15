@@ -73,3 +73,58 @@ def decrypt(password, ciphertext):
     decryptor = cipher.decryptor()
     plaintext = decryptor.update(ciphertext) + decryptor.finalize()
     return plaintext.decode('utf-8')
+
+def get_page_content(page_name):
+    if page_name == "index.html":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "index.html"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "text/html" }
+
+    if page_name == "script.js":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "script.js"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "text/javascript" }
+
+    if page_name == "favicon.svg":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "favicon.svg"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "image/svg+xml" }
+
+    if page_name == "logo.svg":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "logo.svg"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "image/svg+xml" }
+
+    if page_name == "structure.css":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "structure.css"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "text/css" }
+
+    if page_name == "theme.css":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "theme.css"), "r", encoding="UTF-8") as fp:
+            text = fp.read()
+
+        return text, { "Content-Type": "text/css" }
+
+    if page_name == "bglogin.jpg":
+        with open(os.path.join(os.path.dirname(__file__), "..", "static", "bglogin.jpg"), "rb") as fp:
+            content = fp.read()
+
+        return content, { "Content-Type": "image/jpeg" }
+
+    if page_name == "logo.png":
+        filename = os.path.join(os.path.dirname(__file__), "..", "static", "logo.png")
+        file_size = os.path.getsize(filename)
+        with open(filename, "rb") as fp:
+            content = fp.read()
+
+        import logging
+        logging.error(file_size)
+        return content, { "Content-Type": "image/png", "Content-Length": str(file_size) }
+
+    return "", { "Content-Type": "text/plain" }

@@ -1,0 +1,8 @@
+global-exclude *.py[cod]
+include CHANGELOG.md
+include README.md
+include LICENSE
+include requirements.txt
+include src/querycommander/static/*.*
+include src/querycommander/.htaccess
+include src/querycommander/connectors/extra_sql/*.*

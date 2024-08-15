@@ -6,17 +6,17 @@
 
 	<title>Query Commander</title>
 
-    <link rel="icon" type="image/png" href="favicon.svg">
-    <meta name="msapplication-TileImage" content="favicon.svg">
+    <link rel="icon" type="image/png" href="?page=favicon.svg">
+    <meta name="msapplication-TileImage" content="?page=favicon.svg">
 
     <!-- <link rel="stylesheet" href="libs/fontawesome/css/all.min.css"> -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="structure.css">
-    <link rel="stylesheet" href="theme.css">
+    <link rel="stylesheet" href="?page=structure.css">
+    <!-- <link rel="stylesheet" href="?page=theme.css"> -->
     <!-- <script type="text/javascript" src="libs/jquery/jquery-3.7.1.min.js"></script> -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-    <script src="script.js" type="module"></script>
+    <script src="?page=script.js" type="module"></script>
 
 </head>
 <body>
@@ -37,7 +37,7 @@
         <div>
             <div class="card-left"></div>
             <div class="card">
-                <h1 class="logo"><img src="logo.png" alt="Query Commander" /></h1>
+                <h1 class="logo"><img src="?page=logo.png" alt="Query Commander" /></h1>
                 <form id="form-login">
                     <h2>Sign In</h2>
                     <div id="login-error">Username or password is invalid. Login failed.</div>
@@ -137,21 +137,21 @@
     <toolbar>
         <div>
             <item class="logo">
-                <a target="_new" title="Query Commander" href="https://www.querycommander.com"><img alt="Query Commander" src="favicon.svg" /></a>
+                <a target="_new" title="Query Commander" href="https://www.querycommander.com"><img alt="Query Commander" src="?page=favicon.svg" /></a>
             </item>
             <item>
                 <button id="btn-save-profile" title="Save"><i class="fas fa-floppy-disk fa-fw"></i></button>
                 <button class="btn-open-role-chooser" title="Role" style="display: none;"><i class="fas fa-shield-halved"></i><span id="role_selected">&lt;default&gt;</span></button>
                 <button id="btn-new-tab" title="New SQL Script"><i class="fas fa-scroll fa-fw"></i><span>SQL</span></button>
-                <button title="Settings"><i class="fas fa-screwdriver-wrench fa-fw"></i></button>
+                <button style="display:none;" id="btn-settings" title="Settings"><i class="fas fa-screwdriver-wrench fa-fw"></i></button>
                 <button id="btn-outdent" title="Decrease Indent"><i class="fas fa-outdent fa-fw"></i></button>
                 <button id="btn-indent" title="Increase Indent"><i class="fas fa-indent fa-fw"></i></button>
                 <button id="btn-execute" title="Execute [Ctrl+Q]"><i class="fas fa-play fa-fw"></i><span>Execute</span></button>
-                <button title="Help"><i class="far fa-circle-question fa-fw"></i></button>
+                <button id="btn-help" title="Help"><i class="far fa-circle-question fa-fw"></i></button>
             </item>
             <item>
                 <div>
-                    <button title="About"><i class="fas fa-circle-info fa-fw"></i></button>
+                    <button id="btn-about" title="About"><i class="fas fa-circle-info fa-fw"></i></button>
                     <button id="btn-logout" title="Logout"><i class="fas fa-right-from-bracket fa-fw"></i></button>
                 </div>
             </item>
@@ -229,7 +229,7 @@
                     </item>
                     <item>
                         <button class="btn-tab-explain" title="Explain Plan"><i class="far fa-map fa-fw"></i></button>
-                        <button class="btn-tab-settings" title="Settings"><i class="fas fa-gear fa-fw"></i></button>
+                        <button style="display:none;" class="btn-tab-settings" title="Settings"><i class="fas fa-gear fa-fw"></i></button>
                     </item>
                 </navmenu>
                 <div>

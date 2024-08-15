@@ -1,1 +1,0 @@
-export var site_path = '/api/index';

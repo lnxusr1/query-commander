@@ -1,5 +1,5 @@
-import { site_path } from './path.js';
-var version = "v0.4.3";
+var site_path = window.location.href;
+var version = "v${VERSION}";
 var timer;
 var is_mouse_down = false;
 var current_user = "";
@@ -1679,6 +1679,16 @@ function doSaveProfile() {
 
 $(document).ready(function() {
     $('version').text(version);
+
+    $('#btn-help').click(function() {
+        window.open('https://docs.querycommander.com', 'docs_page');
+        return false;
+    });
+
+    $('#btn-about').click(function() {
+        window.open('https://docs.querycommander.com/en/latest/about/', 'docs_page');
+        return false;
+    });
 
     $('#btn-logout').click(function() { doLogout(); return false; });
     $('#form-login').submit(function() { doLogin(); return false; });

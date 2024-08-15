@@ -1,4 +1,4 @@
-@import url('theme.css');
+@import url('?page=theme.css');
 
 /* basic page setup */
 html, body {
@@ -216,7 +216,7 @@ overlay .message { overflow: auto; }
 
 overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--editor-bg); z-index: 200; }
 overlay#login > div { user-select: none; display: flex; flex-direction: row; height: 100vh; }
-overlay#login .card-left { flex: 1; background-color: var(--main-bg); background: url('bglogin.jpg'); background-repeat: no-repeat; background-position: center, center; background-size: cover; }
+overlay#login .card-left { flex: 1; background-color: var(--main-bg); background: url('?page=bglogin.jpg'); background-repeat: no-repeat; background-position: center, center; background-size: cover; }
 overlay#login .card { width: 35%; height: 100vh; display: flex; flex-direction: column; justify-content: space-between; }
 /* overlay#login .card { position: absolute; top: calc(50% - 70px); left: calc(50% - 100px); max-width: 220px; } */
 

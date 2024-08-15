@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2024-08-14
+
+- Major change for configuration (working toward python module install)
+- Reworked Apache documentation, testing Lambda configuration
+
 ## [0.4.3] - 2024-08-13
 
 - Added active sessions view to sidebar context

@@ -31,20 +31,14 @@ Example configuration for the virtual host is shown below:
 <VirtualHost *:443>
     ServerAdmin webmaster@localhost
     ServerName your-site-name.com
-    DocumentRoot /path/to/query-commander/src/static
+    DocumentRoot /path/to/query-commander/src/querycommander/
+
+    SetEnv QRYCOMM_CONFIG_PATH "/path/to/your/folder/for/config/files"
 
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 
-    <Directory /path/to/query-commander/src/static/>
-        Options FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-
-    Alias /api /path/to/query-commander/src/code/
-
-    <Directory "/path/to/query-commander/src/code/">
+    <Directory "/path/to/query-commander/src/querycommander/">
         AllowOverride All
         Options FollowSymLinks ExecCGI 
         Require all granted

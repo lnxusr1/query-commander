@@ -8,18 +8,50 @@
 
 ## Setup the Python Runtime Environment
 
-``` shell
+``` bash
 apt-get install python3-pip
 apt-get install python3-venv
 
+# Setup some empty folders for later
+mkdir -p /path/to/query-commander/site
+mkdir -p /path/to/query-commander/config
+
 python3 -m venv /path/to/query-commander/.venv
 source /path/to/query-commander/.venv/bin/activate
-pip install -r /path/to/query-commander/requirements.txt
+pip install querycommander[all]
 ```
+
+## Place your index script
+
+``` bash
+vi /path/to/query-commander/site/index.py
+```
+
+Enter the following text and save the file:
+
+``` python
+#!/usr/bin/env python
+from querycommander import start
+start.as_cgi()
+```
+
+Make sure to set the file to executable:
+
+``` bash
+chmod a+x /path/to/query-commander/site/index.py
+```
+
+Now add your ```settings.yml``` file:
+
+``` bash
+vi /path/to/query-commander/config/settings.yml
+```
+
+*See the [Configuration](basic.md) section for configuration options.*
 
 ## Set up the Apache Virtual Host
 
-Create a file:  
+Create an Apache configuration file:  
 
 ```
 sudo vi /etc/apache2/sites-available/your-site-name.conf
@@ -31,14 +63,14 @@ Example configuration for the virtual host is shown below:
 <VirtualHost *:443>
     ServerAdmin webmaster@localhost
     ServerName your-site-name.com
-    DocumentRoot /path/to/query-commander/src/querycommander/
+    DocumentRoot /path/to/query-commander/site/
 
-    SetEnv QRYCOMM_CONFIG_PATH "/path/to/your/folder/for/config/files"
+    SetEnv QRYCOMM_CONFIG_PATH "/path/to/query-commander/config"
 
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 
-    <Directory "/path/to/query-commander/src/querycommander/">
+    <Directory "/path/to/query-commander/site/">
         AllowOverride All
         Options FollowSymLinks ExecCGI 
         Require all granted
@@ -63,30 +95,20 @@ sudo a2ensite your-site-name
 sudo systemctl restart apache2
 ```
 
-## Mark all *.py files as executable
+## Connecting to the UI
 
-``` shell
-cd /path/to/query-commander/src/code/
-chmod a+x *.py
-chmod a+x connectors/*.py
-chmod a+x core/*.py
-chmod a+x functions/*.py
+The Python module is designed to serve the necessary HTML directly from the module so after enabling your site you should be able to browser to the URL that would represent "index.py".  If you've enabled indexes in your Apache configuration you can access it by navigating to the directory that index.py is served under.
+
+In the example configuration above that would equate to:
+
+``` html
+https://your-site-name.com/index.py
 ```
 
-## Update the JavaScript path to the API
-
-To connect the static pages to the API you may need to adjust the URL the application uses to connect to the backend.  This is generally only required if you are locating the python files at a path different than the "api" sub path from the static code.  The Apache configuration above when used exactly as specified does not require this change, but as installations vary this path is configurable.
-
-To change it edit the file **path.js** in the static folder of the repository.
-
-``` javascript
-export var site_path = '/api/index';
-```
-
-Change **site_path** to point to any URL that will respond to the API requests.
+As always, reach out and start a [discussion](https://github.com/lnxusr1/query-commander/discussions) if you need help.
 
 !!! note "Linux Installations"
     These instructions are targeted for Debian-based Linux distributions.  Other distributions may require minor adjustments.  
 
 !!! warning "Microsoft Windows Installations"
-    If you are installing on Windows you will at least need to check the header in ```query-commander/src/code/index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussion on [GitHub](https://github.com/lnxusr1/query-commander/discussions).
+    If you are installing on Windows you will at least need to check the header in your ```index.py``` and be sure it points to a valid python interpreter and work your way out from there.  For more specific help then join in the discussion on [GitHub](https://github.com/lnxusr1/query-commander/discussions).

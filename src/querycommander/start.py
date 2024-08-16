@@ -4,10 +4,11 @@ import logging
 import json
 
 from functions import process_request
+from core.config import settings as cfg
 from core.interactions import Request, Response
 from core.helpers import get_page_content
 
-VERSION = (0, 5, 0)
+VERSION = (0, 5, 1)
 __version__ = ".".join([str(x) for x in VERSION])
 
 logging.basicConfig(
@@ -41,6 +42,9 @@ def as_cgi():
         else:
             if path_value == "script.js":
                 page_content = page_content.replace("${VERSION}", __version__)
+            if path_value == "index.html":
+                page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
+                page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
             sys.stdout.buffer.write(page_content.encode())
         sys.exit()
 

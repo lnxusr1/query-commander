@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1] - 2024-08-15
+
+- PyPi module launch
+- CDN configuration options for overriding default sources
+- Additional general documentation cleanup/updates for 5.x version
+- Simplified installation process
+
 ## [0.5.0] - 2024-08-14
 
 - Major change for configuration (working toward python module install)

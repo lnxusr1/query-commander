@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "querycommander"
+version = "0.5.1"
+description = "Browser-based SQL Query Tool for Universal Database Management"
+readme = "README.md"
+authors = [
+    { name = "lnxusr1", email = "dist@querycommander.com" },
+]
+license = {file = "LICENSE"}
+keywords = ["database","dba","sql","mysql","postgresql","oracle","oracldb","mariadb","redshift"]
+dependencies = [
+    "boto3",
+    "cryptography",
+    "PyYAML",
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.6"
+
+[project.optional-dependencies]
+oracle = [
+    "oracledb",
+]
+mysql = [
+    "mysql-connector-python",
+]
+mariadb = [
+    "mysql-connector-python",
+]
+postgres = [
+    "psycopg",
+]
+redshift = [
+    "psycopg",
+]
+redis = [
+    "redis",
+]
+ldap = [
+    "ldap3",
+]
+all-dbs = [
+    "oracledb",
+    "psycopg",
+    "mysql-connector-python",
+]
+all = [
+    "oracledb",
+    "psycopg",
+    "mysql-connector-python",
+    "redis",
+    "ldap3",
+]
+
+[project.urls]
+Homepage = "https://querycommander.com"
+Documentation = "https://docs.querycommander.com"
+Repository = "https://github.com/lnxusr1/query-commander.git"
+Issues = "https://github.com/lnxusr1/query-commander/issues"
+Changelog = "https://docs.querycommander.com/en/latest/changelog/"
+
+[tool.flake8]
+ignore = ["E201", "E202", "W293", "W291", "W292"]
+max-line-length = 160
+exclude = ["tests/*"]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]

@@ -49,6 +49,27 @@ class Settings:
     @property
     def rate_limit_period(self):
         return int(self.data.get("settings", {}).get("rate_limit", {}).get("period", -1))
+    
+    @property
+    def cdn_fontawesome(self):
+        far = self.data.get("settings", {}).get("cdns", {}).get("fontawesome", {})
+        fa = {
+            "href": far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"),
+            "integrity": far.get("integrity", "sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="),
+            "crossorigin": far.get("crossorigin", "anonymous"),
+            "referrerpolicy": far.get("referrerpolicy", "no-referrer")
+        }
+        
+        return f"<link rel=\"stylesheet\" " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + " />"
+
+    @property
+    def cdn_jquery(self):
+        far = self.data.get("settings", {}).get("cdns", {}).get("jquery", {})
+        fa = {
+            "src": far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css")
+        }
+        
+        return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
 
     def sys_settings(self, name, default=None):
         return self.data.get("settings", {}).get(name, default)

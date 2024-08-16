@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 
-import os
-import sys
 import logging
-
-from functions import process_request
-from core.interactions import Request, Response
-from core.helpers import get_page_content
 
 logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S %z',

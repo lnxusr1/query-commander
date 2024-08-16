@@ -48,5 +48,29 @@ Introducing **Query Commander**, the revolutionary *opensource* browser-based SQ
     
     Persona proxies (a.k.a. role-based service accounts) eliminate the need for users to be individually created/maintained inside the database.  This feature can save time being wasted on database account management and access pruning which can be significant depending on the size of your userbase.
 
+## Installation
+
+For local installations the easiest way to get started is to use pip as shown below:
+
+``` bash
+pip install querycommander
+```
+
+The above installs the basic software and only includes AWS integrations by default.  To install specific connectors or components use one or more of the following commands:
+
+``` bash
+# Database Connectors
+pip install querycommander[postgres]
+pip install querycommander[mysql]
+pip install querycommander[oracle]
+pip install querycommander[redshift]
+
+# Other connectors
+pip install querycommander[redis] # For Redis session token storage
+pip install querycommander[ldap]  # For LDAP authentication
+
+# Install everything in one command
+pip install querycommander[all]
+```
 
 

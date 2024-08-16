@@ -37,6 +37,31 @@ Introducing **Query Commander**, the revolutionary *opensource* browser-based SQ
     - Traditional installation with CGI executions
     - Optional **Serverless** installation (AWS API Gateway, Lambda, S3, DynamoDB, and Secrets Manager)
 
+## Installation
+
+For local installations the easiest way to get started is to use pip as shown below:
+
+``` shell
+pip install querycommander
+```
+
+The above installs the basic software and only includes AWS integrations by default.  To install specific connectors or components use one or more of the following commands:
+
+``` shell
+# Database Connectors
+pip install querycommander[postgres]
+pip install querycommander[mysql]
+pip install querycommander[oracle]
+pip install querycommander[redshift]
+
+# Other connectors
+pip install querycommander[redis] # For Redis session token storage
+pip install querycommander[ldap]  # For LDAP authentication
+
+# Install everything in one command
+pip install querycommander[all]
+```
+
 ## Learn More
 
 [Read the Documentation](https://docs.querycommander.com)

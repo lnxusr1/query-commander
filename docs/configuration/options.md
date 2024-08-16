@@ -10,6 +10,7 @@ The following is a list of optional values you can specify in the *settings.yml*
 | aws_profile_name    | *None*  | Name for Profile-based authentication to AWS services.       |
 | aws_region_name     | *None*  | AWS Region Name                                              |
 | rate_limit          | *None*  | Record return rate limits (see **Rate Limits** section below) |
+| cdns                | *None*  | CDNs used to customize location client libraries             |
 
 ## Example
 
@@ -31,3 +32,19 @@ settings:
 ```
 
 The example above will limit the maximum rows that can be downloaded to 20,000 records in any 10 minute timeframe.  This limit is regardless of the number of queries executed.
+
+## CDNs
+
+The CDNs used to pull the client libraries are configurable, but by default will pull from the public CDNs.  Examples of configuration is shown below with the default values for each.  To change just include in the settings file and modify as desired.  Any attributes other than the required *url* will be placed in the html as name=value pairs.
+
+``` yaml
+settings:
+  cdns:
+    fontawesome:
+      url: https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css
+      integrity: sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==
+      crossorigin: anonymous
+      referrerpolicy: no-referrer
+    jquery:
+      url: https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js
+```

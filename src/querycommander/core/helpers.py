@@ -124,7 +124,6 @@ def get_page_content(page_name):
             content = fp.read()
 
         import logging
-        logging.error(file_size)
         return content, { "Content-Type": "image/png", "Content-Length": str(file_size) }
 
     return "", { "Content-Type": "text/plain" }

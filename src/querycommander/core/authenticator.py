@@ -1,13 +1,14 @@
 import sys
 import logging
 import ldap3
-from core.config import settings as cfg
-from core.helpers import validate_string
+from querycommander.core.config import settings as cfg
+from querycommander.core.helpers import validate_string
 
 
 class Authenticator:
     def __init__(self, **kwargs):
-        pass
+        self.logger = logging.getLogger("AUTHENTICATOR")
+        self.logger.setLevel(cfg.log_level)
 
     @property
     def use_token(self):
@@ -139,8 +140,8 @@ class LDAPAuth(Authenticator):
             if self.conn is not None:
                 self.conn.unbind()
         except:
-            logging.error(f"[LDAP {self.host}] Unbind error, skipping")
-            logging.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
+            self.logger.error(f"[LDAP {self.host}] Unbind error, skipping")
+            self.logger.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
             return False
         
         return True
@@ -184,8 +185,8 @@ class LDAPAuth(Authenticator):
             # If we reach this line then the login was valid
 
         except Exception:
-            logging.error(f"[LDAP {self.host}] LDAP credential validation failed for user: {username}")
-            logging.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
+            self.logger.error(f"[LDAP {self.host}] LDAP credential validation failed for user: {username}")
+            self.logger.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
             return False
 
         return True

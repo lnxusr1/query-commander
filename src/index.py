@@ -11,5 +11,5 @@ logging.getLogger("psycopg.pq").setLevel(logging.INFO)
 logging.getLogger("botocore").setLevel(logging.INFO)
 logging.getLogger("urllib3").setLevel(logging.INFO)
 
-import start
+from querycommander import start
 start.as_cgi()

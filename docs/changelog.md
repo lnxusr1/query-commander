@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2] - 2024-08-16
+
+- Bug fix in module inheritance from pypi package
+- Redesigned page start using start.as_cgi() or start.as_lambda(event, context)
+- Added log_level setting
+- Centralized version number management
+- Improved log divisions
+
 ## [0.5.1] - 2024-08-15
 
 - PyPi module launch

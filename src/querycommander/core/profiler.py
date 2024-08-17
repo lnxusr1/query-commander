@@ -5,7 +5,7 @@ import json
 import logging
 import datetime
 
-from core.config import settings as cfg
+from querycommander.core.config import settings as cfg
 
 
 class Profiler:
@@ -14,6 +14,8 @@ class Profiler:
         self.username = None
         self.settings = kwargs
         self.data = None
+        self.logger = logging.getLogger("PROFILER")
+        self.logger.setLevel(cfg.log_level)
 
     def _get_profile_data(self):
         # OVERRIDE THIS METHOD

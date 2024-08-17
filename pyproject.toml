@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "querycommander"
-version = "0.5.1"
+dynamic = ["version"]
 description = "Browser-based SQL Query Tool for Universal Database Management"
 readme = "README.md"
 authors = [

@@ -1,13 +1,15 @@
 import os
+import sys
 import datetime
 import tempfile
 import hashlib
 import json
+import traceback
 import logging
 import http.cookies
-from core.helpers import get_utc_now, generate_session_token, validate_string
-from core.config import settings as cfg
-from core.profiler import profiler as prf
+from querycommander.core.helpers import get_utc_now, generate_session_token, validate_string
+from querycommander.core.config import settings as cfg
+from querycommander.core.profiler import profiler as prf
 
 class Tokens:
     def __init__(self, **kwargs):
@@ -20,6 +22,8 @@ class Tokens:
         self._connections = None
         self._username = None
         self._do_update = False
+        self.logger = logging.getLogger("TOKENIZER")
+        self.logger.setLevel(cfg.log_level)
 
     def _get_token_data(self):
         # OVERRIDE THIS METHOD
@@ -457,11 +461,15 @@ class DynamoDBTokens(Tokens):
 
     def _put_token_data(self):
         if self.token is None or self._username is None or self.data is None:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             return False
         
         try:
             self.conn.put_item(TableName=self.table_name, Item={ "username": { 'S': self._username}, "data": {'S': json.dumps(self.data) }})
         except:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
+            self.logger.debug(str(sys.exc_info()[0]))
+            self.logger.debug(str(traceback.format_exc()))
             return False
         
         return True

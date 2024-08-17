@@ -3,13 +3,11 @@ import sys
 import logging
 import json
 
-from functions import process_request
-from core.config import settings as cfg
-from core.interactions import Request, Response
-from core.helpers import get_page_content
-
-VERSION = (0, 5, 1)
-__version__ = ".".join([str(x) for x in VERSION])
+from querycommander import __version__
+from querycommander.functions import process_request
+from querycommander.core.config import settings as cfg
+from querycommander.core.interactions import Request, Response
+from querycommander.core.helpers import get_page_content
 
 logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S %z',
@@ -33,7 +31,6 @@ def as_cgi():
         page_content, headers = get_page_content(path_value)
 
         for item in headers:
-            logging.info(f"{item}: {headers[item]}\n")
             sys.stdout.buffer.write(f"{item}: {headers[item]}\n".encode())
 
         sys.stdout.buffer.write("\n".encode())
@@ -42,9 +39,11 @@ def as_cgi():
         else:
             if path_value == "script.js":
                 page_content = page_content.replace("${VERSION}", __version__)
+
             if path_value == "index.html":
                 page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
                 page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+
             sys.stdout.buffer.write(page_content.encode())
         sys.exit()
 
@@ -63,33 +62,56 @@ def as_cgi():
     resp.send()
 
 def as_lambda(event, context):
-    if event["httpMethod"] == "GET":
-        page_content, headers = get_page_content(event["queryStringParameters"].get("page", "index"))
-        if headers["Content-Type"] in ["image/jpeg", "image/png"]:
-            import base64
-            return {
-                'statusCode': '200',
-                'body': base64.b64encode(page_content).decode('utf-8'),
-                'headers': headers,
-                'isBase64Encoded': True
-            }
-        else:
-            return {
-                'statusCode': '200',
-                'body': page_content,
-                'headers': headers
-            }
 
     headers = {}
     for hdr in event.get("headers", {}):
-        headers[hdr.upper()] = event.get("headers", {}).get(hdr, "")
+        headers[hdr.upper().replace("-","_")] = event.get("headers", {}).get(hdr, "")
 
     headers["REMOTE_ADDR"] = event.get("requestContext", {}).get("identity", {}).get("sourceIp", "")
     if "COOKIE" in headers:
         headers["HTTP_COOKIE"] = headers.get("COOKIE")
 
+    if event["httpMethod"] == "GET":
+        
+        path_value = event["queryStringParameters"].get("page", "index.html") if isinstance(event["queryStringParameters"], dict) else "index.html"
+        page_content, hdrs = get_page_content(path_value)
+
+        if hdrs["Content-Type"] in ["image/jpeg", "image/png"]:
+            import base64
+            return {
+                'statusCode': '200',
+                'body': base64.b64encode(page_content).decode('utf-8'),
+                'headers': hdrs,
+                'isBase64Encoded': True
+            }
+        else:
+
+            if path_value == "script.js":
+                page_content = page_content.replace("${VERSION}", __version__)
+
+            if path_value == "index.html":
+                page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
+                page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+
+            return {
+                'statusCode': '200',
+                'body': page_content,
+                'headers': hdrs
+            }
+
+    my_body = "{}"
+    if "body" in event:
+        if "isBase64Encoded" in event:
+            if event.get("isBase64Encoded", False):
+                import base64
+                my_body = base64.b64decode(event.get("body")).decode("UTF-8")
+            else:
+                my_body = event.get("body")
+        else:
+            my_body = event.get("body")
+
     request = Request(**headers)
-    request.set_data(event.get("body", "{}"))
+    request.set_data(my_body)
     resp = Response()
 
     try:

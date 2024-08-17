@@ -4,6 +4,7 @@ The following is a list of optional values you can specify in the *settings.yml*
 
 | Setting             | Default | Description                                                  |
 | :------------------ | :------ | :----------------------------------------------------------- |
+| log_level           | "info"  | Standard python logging levels (debug, info, error, etc.)    |
 | records_per_request | 200     | Number of records returned in a single page request.         |
 | aws_access_key      | *None*  | AWS Access Key for Key-based authentication to AWS services. |
 | aws_secret_key      | *None*  | AWS Secret Key for Key-based authentication to AWS services. | 

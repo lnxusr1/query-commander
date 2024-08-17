@@ -3,7 +3,7 @@ import json
 import yaml
 import logging
 
-from core.connections import Connections
+from querycommander.core.connections import Connections
 
 class Settings:
     CONFIG_PATH = os.environ.get("QRYCOMM_CONFIG_PATH", os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
@@ -59,17 +59,33 @@ class Settings:
             "crossorigin": far.get("crossorigin", "anonymous"),
             "referrerpolicy": far.get("referrerpolicy", "no-referrer")
         }
-        
         return f"<link rel=\"stylesheet\" " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + " />"
 
     @property
     def cdn_jquery(self):
         far = self.data.get("settings", {}).get("cdns", {}).get("jquery", {})
         fa = {
-            "src": far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css")
+            "src": far.get("url", "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js")
         }
-        
         return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
+
+    @property
+    def log_level(self):
+        lvl = str(self.data.get("settings", {}).get("log_level", "info")).lower()
+
+        if lvl == "critical":
+            return logging.CRITICAL
+
+        if lvl == "error":
+            return logging.ERROR
+
+        if lvl == "warning":
+            return logging.WARNING
+
+        if lvl == "debug":
+            return logging.DEBUG
+        
+        return logging.INFO
 
     def sys_settings(self, name, default=None):
         return self.data.get("settings", {}).get(name, default)

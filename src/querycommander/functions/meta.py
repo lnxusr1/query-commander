@@ -1,5 +1,5 @@
-from core.tokenizer import tokenizer
-from connectors.selector import get_db_connection
+from querycommander.core.tokenizer import tokenizer
+from querycommander.connectors.selector import get_db_connection
 
 
 def get_info(request, response, data_type="meta"):

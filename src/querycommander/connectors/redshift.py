@@ -8,8 +8,8 @@ from decimal import Decimal
 import time
 
 import psycopg
-from connectors import Connector
-from core.tokenizer import tokenizer
+from querycommander.connectors import Connector
+from querycommander.core.tokenizer import tokenizer
 
 
 class Redshift(Connector):
@@ -67,8 +67,8 @@ class Redshift(Connector):
                 self.connection.add_notice_handler(self._save_notice)
 
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to connect to database.")
                 self.connection = None
                 return False
@@ -80,8 +80,8 @@ class Redshift(Connector):
             try:
                 self.connection.commit()
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to commit transaction.")
                 return False
         
@@ -92,8 +92,8 @@ class Redshift(Connector):
             try:
                 self.connection.close()
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close database connection.")
                 return False
 
@@ -102,9 +102,9 @@ class Redshift(Connector):
     def execute(self, sql, params=None):
         if self.connection is not None:
             try:
-                logging.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {tokenizer.token}")
+                self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {tokenizer.token}")
                 if params is not None:
-                    logging.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
+                    self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.execute(sql, params=params)
@@ -116,13 +116,13 @@ class Redshift(Connector):
 
                 return cur
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Query execution failed.")
                 raise
             
         else:
-            logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {tokenizer.token}")
+            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {tokenizer.token}")
             self.err.append("Unable to establish connection")
             raise ConnectionError("Unable to establish connection")
 
@@ -136,15 +136,15 @@ class Redshift(Connector):
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except TypeError:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(sql))
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(sql))
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
                 headers = []
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(sql))
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(sql))
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
                 headers = []
                 self.stats["end_time"] = time.time()
@@ -179,13 +179,13 @@ class Redshift(Connector):
                 if str(e) == "the last operation didn't produce a result":
                     pass
                 else:
-                    logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
-                    logging.debug(str(traceback.format_exc()))
+                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
+                    self.logger.debug(str(traceback.format_exc()))
                     self.stats["end_time"] = time.time()
                     return
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to fetch rows for query.")
                 self.stats["end_time"] = time.time()
                 raise
@@ -193,14 +193,14 @@ class Redshift(Connector):
             try:
                 cur.close()
             except:
-                logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
-                logging.debug(str(traceback.format_exc()))
+                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close cursor for query.")
                 self.stats["end_time"] = time.time()
                 raise
 
         else:
-            logging.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
+            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
             self.err.append("Unable to establish connection")
             self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")

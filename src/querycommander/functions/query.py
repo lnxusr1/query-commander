@@ -1,7 +1,7 @@
-from core.config import settings as cfg
-from core.helpers import get_utc_now
-from core.tokenizer import tokenizer
-from connectors.selector import get_db_connection
+from querycommander.core.config import settings as cfg
+from querycommander.core.helpers import get_utc_now
+from querycommander.core.tokenizer import tokenizer
+from querycommander.connectors.selector import get_db_connection
 
 def get_query_results(response, connection_name, db_name, sql, query_type, start_record=0):
 

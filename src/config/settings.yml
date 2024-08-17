@@ -1,4 +1,5 @@
 settings:
+  log_level: debug
   records_per_request: 200
 
 tokenizer:

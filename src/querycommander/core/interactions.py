@@ -1,6 +1,6 @@
 import json
 import http.cookies
-from core.tokenizer import tokenizer
+from querycommander.core.tokenizer import tokenizer
 
 
 class Response:

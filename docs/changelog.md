@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3] - 2024-08-17
+
+- Added S3 Profile storage option
+- Added "lambda" install subdivision for pip installer
+- Updated installation docs for AWS API Gateway/Lambda install
+- Logging cleanup
+
 ## [0.5.2] - 2024-08-16
 
 - Bug fix in module inheritance from pypi package

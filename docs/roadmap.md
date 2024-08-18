@@ -39,6 +39,7 @@ The application roadmap will continue to evolve over the next several months as 
     - Local Profiles - **COMPLETE**
     - DynamoDB Profiles - **COMPLETE**
     - <strike>Redis Profiles</strike>
+    - S3 Profiles - **COMPLETE**
 
 - Installers
     - Shell Script / Executable
@@ -56,5 +57,5 @@ As no good tool is ever truly complete please find below the scratch-pad of feat
 - SQL Autocomplete
 - Microsoft SQL Server
 - IBM DB2 (LUW)
-- S3 object options (in addition to Local, DynamoDB, and Redis)
+- <strike>S3 object options (in addition to Local, DynamoDB, and Redis)</strike> - *ADDED in 0.5.3*
 - Result download options for CSV, XML, JSON, etc.

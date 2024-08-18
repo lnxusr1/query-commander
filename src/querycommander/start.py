@@ -18,6 +18,9 @@ logging.getLogger("psycopg.pq").setLevel(logging.INFO)
 logging.getLogger("botocore").setLevel(logging.INFO)
 logging.getLogger("urllib3").setLevel(logging.INFO)
 
+logger = logging.getLogger("START")
+logger.setLevel(cfg.log_level)
+
 def as_cgi():
     if os.environ.get("REQUEST_METHOD", "GET") == "GET":
         import cgi
@@ -28,6 +31,7 @@ def as_cgi():
         if path_value is None or str(path_value) == "":
             path_value = "index.html"
 
+        logger.info(f"Request for {path_value}")
         page_content, headers = get_page_content(path_value)
 
         for item in headers:
@@ -74,6 +78,8 @@ def as_lambda(event, context):
     if event["httpMethod"] == "GET":
         
         path_value = event["queryStringParameters"].get("page", "index.html") if isinstance(event["queryStringParameters"], dict) else "index.html"
+        logger.info(f"Request for {path_value}")
+
         page_content, hdrs = get_page_content(path_value)
 
         if hdrs["Content-Type"] in ["image/jpeg", "image/png"]:

@@ -189,11 +189,72 @@ class DynamoDBProfiler(Profiler):
         return True
 
 
+class S3Profiler(Profiler):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        import boto3
+        boto3.set_stream_logger('boto3', logging.WARNING)
+        boto3.set_stream_logger('botocore', logging.WARNING)
+        logging.getLogger('urllib3').setLevel(logging.WARNING)
+
+        self.bucket_name = kwargs.get("bucket")
+        self.key_prefix = kwargs.get("prefix", "")
+
+        session = boto3.Session(**cfg.aws_credentials(kwargs))
+        self.conn = session.client('s3', region_name=cfg.aws_region_name(kwargs))
+
+    def _get_profile_data(self):
+        if self.username is None:
+            return super()._get_profile_data()
+        
+        data = super()._get_profile_data()
+
+        try:
+            filename = f"{hashlib.sha1(self.username.encode()).hexdigest()}.json"
+            s3_key = f"{self.key_prefix.strip('/')}/{filename}".strip('/')
+            response = self.conn.get_object(Bucket=self.bucket_name, Key=s3_key)
+            content = response['Body'].read().decode('utf-8')
+            data = json.loads(content)
+        except:
+            return super()._get_profile_data()
+
+        return data
+
+    def _put_profile_data(self):
+        if self.username is None or self.data is None:
+            return False
+        
+        try:
+            filename = f"{hashlib.sha1(self.username.encode()).hexdigest()}.json"
+            s3_key = f"{self.key_prefix.strip('/')}/{filename}".strip('/')
+            self.conn.put_object(Bucket=self.bucket_name, Key=s3_key, Body=json.dumps(self.data))
+        except:
+            return False
+        
+        return True
+    
+    def _remove_profile_data(self):
+        if self.username is None:
+            return False
+
+        try:
+            filename = f"{hashlib.sha1(self.username.encode()).hexdigest()}.json"
+            s3_key = f"{self.key_prefix.strip('/')}/{filename}".strip('/')
+            self.conn.delete_object(Bucket=self.bucket_name, Key=s3_key)
+        except:
+            return False
+        
+        return True
+
+
 def get_profiler(connection_details):
     if connection_details.get("type", "local") == "local":
         return LocalProfiler(**connection_details)
     if connection_details.get("type", "local") == "dynamodb":
         return DynamoDBProfiler(**connection_details)
+    if connection_details.get("type", "local") == "s3":
+        return S3Profiler(**connection_details)
         
         
     return Profiler(**connection_details)

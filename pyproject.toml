@@ -13,7 +13,6 @@ authors = [
 license = {file = "LICENSE"}
 keywords = ["database","dba","sql","mysql","postgresql","oracle","oracldb","mariadb","redshift"]
 dependencies = [
-    "boto3",
     "cryptography",
     "PyYAML",
 ]
@@ -52,6 +51,14 @@ all-dbs = [
     "mysql-connector-python",
 ]
 all = [
+    "oracledb",
+    "psycopg",
+    "mysql-connector-python",
+    "redis",
+    "boto3",
+    "ldap3",
+]
+lambda = [
     "oracledb",
     "psycopg",
     "mysql-connector-python",

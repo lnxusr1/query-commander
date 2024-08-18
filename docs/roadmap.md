@@ -13,7 +13,7 @@ The application roadmap will continue to evolve over the next several months as 
     - DB Session Viewer - **COMPLETE**
     - DB Lock Viewer - **COMPLETE**
     - Rate Limits - **COMPLETE**
-    - Client-side Results Filtering
+    - Client-side Results Filtering - **COMPLETE**
 
 - Authenticators
     - Local Database authentication - **COMPLETE**

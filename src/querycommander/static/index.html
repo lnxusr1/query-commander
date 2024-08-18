@@ -131,6 +131,40 @@
             </div>
         </form>
     </overlay>
+    
+    <overlay class="chooser" id="tab-filter-options">
+        <form>
+            <div class="message-box">
+                <div class="title">
+                    <span>Filter Options</span>
+                    <button class="btn-chooser-close"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="message">
+                        <div>
+                            <item><select id="sel-column"></select></item>
+                            <item><select id="sel-compare">
+                                <option value="sw">starts with</option>
+                                <option value="ew">ends with</option>
+                                <option value="cn">contains</option>
+                                <option value="eq">equals</option>
+                                <option value="gt">greater than</option>
+                                <option value="lt">less than</option>
+                            </select></item>
+                            <item><input id="sel-value" type="text" placeholder="enter text" /></item>
+                        </div>
+                </div>
+                <div class="buttons">
+                    <ul>
+                        <li>
+                            <li><button class="btn-chooser-clear">Clear</button></li>
+                            <li><button class="btn-chooser-close">Cancel</button></li>
+                            <li><button class="btn-chooser-apply">Apply</button></li>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </form>
+    </overlay>
 
     <toolbar>
         <div>
@@ -202,10 +236,16 @@
             </div>
         </slider>
         <core>
+            <div class="tab-list-items">
+                <button id="btn-tab-selector"><i class="fas fa-caret-down"></i></button>
+                <ul id="tab-selector-list">
+                    <li><a href="#">TAB </a></li>
+                </ul>
+            </div>
             <tablist>
                 <item></item>
-                <item><a href="#">tab item<button title="Close"><i class="fas fa-times"></i></button></a></item>
-                <item><a class="active" href="#">tab item<button title="Close"><i class="fas fa-times"></i></button></a></item>
+                <item><a href="#"><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></a></item>
+                <item><a class="active" href="#"><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></a></item>
                 <item></item>
             </tablist>
         </core>

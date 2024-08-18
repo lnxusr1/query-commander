@@ -56,7 +56,16 @@ sidebar > metadata > ul { padding: 8px 0; margin-left: 12px; }
 
 slider { width: 6px; overflow: hidden; user-select: none; cursor: col-resize; line-height: 12px; align-content: center; background: var(--slider-bg); color: var(--slider-fg-color); }
 
-core { overflow: hidden; flex: 1; display: flex; width: 100%; flex-direction: column;}
+core { overflow: hidden; flex: 1; display: flex; width: 100%; flex-direction: column; position: relative; }
+core > div.tab-list-items { z-index: 6; display: block; position: absolute; top: 0; right: 0; height: 23px; padding-top: 3px; width: 28px; background: var(--toolbar-bg-dark); }
+core > div.tab-list-items > button { padding:0;margin:0;border:0; border: 1px solid var(--toolbar-border-color-dark); border-bottom: none; background: var(--toolbar-bg); display: block; height: 23px; width: 22px; border-top-left-radius: 3px; border-top-right-radius: 3px;}
+core > div.tab-list-items > button:hover { background: var(--editor-bg); }
+core > div.tab-list-items.active > button { background: var(--main-bg); border: 1px solid var(--slider-fg-color); border-bottom: none; }
+core > div.tab-list-items > ul { display:none; font-size: 0.8rem; position: absolute; top: 26px; right: 6px; list-style: none; white-space: nowrap; margin: 0; padding: 0; background: var(--toolbar-bg); border: 1px solid var(--toolbar-border-color); }
+core > div.tab-list-items.active > ul { display: block; }
+core > div.tab-list-items > ul > li > a { display: block; padding: 0 8px; line-height: 24px; text-decoration: none; color: var(--text-color); border-top: 1px solid #fff; border-bottom: 1px solid var(--toolbar-border-color); }
+core > div.tab-list-items > ul > li > a:hover { background: var(--toolbar-bg-dark); }
+core > div.tab-list-items > ul > li > a:active { background: var(--button-hover); }
 core > tablist { user-select:none; display: flex; flex-direction: row; overflow: hidden; background: var(--toolbar-bg-dark); height: 26px; }
 core > tablist > item { padding-top: 3px; white-space: nowrap; }
 core > tablist > item:first-child { width: 25px; }
@@ -158,14 +167,15 @@ results table tr td, propdetail table tr td {
     font-size: 0.85rem;
 }
 
-results table tr:nth-child(even) td, propdetail table tr:nth-child(even) td { 
+results table tr.alt td, propdetail table tr:nth-child(even) td { 
     background: var(--results-table-bg-alt); 
-    border-top: 1px solid var(--resultoverlay-target="#ddl-data"s-table-bg-alt);
+    border-top: 1px solid var(--results-table-bg-alt);
     border-left: 1px solid var(--results-table-bg);
     border-right: 1px solid var(--results-table-bg-alt);
     border-bottom: 1px solid var(--results-table-bg-alt);
 }
 
+results table tr.hide { display: none; }
 results table tr td data, propdetail table tr td data { padding: 0 2px; }
 results .number, propdetail .number { text-align: right; }
 results .date, propdetail .date { text-align: right; }
@@ -263,6 +273,12 @@ overlay.chooser#chooser-select-connection label > span:last-child { opacity: 0.4
 .sidebar-context-menu ul { list-style: none; margin: 0; padding: 0; }
 .sidebar-context-menu a { text-decoration: none; display: block; padding: 4px 8px; color: var(--text-color); border-radius: 0; }
 .sidebar-context-menu a:hover { background: var(--button-hover); }
+
+overlay.chooser#tab-filter-options .message > div { display: flex; flex-direction: row; }
+overlay.chooser#tab-filter-options .message > div > item { border: 1px solid var(--toolbar-border-color); max-width: 250px; }
+overlay.chooser#tab-filter-options .message > div > item:nth-child(3) { width: 200px; }
+overlay.chooser#tab-filter-options .message > div select { display: block; line-height: 28px; height:28px; border: 0; font-size: 1rem; padding: 0 6px; background: var(--toolbar-bg); width: 100%; outline: none; }
+overlay.chooser#tab-filter-options .message > div input { display: block; line-height: 28px; height: 28px; border: 0; font-size: 1rem; padding: 0 6px; background: var(--toolbar-bg); outline: none; width: 100%; }
 
 server-type { display: inline; opacity: 0.4; font-size: 0.8rem; }
 server-type::before { content: "-"; display: inline-block; margin: 0 4px; }

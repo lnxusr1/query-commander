@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.4] - 2024-08-18
+
+- Added tab selector for reordering multiple tabs
+- Updated tab names to allow for connections to be different than tab name
+- Added simple client-side record filtering
+
 ## [0.5.3] - 2024-08-17
 
 - Added S3 Profile storage option

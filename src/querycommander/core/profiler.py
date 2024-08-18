@@ -63,11 +63,12 @@ class Profiler:
                 for x in value:
                     if not isinstance(x, dict):
                         return
-                    if len(x) != 3:
+                    if len(x) != 4:
                         return
                     if x.get("name") is None or x.get("content") is None:
                         return
                     x["name"] = str(x.get("name"))[0:255]
+                    x["connection"] = str(x.get("connection"))[0:255]
                     x["database"] = str(x.get("database"))[0:100]
                     x["content"] = str(x.get("content"))[0:20000]
             else:

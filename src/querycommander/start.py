@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import json
+import traceback
 
 from querycommander import __version__
 from querycommander.functions import process_request
@@ -123,6 +124,8 @@ def as_lambda(event, context):
     try:
         process_request(request, resp)
     except:
+        logger.error(f"[{headers['REMOTE_ADDR']}] - {str(sys.exc_info()[0])}")
+        logger.debug(str(traceback.format_exc()))
         return {
             'statusCode': '200',
             'body': json.dumps({ "ok": False, "error": "An internal error occurred." }),

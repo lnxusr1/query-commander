@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2024-08-19
+
+- Dropped support for psycopg(2/3) due to static linking limitation
+- Added support for pg8000 and updated docs
+- Updated logging for better error trapping in lambda
+- Added cache breakers to ajax calls
+
 ## [0.5.4] - 2024-08-18
 
 - Added tab selector for reordering multiple tabs

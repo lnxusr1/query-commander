@@ -79,7 +79,7 @@ connections:
       host: my-db-server.lan
       port: 5432
       options:
-        sslmode: require
+        ssl: true
         application_name: querycommander
 ```
 
@@ -106,7 +106,7 @@ connections:
         - MyGroupName1
         - MyGroupName2
       options:
-        sslmode: require
+        ssl: true
 
     - name: myconn2
       type: postgres
@@ -118,7 +118,7 @@ connections:
         - MyGroupName1
         - MyGroupName3
       options:
-        sslmode: require
+        ssl: true
 ```
 
 ### &raquo; Storing Connections in AWS Secrets Manager
@@ -185,8 +185,8 @@ The libraries used in the built-in connectors are listed below:
 
 | Database                                                | PyPy Module            | Version | 
 | :------------------------------------------------------ | :--------------------- | :------ | 
-| [PostgreSQL](https://www.psycopg.org)                   | psycopg                | 3.2.1+  | 
-| [AWS Redshift](https://www.psycopg.org)                 | psycopg                | 3.2.1+  | 
+| [PostgreSQL](https://github.com/tlocke/pg8000)                   | pg8000                | 1.31.2+  | 
+| [AWS Redshift](https://github.com/tlocke/pg8000)                 | pg8000                | 1.31.2+  | 
 | [Oracle](https://oracle.github.io/python-oracledb/)     | oracledb               | 2.3.0+  |
 | [MySQL](https://dev.mysql.com/doc/connector-python/en/) | mysql-connector-python | 9.0.0+  |
 

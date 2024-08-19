@@ -7,7 +7,8 @@ from datetime import datetime
 from decimal import Decimal
 import time
 
-import psycopg
+import pg8000
+import pg8000.dbapi
 from querycommander.connectors import Connector
 from querycommander.core.tokenizer import tokenizer
 
@@ -46,7 +47,9 @@ class Redshift(Connector):
     
     @property
     def notices(self):
-        if len(self._notices) == 0:
+        if len(self.connection.notices) > 0:
+            return "\n".join([str(x[b"M"].decode('UTF-8')) for x in self.connection.notices])
+        else:
             return "Query executed successfully."
         
         return "\n".join([str(x) for x in self._notices])
@@ -54,17 +57,18 @@ class Redshift(Connector):
     def open(self):
         if self.connection is None:
             try:
-                self.connection = psycopg.connect(
+                self.connection = pg8000.connect(
                     host=self.host,
                     port=self.port,
-                    dbname=self.database,
+                    database=self.database,
                     user=self.user,
                     password=self.password,
                     autocommit=True,
                     **self.options
                 )
 
-                self.connection.add_notice_handler(self._save_notice)
+                #self.connection.add_notice_handler(self._save_notice)
+                self.autocommit = True
 
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
@@ -107,14 +111,21 @@ class Redshift(Connector):
                     self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
 
                 self.stats["start_time"] = time.time()
-                cur = self.connection.execute(sql, params=params)
+                cur = self.connection.cursor()
+                #cur.execute("SET AUTOCOMMIT TO ON")
+                if params is None or len(params) == 0:
+                    cur.execute(sql)
+                else:
+                    cur.execute(sql, params)
                 self.stats["exec_time"] = time.time()
 
                 # Move to last set in results (mimic psycopg2)
-                while cur.nextset():
-                    pass
+                #while cur.nextset():
+                #    pass
 
                 return cur
+            except pg8000.dbapi.ProgrammingError as e:
+                raise Exception(e.args[0]['M'])
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
@@ -175,14 +186,14 @@ class Redshift(Connector):
                             record[i] = str(item) if item is not None else item
             
                         yield headers, record
-            except psycopg.ProgrammingError as e:
-                if str(e) == "the last operation didn't produce a result":
-                    pass
-                else:
-                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
-                    self.logger.debug(str(traceback.format_exc()))
-                    self.stats["end_time"] = time.time()
-                    return
+            #except psycopg.ProgrammingError as e:
+            #    if str(e) == "the last operation didn't produce a result":
+            #        pass
+            #    else:
+            #        self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
+            #        self.logger.debug(str(traceback.format_exc()))
+            #        self.stats["end_time"] = time.time()
+            #        return
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))

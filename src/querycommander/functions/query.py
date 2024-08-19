@@ -57,7 +57,9 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
             data["output"] = "\n".join(["\t".join(r) for r in data["records"]])
             data["records"] = []
             data["headers"] = []
-            
+        
+        connection.commit()
+        connection.close()
     except Exception as e:
         data["error"] = str(e)
 

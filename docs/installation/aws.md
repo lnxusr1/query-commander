@@ -4,6 +4,9 @@ To use Query Commander with API Gateway + Lambda you must attach the Lambda to a
 
 ## Intial Setup
 
+!!! important
+    For the package creation to work properly you should execute all commands on an Amazon Linux x86_64 server as this is most similar to the Lambda runtime environment of the same architecture.
+
 ### Step 1: Create the Lambda Layer
 
 It is recommending to use pip to set up the libraries on which query commander depends.  This is fairly easy to achieve using the following:
@@ -102,21 +105,26 @@ Once complete, save and click **Deploy** to publish the latest version of your f
 
 ### Step 7: Set up API Gateway to call your Lambda function
 
-1. Navigate to the *API Gateway* section in the AWS Console
-2. **Build** a new HTTP API
-3. Create and configure integrations
-    - Click **Add Integration** and select *Lambda* as the integration source
-    - Check the *AWS Region* drop down to insure it's accurate
-    - Select the Lambda function created in Step 2 above
-    - In the *Version* option select **1.0** (The tool does not require AWS to infer responses)
-    - Enter a name for your API and click **Next**
-4. Configure Routes
-    - Method: ANY
-    - Resource Path:  /querycommander
-    - Integration Target:  *&lt;Lambda Function from Step 2&gt;*
-    - Click **Next**
-5. Define Stages:  Leave the defaults as-is and click **Next**
-6. Review options and click **Create**
+1. Navigate to the Lambda function in the AWS Console
+2. Click "Add Trigger" in the chart at the top (above the Code window)
+3. Select **API Gateway** in the drop down list
+4. Choose to *Create a New API*
+5. Select *REST API*
+6. Choose *Open* from the security box
+7. Click "Additional Details" to show more options
+8. In "Binary Media Types" choose **Add**
+9. Enter **\*/\*** in the box to indicate all types
+10. Choose **Add** at the bottom to create the API
+
+### Step 8: Adjust Lambda Runtime Configuration
+
+Query Commander recommends adjusting the following:
+
+- Set the timeout of the Lambda function to something reasonable for your use case.
+- Allocate at least 512MB of Memory to the function for consistent operation.
+
+!!! note
+    While adjusting the timeout of the Lambda function it is strongly recommended to start low and increment in stages as setting long timeouts up front may create hurdles for troubleshooting.
 
 ## Making Lambda work in your VPC
 

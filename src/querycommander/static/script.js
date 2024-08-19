@@ -10,6 +10,17 @@ var tab_counter = 0;
 var escape_key = false;
 var fade_login = false;
 
+$.ajaxSetup({
+    cache: false
+});
+
+let no_cache_headers = {
+    "Cache-Control": "no-cache, no-store, must-revalidate", // HTTP 1.1.
+    "Pragma": "no-cache", // HTTP 1.0.
+    "Expires": "0", // Proxies.
+    'Access-Control-Allow-Origin': '*'
+};
+
 function doGetCurrentDate() {
     var now = new Date();
     var month = now.getMonth() + 1; // Months are zero-based
@@ -306,7 +317,7 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(req_data),
         contentType: "application/json",
         beforeSend: function(xhr) {
@@ -1061,7 +1072,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="") {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(meta_request),
         contentType: "application/json",
         beforeSend: function(xhr) {
@@ -1109,7 +1120,7 @@ function doAddDetailTab(obj_details) {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
         success: function(data) {
@@ -1239,7 +1250,7 @@ function doGenerateDDL(obj_details) {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
         success: function(data) {
@@ -1287,7 +1298,7 @@ function doLoadContextData(obj, type_name) {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
         success: function(data) {
@@ -1471,7 +1482,7 @@ function doLoadMeta(obj) {
             dataType: "json",
             method: "POST",
             crossDomain: true,
-            headers: { 'Access-Control-Allow-Origin': '*' },
+            headers: no_cache_headers,
             data: JSON.stringify(data),
             contentType: "application/json",
             success: function(data) {
@@ -1662,7 +1673,7 @@ function doLogin() {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
         beforeSend: function(xhr) {
@@ -1701,7 +1712,7 @@ function doLogout() {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify({ "command": "logout" }),
         contentType: "application/json",
         beforeSend: function(xhr) {
@@ -1734,7 +1745,7 @@ function doCheckSession(extend=false) {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
         error: function() {
@@ -1771,7 +1782,7 @@ function doLoadProfile() {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
         error: function() {
@@ -1838,7 +1849,7 @@ function doSaveProfile() {
         dataType: "json",
         method: "POST",
         crossDomain: true,
-        headers: { 'Access-Control-Allow-Origin': '*' },
+        headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
         beforeSend: function(xhr) {

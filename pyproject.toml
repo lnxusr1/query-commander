@@ -34,10 +34,10 @@ mariadb = [
     "mysql-connector-python",
 ]
 postgres = [
-    "psycopg",
+    "pg8000",
 ]
 redshift = [
-    "psycopg",
+    "pg8000",
 ]
 redis = [
     "redis",
@@ -47,12 +47,12 @@ ldap = [
 ]
 all-dbs = [
     "oracledb",
-    "psycopg",
+    "pg8000",
     "mysql-connector-python",
 ]
 all = [
     "oracledb",
-    "psycopg",
+    "pg8000",
     "mysql-connector-python",
     "redis",
     "boto3",
@@ -60,7 +60,7 @@ all = [
 ]
 lambda = [
     "oracledb",
-    "psycopg",
+    "pg8000",
     "mysql-connector-python",
     "redis",
     "ldap3",

@@ -193,6 +193,10 @@ class Postgres(Connector):
             #        self.logger.debug(str(traceback.format_exc()))
             #        self.stats["end_time"] = time.time()
             #        return
+            except StopIteration:
+                pass
+            except GeneratorExit:
+                pass
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
@@ -438,7 +442,7 @@ class Postgres(Connector):
             return " ".join(
                 [
                     "select CONCAT('CREATE SEQUENCE IF NOT EXISTS ', schemaname, '.', sequencename, ",
-                    "'\n INCREMENT BY ', increment_by, '\n MIN VALUE ', min_value, '\n MAX VALUE ', max_value, ",
+                    "'\n INCREMENT BY ', increment_by, '\n MINVALUE ', min_value, '\n MAXVALUE ', max_value, ",
                     "'\n START WITH ', start_value, '\n CACHE ', cache_size, ",
                     "case when not cycle then '\n NO CYCLE' else '' end, ",
                     "case when owner_table is not null and owner_column is not null then CONCAT('\n OWNED BY ',owner_schema,'.',owner_table,'.',owner_column) else '' end,"
@@ -922,7 +926,7 @@ class Postgres(Connector):
             meta["type"] = "database"
             meta["color"] = "brown"
             meta["classes"] = ["fa", "fa-database"]
-            meta["menu_items"] = ["refresh", "copy"]
+            meta["menu_items"] = ["refresh", "copy", "tab"]
 
             sql = self._sql("databases")
             params = None

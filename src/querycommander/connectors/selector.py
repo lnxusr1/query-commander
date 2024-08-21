@@ -30,14 +30,27 @@ def get_db_connection(connection_name, database=None):
 
         if conn.get("type") in ["postgres", "postgresql", "pgsql"]:
             from querycommander.connectors.postgres import Postgres
-            if "database" not in conn:
-                conn["database"] = database
+
+            # Security hole?
+            conn["database"] = database if database is not None else conn["database"] if "database" in conn else None
+            #if "database" not in conn:
+            #    conn["database"] = database
+
+            # Override
+            #conn["database"] = database
+
+            logger.debug(f"Connection selected: {connection_name}")
+            logger.debug(f"Database selected: {database}")
+            logger.debug(f"Database selected: {conn.get('database')}")
+
             return Postgres(**conn)
         
         if conn.get("type") in ["mysql", "mariadb"]:
             from querycommander.connectors.mysqldb import MySQL
-            if "database" not in conn:
-                conn["database"] = database
+            conn["database"] = database if database is not None else conn["database"] if "database" in conn else None
+
+            #if "database" not in conn:
+            #    conn["database"] = database
             return MySQL(**conn)
 
         if conn.get("type") in ["oracle", "oracledb"]:

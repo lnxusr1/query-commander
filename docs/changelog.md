@@ -2,12 +2,30 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1] - 2024-08-20
+
+- Added AWS Lambda Layer zip inclusion
+- Bug fix for lambda cookies not being set properly
+- Bug fix for session update after logout
+- Bug fix for PostgreSQL Sequence DDL export
+- Bug fix for weirdness in Lambda holding connection names that don't exist
+- Bug fix for MySQL "no database selected" error
+- Cleaned HTML code for client-side filters
+- Added traps in connectors for non-fatal errors to avoid unforced errors
+- Added "New SQL Script..." link to context menu for databases
+- Updated cache breakers for all API calls
+- Improved handling of keyboard shortcuts
+
 ## [0.6.0] - 2024-08-19
 
-- Dropped support for psycopg(2/3) due to static linking limitation
-- Added support for pg8000 and updated docs
+- **BREAKING**: Library change for PostgreSQL connections
+    - Dropped support for psycopg(2/3) due to static linking limitation in lambda
+    - Added support for pg8000 and updated docs
+
 - Updated logging for better error trapping in lambda
 - Added cache breakers to ajax calls
+
+**NOTICE**: Future releases will call out breaking changes like the library change here explicitly.
 
 ## [0.5.4] - 2024-08-18
 

@@ -137,6 +137,10 @@ class MySQL(Connector):
 
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
+            except StopIteration:
+                pass
+            except GeneratorExit:
+                pass
             except TypeError:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(sql))
@@ -330,7 +334,7 @@ class MySQL(Connector):
             meta["type"] = "database"
             meta["color"] = "brown"
             meta["classes"] = ["fa", "fa-database"]
-            meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
+            meta["menu_items"] = ["refresh", "tab", "copy", "ddl", "details"]
 
             sql = self._sql("databases")
             params = None

@@ -146,6 +146,10 @@ class Redshift(Connector):
             
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
+            except StopIteration:
+                pass
+            except GeneratorExit:
+                pass
             except TypeError:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(sql))
@@ -412,7 +416,7 @@ class Redshift(Connector):
             meta["type"] = "database"
             meta["color"] = "purple"
             meta["classes"] = ["fas", "fa-file-lines"]
-            meta["menu_items"] = ["refresh", "copy"]
+            meta["menu_items"] = ["refresh", "copy", "tab"]
 
             sql = self._sql("schemas")
             params = None

@@ -70,7 +70,7 @@ class Tokens:
             data = self._get_token_data()
             self._is_loaded = True
 
-        if self.token is None and self.data is None:
+        if self.token is None:
             self.token = generate_session_token()
 
         if isinstance(data, dict):
@@ -121,7 +121,9 @@ class Tokens:
     def update(self):
         self._get()
 
+        self._do_update = False
         if self._username is None or self.token is None:
+            self.logger.debug("No username or token, cannot update token")
             return False
     
         expiration_time = get_utc_now() + datetime.timedelta(minutes=int(self.timeout))
@@ -134,7 +136,9 @@ class Tokens:
     def remove(self):
         self._get()
         
+        self._do_update = False
         if self._username is None or self.token is None:
+            self.logger.debug("Username or token is blank, cannnot remove token")
             return False
     
         expiration_time = get_utc_now()
@@ -309,6 +313,7 @@ class LocalTokens(Tokens):
 
     def _put_token_data(self):
         if self.token is None or self._username is None or self.data is None:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             return False
         
         try:
@@ -319,6 +324,9 @@ class LocalTokens(Tokens):
             with open(filename, "w", encoding="UTF-8") as fp:
                 json.dump(self.data, fp)
         except:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
+            self.logger.debug(str(sys.exc_info()[0]))
+            self.logger.debug(str(traceback.format_exc()))
             return False
         
         return True
@@ -389,11 +397,15 @@ class RedisTokens(Tokens):
 
     def _put_token_data(self):
         if self.token is None or self._username is None or self.data is None:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             return False
         
         try:
             self.conn.set(self._username, json.dumps(self.data))
         except:
+            self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
+            self.logger.debug(str(sys.exc_info()[0]))
+            self.logger.debug(str(traceback.format_exc()))
             return False
         
         return True
@@ -460,11 +472,17 @@ class DynamoDBTokens(Tokens):
         return data
 
     def _put_token_data(self):
+        
+        #stack = traceback.extract_stack()
+        #formatted_stack = traceback.format_list(stack)
+        #self.logger.debug("\n".join(formatted_stack))
+        
         if self.token is None or self._username is None or self.data is None:
             self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             return False
         
         try:
+            #self.logger.debug(f"Sending {self.username} and {self.token} and {self.data}")
             self.conn.put_item(TableName=self.table_name, Item={ "username": { 'S': self._username}, "data": {'S': json.dumps(self.data) }})
         except:
             self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")

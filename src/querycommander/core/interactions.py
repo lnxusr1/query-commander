@@ -16,7 +16,13 @@ class Response:
 
     def add_header(self, name, value):
         if name is not None and value is not None:
-            self.headers[str(name)] = str(value)
+            if str(name) in self.headers:
+                if isinstance(self.headers[str(name)], list):
+                    self.headers[str(name)].append(str(value))
+                else:
+                    self.headers[str(name)] = [self.headers[str(name)], str(value)]
+            else:
+                self.headers[str(name)] = str(value)
 
         return True
 
@@ -27,7 +33,13 @@ class Response:
         self.add_header("Access-Control-Allow-Origin", "*")
         cookie = tokenizer.cookie(extend=self.extend)
         if cookie is not None:
-            self.add_header(cookie.split(":", 1)[0].strip(), cookie.split(":", 1)[1].strip())
+            import logging
+            if "\n" in cookie:
+                cookies = cookie.split("\r\n")
+                for c in cookies:
+                    self.add_header(c.split(":", 1)[0].strip(), c.split(":", 1)[1].strip())
+            else:
+                self.add_header(cookie.split(":", 1)[0].strip(), cookie.split(":", 1)[1].strip())
 
     def send(self):
         data = self.raw_data
@@ -36,7 +48,11 @@ class Response:
             print("Content-Type: text/html")
 
         for item in self.headers:
-            print(f"{str(item.rstrip())}: {str(self.headers.get(item))}")
+            if isinstance(self.headers[item], list):
+                for si in self.headers[item]:
+                    print(f"{str(item.rstrip())}: {str(si)}")
+            else:
+                print(f"{str(item.rstrip())}: {str(self.headers.get(item))}")
         
 #        if self.cookie is not None:
 #            print(str(self.cookie).strip())

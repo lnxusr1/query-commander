@@ -11,38 +11,13 @@ def process_request(request, response):
     logger.setLevel(cfg.log_level)
 
     command = str(request.json_data.get("command", "auth")).lower()
-    tokenizer.set_token(request.token)
-    tokenizer.set_username(request.username)
-    tokenizer.set_remote_addr(request.host)
-
-    if command == "check":
-        # check: allow browser to check if session is still valid (does not auto-extend session length)
-        # check-init: same as "check" but if a valid token is found it auto-extends the session length
-        if not tokenizer.validate():
-            response.output({ "ok": False, "logout": True }, extend=False)
-            return
-        else:
-            if request.json_data.get("extend", False):
-                username = tokenizer.username
-                logger.debug(f"[{username}@{tokenizer.remote_addr}] Session extended - {tokenizer.token}")
-                tokenizer.update() # Auto extend session
-            
-            response.output({ 
-                "ok": True, 
-                "username": tokenizer.username,
-                #"roles": [tokenizer.role_selected], # tokenizer.roles as list
-                #"role_selected": tokenizer.role_selected, 
-                "connections": tokenizer.connections()
-            }, extend=False)
-
-            return
 
     if command == "login":
         from querycommander.core.authenticator import authenticator
 
-        logger.debug(f"authenticator type = {cfg.sys_authenticator.get('type', 'local')}")
-        logger.debug(f"tokenizer type = {cfg.sys_tokenizer.get('type', 'local')}")
-        logger.debug(f"connections type = {cfg.sys_connections().get('type', 'config')}")
+        #logger.debug(f"authenticator type = {cfg.sys_authenticator.get('type', 'local')}")
+        #logger.debug(f"tokenizer type = {cfg.sys_tokenizer.get('type', 'local')}")
+        #logger.debug(f"connections type = {cfg.sys_connections().get('type', 'config')}")
 
         username = str(request.json_data.get("username", "")).strip()[0:100]
         password = str(request.json_data.get("password", ""))[0:256]
@@ -77,6 +52,7 @@ def process_request(request, response):
                 )
 
             #tokenizer.purge()
+            logger.debug(f"[{username}@{tokenizer.remote_addr}] Authentication complete, placing token")
             if not tokenizer.update():
                 logger.error(f"[{username}@{tokenizer.remote_addr}] Unable to create token")
                 response.output({ "ok": False })
@@ -92,10 +68,37 @@ def process_request(request, response):
             response.output({ "ok": False })
             return
 
+    tokenizer.set_token(request.token)
+    tokenizer.set_username(request.username)
+    tokenizer.set_remote_addr(request.host)
+
+    if command == "check":
+        # check: allow browser to check if session is still valid (does not auto-extend session length)
+        # check-init: same as "check" but if a valid token is found it auto-extends the session length
+        if not tokenizer.validate():
+            response.output({ "ok": False, "logout": True }, extend=False)
+            return
+        else:
+            if request.json_data.get("extend", False):
+                username = tokenizer.username
+                logger.debug(f"[{username}@{tokenizer.remote_addr}] Session extended - {tokenizer.token}")
+                tokenizer.update() # Auto extend session
+            
+            response.output({ 
+                "ok": True, 
+                "username": tokenizer.username,
+                #"roles": [tokenizer.role_selected], # tokenizer.roles as list
+                #"role_selected": tokenizer.role_selected, 
+                "connections": tokenizer.connections()
+            }, extend=False)
+
+            return
+
     if command == "logout":
-        logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Logout successful - {tokenizer.token}")
+        #logger.debug("attempting logout")
         tokenizer.remove()
-        response.output({ "ok": False, "logout": True })
+        logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Logout successful - {tokenizer.token}")
+        response.output({ "ok": False, "logout": True, "message": "Logout successful." }, extend=False)
         return
 
     # ==============================================================================================================================
@@ -106,7 +109,7 @@ def process_request(request, response):
             logger.error(f"[{tokenizer.remote_addr}] Invalid token - {tokenizer.token}")
         else:
             logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed validation - {tokenizer.token}")
-        response.output({ "ok": False, "logout": True })
+        response.output({ "ok": False, "logout": True }, extend=False)
         return
 
     # ==============================================================================================================================

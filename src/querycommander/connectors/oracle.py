@@ -141,6 +141,10 @@ class Oracle(Connector):
                 #self.logger.debug(str(traceback.format_exc()))
                 #self.err.append("Unable to parse columns.")
                 headers = []
+            except StopIteration:
+                pass
+            except GeneratorExit:
+                pass
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(sql))
@@ -363,7 +367,7 @@ class Oracle(Connector):
             meta["type"] = "database"
             meta["color"] = "brown"
             meta["classes"] = ["fa", "fa-database"]
-            meta["menu_items"] = ["refresh", "copy"]
+            meta["menu_items"] = ["refresh", "tab", "copy"]
 
             sql = self._sql("schemas")
             params = None

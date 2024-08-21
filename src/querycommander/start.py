@@ -132,8 +132,19 @@ def as_lambda(event, context):
             'headers': { "Content-Type": "application/json" }
         }
 
+    body_data = json.dumps(resp.raw_data)
+    v_headers = {}
+    mv_headers = {}
+
+    for item in resp.headers:
+        if isinstance(resp.headers.get(item), list):
+            mv_headers[item] = resp.headers.get(item)
+        else:
+            v_headers[item] = resp.headers.get(item)
+
     return {
         'statusCode': '200',
-        'body': json.dumps(resp.raw_data),
-        'headers': resp.headers
+        'body': body_data,
+        'headers': v_headers,
+        'multiValueHeaders': mv_headers
     }

@@ -1,4 +1,4 @@
-var site_path = window.location.href;
+//var site_path = window.location.pathname;
 var version = "v${VERSION}";
 var timer;
 var is_mouse_down = false;
@@ -20,6 +20,29 @@ let no_cache_headers = {
     "Expires": "0", // Proxies.
     'Access-Control-Allow-Origin': '*'
 };
+
+function generate_url() {
+    let baseUrl = window.location.pathname;
+    let randomString = Math.random().toString(36).substring(2, 15);
+    let timestamp = Date.now();
+    let cacheBreaker = randomString + "_" + timestamp;
+    let finalUrl = baseUrl + "?" + cacheBreaker;
+    
+    return finalUrl;
+}
+
+function highlightContents(divSelector) {
+    var div = $(divSelector).get(0);  // Get the DOM element from the jQuery object
+
+    if (window.getSelection && document.createRange) {
+        var range = document.createRange();
+        range.selectNodeContents(div);
+        
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+    }
+}
 
 function doGetCurrentDate() {
     var now = new Date();
@@ -313,7 +336,7 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
     $(tab_id + ' div.section.data').addClass('is-loading');
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -443,9 +466,6 @@ function doApplyFilterOptions() {
                 sel_value = parseFloat(sel_value);
             }
 
-            console.log('----');
-            console.log(r_val);
-            console.log(sel_value);
             if (sel_compare == "sw") {
                 if (!r_val.startsWith(sel_value)) {
                     rows.eq(i).removeClass('show');
@@ -822,6 +842,7 @@ function doWireUpQueryTab(tab_id) {
         escape_key = false;
 
         if (e.keyCode == 27) {
+            // Esc
             escape_key = true;
         }
 
@@ -830,9 +851,19 @@ function doWireUpQueryTab(tab_id) {
 
     $(tab_id + ' textarea.editor').keydown(function(e) { 
         if (!(escape_key) && (e.keyCode == 9)) {
+            // Tab
             e.preventDefault();
 
             doManageTab($(this), e.shiftKey);
+            return false;
+        }
+
+        if (e.ctrlKey || e.metaKey) {
+            if (e.keyCode == 83) {
+                e.preventDefault();
+                $('#btn-save-profile').trigger('click');
+                return false;
+            }
         }
     });
 
@@ -1068,7 +1099,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="") {
     };
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1116,7 +1147,7 @@ function doAddDetailTab(obj_details) {
     obj_details["command"] = "details";
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1246,7 +1277,7 @@ function doGenerateDDL(obj_details) {
     obj_details["command"] = "ddl";
     
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1294,7 +1325,7 @@ function doLoadContextData(obj, type_name) {
     let data = { command: "details", type: type_name, target: "sql", path: { connection: target } }
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1330,8 +1361,9 @@ function doLoadContextMenu(obj, event, menu_items) {
         if (menu_items[z] == "refresh") { $('#btn-context-refresh-item').parent().show(); }
         if (menu_items[z] == "copy") { $('#btn-context-copy-name').parent().show(); }
         if (menu_items[z] == "extra") { $('.context-extra').show(); }
-        if (menu_items[z] == "ddl") { $('#btn-context-generate-ddl').parent().show(); }
+        if (menu_items[z] == "ddl") { $('.sidebar-context-menu > ul > li.optional').show(); }
         if (menu_items[z] == "details") { $('#btn-context-view-details').parent().show(); }
+        if (menu_items[z] == "tab") { $('.sidebar-context-menu > ul > li.new-tab').show(); }
     }
 
     $('#btn-context-refresh-item').click(function() {
@@ -1342,6 +1374,14 @@ function doLoadContextMenu(obj, event, menu_items) {
         $(obj).parent().children('ul').remove();
         $(obj).trigger('click');
         $('.sidebar-context-menu').hide();
+        return false;
+    });
+
+    $('#btn-new-tab').click(function() {
+        doHideMenus();
+        let conn_name = $(obj).parent().parent().parent().children('a').find('span').text();
+        let db_name = $(obj).find('span').text();
+        addQueryTab(false, conn_name, db_name);
         return false;
     });
 
@@ -1478,7 +1518,7 @@ function doLoadMeta(obj) {
         }
 
         $.ajax({
-            url: site_path,
+            url: generate_url(),
             dataType: "json",
             method: "POST",
             crossDomain: true,
@@ -1669,7 +1709,7 @@ function doLogin() {
     $('#password').val('');
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1708,7 +1748,7 @@ function doLogout() {
     is_mouse_down=false;
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1741,7 +1781,7 @@ function doCheckSession(extend=false) {
     }
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1778,7 +1818,7 @@ function doLoadProfile() {
     }
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1845,7 +1885,7 @@ function doSaveProfile() {
     }
 
     $.ajax({
-        url: site_path,
+        url: generate_url(),
         dataType: "json",
         method: "POST",
         crossDomain: true,
@@ -1965,6 +2005,7 @@ $(document).ready(function() {
 
     $(document).keydown(function (e) {
         if (e.which === 27) {
+            // Esc
             $('.sidebar-context-menu').hide();
             $('overlay.chooser#chooser-select-connection').hide();
             $('overlay.chooser#ddl-data').hide();
@@ -1973,19 +2014,47 @@ $(document).ready(function() {
 
 
     $(document).keydown(function (e) {
-        if (["TEXTAREA","INPUT","A","BUTTON","LABEL"].includes($(document).find(':focus').prop('tagName'))) {
+        if (["TEXTAREA","INPUT"].includes($(document).find(':focus').prop('tagName'))) {
             return true;
         } else {
             if (e.ctrlKey || e.metaKey) {
                 if (e.keyCode == 65) {
+                    // A
                     if ($('tab.active .btn-tab-results').hasClass('active')) {
                         $('tab.active results table').find('td').addClass('selected');
                         e.preventDefault();
+                        return false;
+                    } else {
+                        e.preventDefault();
+
+                        if ($('.chooser#ddl-data').is(':visible')) { 
+                            highlightContents('#ddl-data .message'); 
+                            return false;
+                        }
+                        
+                        if ($('tab.active').hasClass('properties')) {
+                            if ($('tab.active .section.code').is(':visible')) {
+                                highlightContents('tab.active .section.code > div');
+                                return false;
+                            }
+                        }
+
+                        if ($('tab.active .btn-tab-output').hasClass('active')) {
+                            highlightContents('tab.active .section.output > div');
+                            return false;
+                        }
+
+                        if ($('tab.active .btn-tab-code').hasClass('active')) {
+                            highlightContents('tab.active .section.statement > div');
+                            return false;
+                        }
+
                         return false;
                     }
                 }
 
                 if (e.keyCode == 67) {
+                    // C
                     if (($('tab.active .btn-tab-results').hasClass('active')) && ($('tab.active results table').find('.selected').length > 0)) {
                         $('tab.active .btn-tab-copy').trigger('click');
                         e.preventDefault();
@@ -1994,8 +2063,10 @@ $(document).ready(function() {
                 }
 
                 if (e.keyCode == 83) {
+                    // S
                     e.preventDefault();
                     $('#btn-save-profile').trigger('click');
+                    return false;
                 }
             }
         }

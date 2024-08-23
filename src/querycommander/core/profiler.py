@@ -159,7 +159,7 @@ class DynamoDBProfiler(Profiler):
         data = super()._get_profile_data()
 
         try:
-            response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self.username) } })
+            response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self.username) } }, ConsistentRead=True)
             d = response["Item"].get("data").get("S")
             data = json.loads(d if isinstance(d, str) else "{}")
         except:

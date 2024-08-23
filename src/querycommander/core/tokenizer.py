@@ -70,7 +70,7 @@ class Tokens:
             data = self._get_token_data()
             self._is_loaded = True
 
-        if self.token is None:
+        if self.token is None and self.data is None:
             self.token = generate_session_token()
 
         if isinstance(data, dict):
@@ -90,11 +90,14 @@ class Tokens:
                 "connections": [],
                 "role_selected": ""
             }
+            self._is_loaded = True
 
         return True
 
     def validate(self):
         self._get()
+
+        #self.logger.debug(f"{self._username} == {self.token} == {self.data}")
 
         if self.token is not None \
             and len(str(self.data.get("token", "")).strip()) >= 20 \
@@ -149,6 +152,9 @@ class Tokens:
         return self._put_token_data()
         
     def set_token(self, token=None):
+        if len(str(token).strip()) < 10:
+            token = None
+
         if token is not None:
             token = str(token).strip()
             if not validate_string(token, max_length=100):
@@ -157,6 +163,7 @@ class Tokens:
         self.token = token
 
     def set_username(self, value):
+        #self.logger.debug(f"Setting username: {value}")
         if value is not None:
             if not validate_string(value, max_length=256):
                 raise ValueError("Invalid username format")
@@ -272,13 +279,15 @@ class Tokens:
             
             expiration_time = datetime.datetime.strptime(self.data.get("expires"), '%a, %d-%b-%Y %H:%M:%S UTC')
             
-            cookie['token'] = self.token
-            cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
-            cookie['token']['secure'] = True
+            if self.token is not None and str(self.token) != "None":
+                cookie['token'] = self.token
+                cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+                cookie['token']['secure'] = True
             
-            cookie['username'] = self._username
-            cookie['username']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
-            cookie['username']['secure'] = True
+            if self._username is not None and str(self._username) != "None":
+                cookie['username'] = self._username
+                cookie['username']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+                cookie['username']['secure'] = True
 
             ret = cookie.output()
 
@@ -463,7 +472,7 @@ class DynamoDBTokens(Tokens):
         data = super()._get_token_data()
 
         try:
-            response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self._username) } })
+            response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self._username) } }, ConsistentRead=True)
             d = response["Item"].get("data").get("S")
             data = json.loads(d if isinstance(d, str) else "{}")
         except:

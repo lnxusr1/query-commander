@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import secrets
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+import uuid
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
@@ -11,9 +12,9 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 def generate_session_token():
-    random_bytes = secrets.token_bytes(32)
-    session_token = hashlib.sha256(random_bytes).hexdigest()
-
+    #random_bytes = secrets.token_bytes(32) + get_utc_now().strftime("%Y%m%d%H%M%S").encode()
+    #session_token = hashlib.sha256(random_bytes).hexdigest()
+    session_token = uuid.uuid4().hex
     return session_token
 
 def get_utc_now():

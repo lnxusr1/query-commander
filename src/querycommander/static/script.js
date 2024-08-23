@@ -15,10 +15,6 @@ $.ajaxSetup({
 });
 
 let no_cache_headers = {
-    "Cache-Control": "no-cache, no-store, must-revalidate", // HTTP 1.1.
-    "Pragma": "no-cache", // HTTP 1.0.
-    "Expires": "0", // Proxies.
-    'Access-Control-Allow-Origin': '*'
 };
 
 function generate_url() {
@@ -339,7 +335,6 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(req_data),
         contentType: "application/json",
@@ -1025,7 +1020,7 @@ function doWireUpQueryTab(tab_id) {
     doClearQueryResults($(tab_id + ' .data'));
 }
 
-function addQueryTab(check_exists, connection_name, database="", tab_name="") {
+function addQueryTab(check_exists, connection_name, database="", tab_name="", databases=null) {
 
     if (check_exists) {
         if ($('core > tablist').children().length > 2) { return; }
@@ -1089,6 +1084,21 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="") {
         return;
     }
 
+    if (databases != null) {
+        if (databases) {
+            databases.sort();
+            for (let i = 0; i<databases.length; i++) {
+                let o = $('<option></option>');
+                o.val(databases[i]);
+                o.text(databases[i]);
+                if (databases[i] == database) { o.prop('selected', true); }
+                $('#' + tab_id + ' > item:first-child select').append(o);
+            }
+        }
+
+        return;
+    }
+
     let meta_request = {
         command: "meta", 
         target: connection_name, 
@@ -1102,7 +1112,6 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="") {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(meta_request),
         contentType: "application/json",
@@ -1150,7 +1159,6 @@ function doAddDetailTab(obj_details) {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
@@ -1280,7 +1288,6 @@ function doGenerateDDL(obj_details) {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
@@ -1328,7 +1335,6 @@ function doLoadContextData(obj, type_name) {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
@@ -1521,7 +1527,6 @@ function doLoadMeta(obj) {
             url: generate_url(),
             dataType: "json",
             method: "POST",
-            crossDomain: true,
             headers: no_cache_headers,
             data: JSON.stringify(data),
             contentType: "application/json",
@@ -1655,6 +1660,22 @@ function doShowConnectionDialog() {
     $('#chooser-select-connection').fadeIn('fast');
 }
 
+function doOpenForm() {
+    if ($('core > tablist').children().length == 2) {
+        if (connection_selected != "") { 
+            addQueryTab(true, connection_selected);
+        } else {
+            doShowConnectionDialog();
+        }
+    }
+
+    if (!fade_login) {
+        $('#login').hide();
+    } else {
+        $('#login').fadeOut('fast');
+    }
+}
+
 function doLoginSuccess(data, hide_login) {
     if (current_user != data.username) {
         doClearPage();
@@ -1673,7 +1694,13 @@ function doLoginSuccess(data, hide_login) {
         }
     }
 
-    doLoadProfile();
+    if (data.profiles) {
+        doLoadProfile();
+    } else {
+        $('#btn-save-profile').prop('disabled', true);
+        $('#btn-save-profile').hide();
+        doOpenForm();
+    }
 
 }
 
@@ -1712,7 +1739,6 @@ function doLogin() {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
@@ -1751,7 +1777,6 @@ function doLogout() {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify({ "command": "logout" }),
         contentType: "application/json",
@@ -1784,7 +1809,6 @@ function doCheckSession(extend=false) {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
@@ -1821,7 +1845,6 @@ function doLoadProfile() {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
@@ -1836,25 +1859,15 @@ function doLoadProfile() {
 
             if (data.tabs) {
                 for (let i=data.tabs.length-1; i>=0; i--) {
-                    addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"]);
+                    let dbs = data.connections[data.tabs[i]["connection"]];
+
+                    addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"], dbs);
                     $('core > tab.active textarea.editor').val(data.tabs[i]["content"]);
                 }
             }
         },
         complete: function() {
-            if ($('core > tablist').children().length == 2) {
-                if (connection_selected != "") { 
-                    addQueryTab(true, connection_selected);
-                } else {
-                    doShowConnectionDialog();
-                }
-            }
-
-            if (!fade_login) {
-                $('#login').hide();
-            } else {
-                $('#login').fadeOut('fast');
-            }
+            doOpenForm();
         }
     })
 }
@@ -1888,7 +1901,6 @@ function doSaveProfile() {
         url: generate_url(),
         dataType: "json",
         method: "POST",
-        crossDomain: true,
         headers: no_cache_headers,
         data: JSON.stringify(data),
         contentType: "application/json",
@@ -1964,7 +1976,7 @@ $(document).ready(function() {
         return false; 
     });
     
-    $('#btn-new-tab').click(function() {
+    $('#btn-new-tab-menu').click(function() {
         doHideMenus();
         if ((connection_list.length == 1) && (connection_selected == connection_list[0]["name"])) {
             addQueryTab(false, connection_selected);
@@ -1994,7 +2006,9 @@ $(document).ready(function() {
 
     $('#btn-save-profile').click(function() {
         doHideMenus();
-        doSaveProfile();
+        if (!$(this).prop('disabled')) {
+            doSaveProfile();
+        }
         return false;
     });
 

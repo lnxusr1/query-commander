@@ -30,7 +30,17 @@ class Response:
         self.raw_data = data
         self.extend = extend
 
-        self.add_header("Access-Control-Allow-Origin", "*")
+        #self.add_header("Access-Control-Allow-Origin", "*")
+        self.add_header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
+        self.add_header("Pragma", "no-cache")
+        self.add_header("Expires", "0")
+        self.add_header('Access-Control-Allow-Origin', '*')
+        self.add_header('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+        self.add_header('Referrer-Poilcy', 'strict-origin')
+        self.add_header('X-Content-Type-Options', 'nosniff')
+        self.add_header('X-Frame-Options', 'deny')
+        self.add_header('X-XSS-Protection', '1; mode=block')
+
         cookie = tokenizer.cookie(extend=self.extend)
         if cookie is not None:
             import logging

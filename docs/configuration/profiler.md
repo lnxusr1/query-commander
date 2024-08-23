@@ -33,6 +33,8 @@ The table creation is quite straightforward and only requires that the primary p
 
 Permissions are required for **GetItem**, **PutItem**, **UpdateItem**, **DeleteItem**, and **Scan** on the created table.  If you enable encryption (which is strongly *recommended*) then you need to insure that you also grant access to the KMS key selected for that feature to allow **Encrypt** and **Decrypt** operations.
 
+!!! important
+    Both the profiler and the session tokens use a similar structure but they must be separate tables to avoid conflicting if using DynamoDB for both.  It is recommended to use S3 for User Profiles and DynamoDB for Session Tokens for optimal cost and storage.
 
 ### &raquo; Using AWS Profiles
 

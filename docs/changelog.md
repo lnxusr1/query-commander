@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.2] - 2024-08-22
+
+- Bug fix for new script button not firing
+- Optimized profile pull to reduce round-trips
+- Added configuration option for disabling profiles
+- Adjusted HTTP headers for cache breaking
+- Documentation cleanup and updates
+- Improved logging messages
+
 ## [0.6.1] - 2024-08-20
 
 - Added AWS Lambda Layer zip inclusion

@@ -39,9 +39,9 @@ def get_db_connection(connection_name, database=None):
             # Override
             #conn["database"] = database
 
-            logger.debug(f"Connection selected: {connection_name}")
-            logger.debug(f"Database selected: {database}")
-            logger.debug(f"Database selected: {conn.get('database')}")
+            #logger.debug(f"Connection selected: {connection_name}")
+            #logger.debug(f"Database selected: {database}")
+            #logger.debug(f"Database selected: {conn.get('database')}")
 
             return Postgres(**conn)
         

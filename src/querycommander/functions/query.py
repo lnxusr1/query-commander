@@ -1,7 +1,12 @@
+import sys
+import traceback
+import logging
 from querycommander.core.config import settings as cfg
 from querycommander.core.helpers import get_utc_now
 from querycommander.core.tokenizer import tokenizer
 from querycommander.connectors.selector import get_db_connection
+
+logger = logging.getLogger()
 
 def get_query_results(response, connection_name, db_name, sql, query_type, start_record=0):
 
@@ -16,11 +21,13 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
 
     connection = get_db_connection(connection_name, database=db_name)
     if connection is None:
+        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] QUERY: Invalid database connection: {connection_name}/{db_name} - {tokenizer.token}")
         resp.output({ "ok": False, "error": "Invalid connection specified." })
         return
 
     if not connection.open():
-        resp.output({ "ok": False, "error": "Unable to connect to server.  Please check username/password." })
+        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] QUERY: Unable to connect to server: {connection_name}/{db_name} - {tokenizer.token}")
+        resp.output({ "ok": False, "error": "Unable to connect to server." })
         return
 
     data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False }
@@ -61,6 +68,9 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
         connection.commit()
         connection.close()
     except Exception as e:
+        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed to retrieve results: {connection_name}/{db_name} - {tokenizer.token}")
+        logger.debug(str(sys.exc_info()[0]))
+        logger.debug(str(traceback.format_exc()))
         data["error"] = str(e)
 
     if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
@@ -68,6 +78,8 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
             history_data = tokenizer.history()
             history_data.append([get_utc_now().strftime("%Y-%m-%d %H:%M:%S"), len(data["records"])])
             tokenizer.set("history", history_data)
+
+    logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Query results retrieved: {connection_name}/{db_name} - {tokenizer.token}")
 
     resp.output({ 
         "ok": True, 

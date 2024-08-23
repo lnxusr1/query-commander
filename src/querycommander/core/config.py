@@ -21,6 +21,14 @@ class Settings:
             return self._connections.list()
         else:
             return self._connections.get(conn_name)
+        
+    @property
+    def profiles(self):
+        p = self.data.get("settings", {}).get("profiles", "enable")
+        if str(p).lower() in ["enable", "enabled", ""]:
+            return True
+        
+        return False
     
     @property
     def sys_authenticator(self):

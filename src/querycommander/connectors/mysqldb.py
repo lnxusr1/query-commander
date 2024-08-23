@@ -165,8 +165,8 @@ class MySQL(Connector):
             try:
                 while True:
                     records = cur.fetchmany(size=size)
-                    if records is not None:
-                        self.logger.debug(len(records))
+                    #if records is not None:
+                    #    self.logger.debug(len(records))
                     if not records or len(records) == 0:
                         break
 

@@ -1,6 +1,9 @@
 import json
+import logging
 import http.cookies
 from querycommander.core.tokenizer import tokenizer
+
+logger = logging.getLogger("INTERACTIONS")
 
 
 class Response:
@@ -9,6 +12,7 @@ class Response:
         if isinstance(hdrs, dict):
             self.headers = hdrs
 
+        self.is_socket = kwargs.get("is_socket", False)
         self.data = kwargs.get("data")
         self.raw_data = None
         self.extend = None
@@ -82,10 +86,15 @@ class Response:
 
 class Request:
     def __init__(self, **kwargs):
+        self.is_socket = kwargs.get("is_socket", False)
         self.raw_data = None
         self.json_data = {}
-        self.token = None
-        self.username = None
+        self.token = kwargs.get("token")
+        self.username = kwargs.get("username")
+        self.socket_addr = kwargs.get("socket_addr")
+        self.connection_id = kwargs.get("connection_id")
+        self.request_id = kwargs.get("request_id")
+        self.message_id = kwargs.get("message_id")
 
         self.headers = {}
 
@@ -97,22 +106,26 @@ class Request:
         content_length = str(kwargs.get("CONTENT_LENGTH", "0"))
         self.headers["CONTENT_LENGTH"] = int(content_length) if content_length.isnumeric() else 0
 
-        try:
-            self.cookies = http.cookies.SimpleCookie(self.headers["HTTP_COOKIE"])
-        except:
-            self.cookies = {}
+        if self.headers.get("HTTP_COOKIE") is not None:
+            try:
+                self.cookies = http.cookies.SimpleCookie(self.headers["HTTP_COOKIE"])
+            except:
+                self.cookies = {}
 
-        try:
-            if "token" in self.cookies:
-                self.token = self.cookies["token"].value
-        except:
-            pass
+            try:
+                if "token" in self.cookies:
+                    self.token = self.cookies["token"].value
+            except:
+                pass
 
-        try:
-            if "username" in self.cookies:
-                self.username = self.cookies["username"].value
-        except:
-            pass
+            try:
+                if "username" in self.cookies:
+                    self.username = self.cookies["username"].value
+            except:
+                pass
+
+        logger.debug(f"Token = {self.username}")
+        logger.debug(f"Token = {self.token}")
 
     def set_data(self, data):
         if data is not None:

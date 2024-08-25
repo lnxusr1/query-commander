@@ -4,6 +4,8 @@ To use Query Commander with API Gateway + Lambda you must attach the Lambda to a
 
 ## Intial Setup
 
+For optimal performance two APIs are required.  The REST API serves the pages and simple data objects while the Websocket enables longer running queries to be possible due to AWS timeout limitations in the API Gateway service.  *Without both APIs in place the maximum runtime for a query is 29 seconds.*
+
 !!! important
     For the package creation to work properly you should execute all commands on an Amazon Linux x86_64 server as this is most similar to the Lambda runtime environment of the same architecture.
 
@@ -30,6 +32,9 @@ zip -r ../package.zip *
 ```
 
 Now go into AWS and upload the zip file just created as a new layer.  If you already have a layer you can upload the zip file as a new version on the existing layer.  Make sure to select the proper runtime (Python 3.11 and/or Python 3.12 are the recommended runtimes with x86_64 architecture)
+
+!!! note
+    Releases since 0.6.2 have included a pre-built Python layer for AWS Lambda.  The pre-built layer requires Python 3.12 runtime.  You can download the zip by visiting the [release page](https://github.com/lnxusr1/query-commander/releases/latest).
 
 ### Step 2: Create the Lambda Function
 
@@ -103,7 +108,7 @@ def lambda_handler(event, context):
 
 Once complete, save and click **Deploy** to publish the latest version of your function.
 
-### Step 7: Set up API Gateway to call your Lambda function
+### Step 7: Set up API Gateway REST API
 
 1. Navigate to the Lambda function in the AWS Console
 2. Click "Add Trigger" in the chart at the top (above the Code window)
@@ -116,7 +121,20 @@ Once complete, save and click **Deploy** to publish the latest version of your f
 9. Enter **\*/\*** in the box to indicate all types
 10. Choose **Add** at the bottom to create the API
 
-### Step 8: Adjust Lambda Runtime Configuration
+### Step 8: Set up API Gateway Websocket API
+
+1. Navigate to the API Gateway service in the AWS Console
+2. Click *Create API* and select **Build** under a Websocket API
+3. Enter a *API Name* of your choice
+4. For **Route selection expression** enter *request.body.command*
+5. Click **Next**
+6. Click *Add $default route*
+7. Attach the **Lambda** integration and select the function from **Step #2**.
+8. Click **Next**
+9. Enter *production* in the stage name and click **Next**
+10. Click **Create and deploy**
+
+### Step 9: Adjust Lambda Runtime Configuration
 
 Query Commander recommends adjusting the following:
 

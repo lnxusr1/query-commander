@@ -5,6 +5,50 @@ import logging
 
 from querycommander.core.connections import Connections
 
+
+def get_websocket_apis_invoking_lambda(context):
+    import boto3
+
+    # Get the Lambda function ARN
+    function_name = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+    #function_version = os.environ['AWS_LAMBDA_FUNCTION_VERSION']
+    region = os.environ['AWS_REGION']
+    account_id = context.invoked_function_arn.split(":")[4]
+    lambda_arn = f"arn:aws:lambda:{region}:{account_id}:function:{function_name}"
+
+    # Create a client for API Gateway V2
+    client = boto3.client('apigatewayv2')
+
+    # List all WebSocket APIs
+    response = client.get_apis()
+
+    # List to hold APIs that invoke the current Lambda function
+    websocket_apis_invoke_lambda = []
+
+    for api in response['Items']:
+        api_id = api['ApiId']
+
+        if api['ProtocolType'] == "WEBSOCKET":
+            # Get all integrations for this API
+            stages = client.get_stages(ApiId=api_id)
+            stages = [x.get("StageName") for x in stages["Items"]]
+            if len(stages) == 1:
+
+                integrations = client.get_integrations(ApiId=api_id)
+                for integration in integrations['Items']:
+
+                    # Check if the integration is a Lambda proxy integration and if the URI matches the Lambda ARN
+                    if integration['IntegrationType'] == 'AWS_PROXY' and f"{lambda_arn}/invocations" in integration['IntegrationUri']:
+                        api_endpoint = f"{api['ApiEndpoint']}/{stages[0]}"
+                        if api_endpoint not in websocket_apis_invoke_lambda:
+                            websocket_apis_invoke_lambda.append(api_endpoint)
+
+    if len(websocket_apis_invoke_lambda) == 1:
+        return websocket_apis_invoke_lambda[0]
+    else:
+        return ""
+
+
 class Settings:
     CONFIG_PATH = os.environ.get("QRYCOMM_CONFIG_PATH", os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "config")))
 
@@ -15,13 +59,24 @@ class Settings:
             self.data = yaml.safe_load(fp)
 
         self._connections = Connections(global_settings=self, **self.data.get("connections", {}))
+        #self.web_socket = self.data.get("settings", {}).get("web_socket", "")
+        self.is_lambda = False
+        self.context = None
 
     def sys_connections(self, conn_name=None):
         if conn_name is None:
             return self._connections.list()
-        else:
-            return self._connections.get(conn_name)
+
+        return self._connections.get(conn_name)
+
+    @property
+    def web_socket(self):
+        wss = self.data.get("settings", {}).get("web_socket", "")
+        if self.is_lambda and (wss is None or len(str(wss)) <= 5):
+            return f"{get_websocket_apis_invoking_lambda(self.context)}"
         
+        return wss
+
     @property
     def profiles(self):
         p = self.data.get("settings", {}).get("profiles", "enable")

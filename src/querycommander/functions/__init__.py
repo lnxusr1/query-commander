@@ -37,7 +37,7 @@ def process_request(request, response):
             tokenizer.set("username", username)
             tokenizer.set("roles", authenticator.roles)
             tokenizer.set("connections", tokenizer.connections())
-            resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, "profiles": cfg.profiles }
+            resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, "profiles": cfg.profiles, "web_socket": cfg.web_socket }
 
             resp_data["role_selected"] = authenticator.roles[0]
             tokenizer.set("role_selected", resp_data["role_selected"])
@@ -98,7 +98,8 @@ def process_request(request, response):
                 #"roles": [tokenizer.role_selected], # tokenizer.roles as list
                 #"role_selected": tokenizer.role_selected, 
                 "connections": tokenizer.connections(),
-                "profiles": cfg.profiles
+                "profiles": cfg.profiles,
+                "web_socket": cfg.web_socket
             }, extend=False)
 
             return

@@ -3,7 +3,7 @@
 Tokens are used to store temporary session-specific information for logged in users.
 
 !!! danger "Set a Strong Safe Password"
-    The ```safe_password``` is used to encrypt any **local** database authentication credentials when storing them on the session token so be sure to use a strong password.
+    The ```safe_password``` is used to encrypt credentials when storing them on the session token for the **local** [authenticator](./authenticator.md) so be sure to use a strong password. *(Other authenticators like openldap or microsoft do not use this setting.)*
 
 ## Local Tokens
 

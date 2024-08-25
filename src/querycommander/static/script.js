@@ -9,6 +9,7 @@ var connection_selected = "";
 var tab_counter = 0;
 var escape_key = false;
 var fade_login = false;
+var wss_url = '';
 
 $.ajaxSetup({
     cache: false
@@ -25,6 +26,23 @@ function generate_url() {
     let finalUrl = baseUrl + "?" + cacheBreaker;
     
     return finalUrl;
+}
+
+function getCookieValue(cookieName) {
+    let name = cookieName + "=";
+    let decodedCookies = decodeURIComponent(document.cookie); // Decode URI components
+    let cookiesArray = decodedCookies.split(';'); // Split cookies into an array
+
+    for (let i = 0; i < cookiesArray.length; i++) {
+        let cookie = cookiesArray[i].trim(); // Trim any whitespace
+
+        // Check if the cookie name matches
+        if (cookie.indexOf(name) === 0) {
+            return cookie.substring(name.length, cookie.length); // Return the cookie's value
+        }
+    }
+
+    return null; // If the cookie isn't found
 }
 
 function highlightContents(divSelector) {
@@ -331,18 +349,29 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
     
     $(tab_id + ' div.section.data').addClass('is-loading');
 
-    $.ajax({
-        url: generate_url(),
-        dataType: "json",
-        method: "POST",
-        headers: no_cache_headers,
-        data: JSON.stringify(req_data),
-        contentType: "application/json",
-        beforeSend: function(xhr) {
-            $(tab_id + ' .tab-loading').show();
-            $(tab_id + ' div.section.statement div').text(req_data["statement"]);
-        },
-        success: function(data) {
+    if (wss_url != '') {
+        // web sockets
+
+        $(tab_id + ' .tab-loading').find('.btn-stop-loading').trigger('click');
+        $(tab_id + ' .tab-loading').find('.btn-stop-loading').off();
+
+        $(tab_id + ' .tab-loading').css('display', '');
+        $(tab_id + ' div.section.statement div').text(req_data["statement"]);
+
+        //console.log("Starting socket request: ", wss_url);
+        let socket = new WebSocket(wss_url);
+        let socket_timer = setTimeout(function() { $(tab_id + ' .tab-loading').find('.btn-stop-loading').trigger('click'); }, 960000); // 16 mins
+
+        req_data["token"] = getCookieValue('token');
+        req_data["username"] = getCookieValue('username');
+        
+        socket.onmessage = function(event) {
+            let data = JSON.parse(event.data);
+
+            if ((data.message) && (data.message == "Endpoint request timed out")) {
+                return; // silently discard endpoint timeouts (lambda still running in background)
+            }
+
             if (!as_more) {
                 doClearQueryResults($(tab_id + ' div.section.data'));
             }
@@ -356,17 +385,84 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
             if (data.data) {
                 doLoadQueryData($(tab_id + ' div.section.data'), data.data, true, true, as_more);
             }
-        },
-        error: function(e) {
-            doClearQueryResults($(tab_id + ' div.section.data'));
-            $(tab_id + ' div.section.output div').text('An unexpected error occurred while executing the query.\nThis could be caused by a broken connection or malformed request.\n\nUnable to proceed.');
-            $(tab_id + ' .btn-tab-output').trigger('click');
-        },
-        complete: function() {
+
+            socket.close();
+
+        };
+        
+        socket.onclose = function(event) {
+            clearTimeout(socket_timer);
+            //console.log('WebSocket is closed now.');
             $(tab_id + ' .tab-loading').hide();
             $(tab_id + ' div.section.data').removeClass('is-loading');
-        }
-    });
+        };
+
+        socket.onopen = function(event) { 
+            //console.log('WebSocket is open now.'); 
+            socket.send(JSON.stringify(req_data)); 
+        };
+
+        $(tab_id + ' .tab-loading').find('.btn-stop-loading').click(function() {
+            try {
+                socket.close();
+            } catch (error) {
+                console.error('An error occurred:', error.message);
+            }
+
+            if (!$(tab_id + ' .tab-loading').is(':visible')) {
+                doClearQueryResults($(tab_id + ' div.section.data'));
+            }
+
+            $(tab_id + ' div.section.output div').text('Request cancelled.');
+            $(tab_id + ' .btn-tab-output').trigger('click');
+            $(tab_id + ' .tab-loading').hide();
+            $(tab_id + ' div.section.data').removeClass('is-loading');
+
+            return false;
+        });
+
+    } else {
+        // ajax
+
+        $.ajax({
+            url: generate_url(),
+            dataType: "json",
+            method: "POST",
+            headers: no_cache_headers,
+            data: JSON.stringify(req_data),
+            contentType: "application/json",
+            beforeSend: function(xhr) {
+                $(tab_id + ' .tab-loading').show();
+                $(tab_id + ' div.section.statement div').text(req_data["statement"]);
+                $(tab_id + ' .tab-loading').find('.btn-stop-loading').hide();
+
+            },
+            success: function(data) {
+                if (!as_more) {
+                    doClearQueryResults($(tab_id + ' div.section.data'));
+                }
+
+                if (!data.ok) {
+                    if (data.error) { alert(data.error); }
+                    if (data.logout) { doLogout(); }
+                    return;
+                }
+
+                if (data.data) {
+                    doLoadQueryData($(tab_id + ' div.section.data'), data.data, true, true, as_more);
+                }
+            },
+            error: function(e) {
+                doClearQueryResults($(tab_id + ' div.section.data'));
+                $(tab_id + ' div.section.output div').text('An unexpected error occurred while executing the query.\nThis could be caused by a broken connection or malformed request.\n\nUnable to proceed.');
+                $(tab_id + ' .btn-tab-output').trigger('click');
+            },
+            complete: function() {
+                $(tab_id + ' .tab-loading').hide();
+                $(tab_id + ' div.section.data').removeClass('is-loading');
+            }
+        });
+    }
 }
 
 function doGetTableContents(container, selection=false, delimiter="\t") {
@@ -629,6 +725,7 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true, as
         }
 
         if (data["records"]) {
+            
             for (let r=0; r<data["records"].length; r++) {
                 let tr = $('<tr class="show"></tr>');
                 if (with_numbers) {
@@ -648,9 +745,17 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true, as
                 if (data["records"].length == 0) {
                     if (((data["output"]) && (data["output"].length > 0)) && (data["headers"].length == 0)) {
                         $(container).parent().parent().find('.btn-tab-output').first().trigger('click');
+                    } else {
+                        if (!$(container).parent().parent().find('.btn-tab-results').first().hasClass('active')) {
+                            $(container).parent().parent().find('.btn-tab-results').first().trigger('click');
+                        }
                     }
                     $(container).find('resultsnav').find('.btn-tab-refresh').prop('disabled', false);
                 } else {
+                    if (!$(container).parent().parent().find('.btn-tab-results').first().hasClass('active')) {
+                        $(container).parent().parent().find('.btn-tab-results').first().trigger('click');
+                    }
+
                     $(container).parent().parent().find('.btn-tab-export').prop('disabled', false);
                     $(container).parent().parent().find('.btn-tab-copy').prop('disabled', false);
                     
@@ -1693,6 +1798,8 @@ function doLoginSuccess(data, hide_login) {
             connection_selected = connection_list[0]["name"];
         }
     }
+
+    if (data.web_socket) { wss_url = data.web_socket; }
 
     if (data.profiles) {
         doLoadProfile();

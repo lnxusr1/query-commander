@@ -112,6 +112,9 @@ core > tab.query > item > results .data > div { flex: 1; overflow: auto; width: 
 core > tab.query > item > results .data > div > div:first-child > table { position: absolute; top:0; left: 0; z-index: 2; }
 core > tab.query > item > results .data data { overflow: hidden; }
 core > tab.query > item > results .tab-loading { user-select: none; z-index: 20; position: absolute; top: 0; right: 0; left: 0; bottom: 0; display: flex; flex-direction: row; align-items: center; background: var(--output-overlay-bg); }
+core > tab.query > item > results .tab-loading span > i { margin-right: 6px; }
+core > tab.query > item > results .tab-loading .btn-stop-loading { margin-left: 6px; font-size: 0.85rem; line-height: 1rem; color: var(--text-color); text-decoration: none; }
+core > tab.query > item > results .tab-loading .btn-stop-loading:hover { color: var(--close-hover-color); }
 .tab-loading > div { display: flex; flex-direction: column; align-items: center; width: 100%; }
 .tab-loading > div > div { padding: 6px 12px; border-radius: 6px; background: var(--toolbar-bg); box-shadow: 1px 1px 6px var(--text-color); }
 .tab-loading > div span { display: inline-block; font-size: 1.1rem; }

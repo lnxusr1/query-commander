@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.7.0] - 2024-08-25
+## [0.7.0] - 2024-08-24
 
 - Added websockets for long running queries through AWS Lambda
 - Added autoconfigure websocket API URL

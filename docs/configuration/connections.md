@@ -160,6 +160,9 @@ The same options listed at the top of this page are available, but they are spec
 !!! note
     When using AWS Secrets Manager the Secret Name is substituted for the Connection Name so you do not need to specify a "name" attribute separately in the JSON data.
 
+!!! important
+    You can override the **type** attribute of the connections using the Environment variable **CONNECTIONS_TYPE**.  Presently the only practical value for the environment variable is *secretsmanager* as the default is to use the *config* value.
+
 Permissions for AWS Secrets Manager access to the Query Commander runtime must include **ListSecrets** and **GetSecretValue**.  A simple policy example is shown below:
 
 ``` json

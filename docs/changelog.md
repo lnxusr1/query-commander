@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.1] - 2024-08-25
+
+- Enabled environment variable overrides for most common settings
+- Documentation updates
+
 ## [0.7.0] - 2024-08-24
 
 - Added websockets for long running queries through AWS Lambda

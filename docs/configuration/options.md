@@ -38,7 +38,16 @@ The example above will limit the maximum rows that can be downloaded to 20,000 r
 
 ## CDNs
 
-The CDNs used to pull the client libraries are configurable, but by default will pull from the public CDNs.  Examples of configuration is shown below with the default values for each.  To change just include in the settings file and modify as desired.  Any attributes other than the required *url* will be placed in the html as name=value pairs.
+The CDNs used to pull the client libraries are configurable, but by default will pull from the public CDNs.
+
+| CDN         | Description                                                | Version |
+| :---------- | :--------------------------------------------------------- | :------ |
+| jquery      | The [jQuery](https://www.jquery.com) JavaScript framework  | 6.5+    |
+| fontawesome | The [FontAwesome](https://fontawesome.com/) icon library   | 3.7+    |
+
+### Default CDN Configuration
+
+Examples of configuration is shown below with the default values for each.  To change just include in the settings file and modify as desired.  Any attributes other than the required *url* will be placed in the html as name=value pairs.
 
 ``` yaml
 settings:

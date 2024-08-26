@@ -5,7 +5,7 @@ The application roadmap will continue to evolve over the next several months as 
 ## &raquo; Road to Version 1.0
 
 !!! important
-    As of 2024-08-18 all core features for Version 1.0 are **complete**.  Remaining activities will be to throughly test, tune, and validate all services in all available configurations.  Releases will be posted as groups of fixes/enhancements are completed.
+    All core features are in process of being tested for final validation for the upcoming 1.0 release.
 
 - Features
     - SQL Editor - **COMPLETE** *v0.0.1*
@@ -48,9 +48,6 @@ The application roadmap will continue to evolve over the next several months as 
     - CGI Configuration (Apache/httpd) - [**Instructions**](installation/apache.md)
     - AWS CloudFormation / CDK - [**Instructions**](installation/aws.md)
 
-!!! note
-    These features are being worked in parallel so as minor releases are published it may look a bit random as to which features on the list are enabled.  That will be directly driven by the time required to complete the integration and perform any reasonable testing.
-
 ## Future Thinking
 
 As no good tool is ever truly complete please find below the scratch-pad of features that will be considered for releases after v1.0.
@@ -60,5 +57,5 @@ As no good tool is ever truly complete please find below the scratch-pad of feat
 - SQL Autocomplete
 - Microsoft SQL Server
 - IBM DB2 (LUW)
-- <strike>S3 object options (in addition to Local, DynamoDB, and Redis)</strike> - *ADDED in 0.5.3*
 - Result download options for CSV, XML, JSON, etc.
+- Provide overrides for login background, logos, and application name

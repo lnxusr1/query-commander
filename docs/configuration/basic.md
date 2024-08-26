@@ -91,3 +91,33 @@ connections:
       Values:
         - secret-group-name
 ```
+
+## Environment Variable Overrides
+
+The following environment variables can be used to override settings at the paths indicated in the table below.
+
+| ENV VAR                    | Setting                                  |
+| :------------------------- | :--------------------------------------- |
+| QRYCOMM_CONFIG_PATH        | Sets the path to the *setting.yml* containing folder |
+| LOG_LEVEL                  | settings/log_level                       |
+| RECORD_PER_REQUEST         | settings/records_per_request             |
+| RATE_LIMIT_RECORDS         | settings/rate_limit.records              |
+| RATE_LIMIT_PERIOD          | settings/rate_limit.period               |
+| JQUERY_URL                 | settings/cdns/jquery/url                 |
+| FONTAWESOME_URL            | settings/cdns/fontawesome/url            |
+| FONTAWESOME_INTEGRITY      | settings/cdns/fontawesome/integrity      |
+| FONTAWESOME_CROSSORIGIN    | settings/cdns/fontawesome/crossorigin    |
+| FONTAWESOME_REFERRERPOLICY | settings/cdns/fontawesome/referrerpolicy |
+| AWS_REGION_NAME            | settings/aws_region_name                 |
+| AWS_PROFILE_NAME           | settings/aws_profile_name                |
+| AWS_ACCESS_KEY             | settings/aws_access_key                  |
+| AWS_SECRET_KEY             | settings/aws_secret_key                  |
+| TOKENIZER_TYPE             | tokenizer/type                           |
+| TOKENIZER_TIMEOUT          | tokenizer/timeout                        |
+| TOKENIZER_SAFE_PASSWORD    | tokenizer/safe_password                  |
+| TOKENIZER_PATH             | tokenizer/path                           |
+| TOKENIZER_HOST             | tokenizer/host                           |
+| TOKENIZER_PORT             | tokenizer/port                           |
+| TOKENIZER_SSL              | tokenizer/options/ssl                    |
+| TOKENIZER_TABLE            | tokenizer/table                          |
+| CONNECTIONS_TYPE           | connections/type                         |

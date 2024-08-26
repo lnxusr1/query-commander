@@ -1,6 +1,6 @@
 # Query Commander &middot; [![GitHub license](https://img.shields.io/github/license/lnxusr1/query-commander)](https://github.com/lnxusr1/query-commander/blob/master/LICENSE) ![Python Versions](https://img.shields.io/pypi/pyversions/yt2mp3.svg) ![Read the Docs](https://img.shields.io/readthedocs/query-commander) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/lnxusr1/query-commander)
 
-Introducing **Query Commander**, the revolutionary *opensource* browser-based SQL tool designed for secure and efficient database management. 
+Introducing **Query Commander**, the *opensource* browser-based SQL tool designed for secure and efficient database management. 
 
 ![Basic Screenshot](https://github.com/lnxusr1/query-commander/blob/main/docs/images/screen_basic.png?raw=true)
 

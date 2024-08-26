@@ -1,3 +1,4 @@
+import os
 import json
 import logging
 
@@ -50,10 +51,11 @@ class Connections:
         if self._connections is not None:
             return
         
-        if self.settings.get("type", "config") == "config":
+        c_type = os.environ.get("CONNECTIONS_TYPE", self.settings.get("type", "config"))
+        if c_type == "config":
             self._connections = self._load_config()
 
-        if self.settings.get("type", "config") in ["secretsmanager", "secretmanager"]:
+        if c_type in ["secretsmanager", "secretmanager"]:
             self._connections = self._load_secretsmanager()
 
     def list(self):
@@ -79,10 +81,12 @@ class Connections:
         return self._connections.get(conn_name)
 
     def get(self, conn_name):
-        if self.settings.get("type", "config") == "config":
+
+        c_type = os.environ.get("CONNECTIONS_TYPE", self.settings.get("type", "config"))
+        if c_type == "config":
             self.load() # if not already loaded
             return self._connections.get(conn_name)
 
-        if self.settings.get("type", "config") in ["secretsmanager", "secretmanager"]:
+        if c_type in ["secretsmanager", "secretmanager"]:
             return self._get_secretsmanager(conn_name)
             

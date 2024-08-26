@@ -55,8 +55,9 @@ class Settings:
     def __init__(self):
         self.data = {}
 
-        with open(os.path.join(self.CONFIG_PATH, "settings.yml"), "r", encoding="UTF-8") as fp:
-            self.data = yaml.safe_load(fp)
+        if os.path.exists(os.path.join(self.CONFIG_PATH, "settings.yml")):
+            with open(os.path.join(self.CONFIG_PATH, "settings.yml"), "r", encoding="UTF-8") as fp:
+                self.data = yaml.safe_load(fp)
 
         self._connections = Connections(global_settings=self, **self.data.get("connections", {}))
         #self.web_socket = self.data.get("settings", {}).get("web_socket", "")
@@ -71,7 +72,7 @@ class Settings:
 
     @property
     def web_socket(self):
-        wss = self.data.get("settings", {}).get("web_socket", "")
+        wss = os.environ.get("WEB_SOCKET", self.data.get("settings", {}).get("web_socket", ""))
         if self.is_lambda and (wss is None or len(str(wss)) <= 5):
             return f"{get_websocket_apis_invoking_lambda(self.context)}"
         
@@ -79,7 +80,7 @@ class Settings:
 
     @property
     def profiles(self):
-        p = self.data.get("settings", {}).get("profiles", "enable")
+        p = os.environ.get("PROFILES", self.data.get("settings", {}).get("profiles", "enable"))
         if str(p).lower() in ["enable", "enabled", ""]:
             return True
         
@@ -91,7 +92,9 @@ class Settings:
     
     @property
     def sys_tokenizer(self):
-        return self.data.get("tokenizer", { "type": "local" })
+        tk_data = self.data.get("tokenizer", { "type": "local" })
+        tk_data["type"] = os.environ.get("TOKENIZER_TYPE", tk_data.get("type"))
+        return tk_data
     
     @property
     def sys_profiler(self):
@@ -103,24 +106,24 @@ class Settings:
     
     @property
     def records_per_request(self):
-        return int(self.data.get("settings", {}).get("records_per_request", 200))
+        return int(os.environ.get('RECORDS_PER_REQUEST', self.data.get("settings", {}).get("records_per_request", 200)))
     
     @property
     def rate_limit_records(self):
-        return int(self.data.get("settings", {}).get("rate_limit", {}).get("records", -1))
+        return int(os.environ.get('RATE_LIMIT_RECORDS', self.data.get("settings", {}).get("rate_limit", {}).get("records", -1)))
 
     @property
     def rate_limit_period(self):
-        return int(self.data.get("settings", {}).get("rate_limit", {}).get("period", -1))
+        return int(os.environ.get('RATE_LIMIT_PERIOD', self.data.get("settings", {}).get("rate_limit", {}).get("period", -1)))
     
     @property
     def cdn_fontawesome(self):
         far = self.data.get("settings", {}).get("cdns", {}).get("fontawesome", {})
         fa = {
-            "href": far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"),
-            "integrity": far.get("integrity", "sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="),
-            "crossorigin": far.get("crossorigin", "anonymous"),
-            "referrerpolicy": far.get("referrerpolicy", "no-referrer")
+            "href": os.environ.get("FONTAWESOME_URL", far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css")),
+            "integrity": os.environ.get("FONTAWESOME_INTEGRITY", far.get("integrity", "sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==")),
+            "crossorigin": os.environ.get("FONTAWESOME_CROSSORIGIN", far.get("crossorigin", "anonymous")),
+            "referrerpolicy": os.environ.get("FONTAWESOME_REFERRERPOLICY", far.get("referrerpolicy", "no-referrer"))
         }
         return f"<link rel=\"stylesheet\" " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + " />"
 
@@ -128,13 +131,13 @@ class Settings:
     def cdn_jquery(self):
         far = self.data.get("settings", {}).get("cdns", {}).get("jquery", {})
         fa = {
-            "src": far.get("url", "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js")
+            "src": os.environ.get("JQUERY_URL", far.get("url", "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"))
         }
         return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
 
     @property
     def log_level(self):
-        lvl = str(self.data.get("settings", {}).get("log_level", "info")).lower()
+        lvl = str(os.environ.get('LOG_LEVEL', self.data.get("settings", {}).get("log_level", "info"))).lower()
 
         if lvl == "critical":
             return logging.CRITICAL
@@ -154,7 +157,7 @@ class Settings:
         return self.data.get("settings", {}).get(name, default)
 
     def aws_region_name(self, in_settings):
-        return in_settings.get("aws_region_name", self.sys_settings("aws_region_name"))
+        return in_settings.get("aws_region_name", os.environ.get("AWS_REGION_NAME", self.sys_settings("aws_region_name")))
 
     def aws_credentials(self, in_settings):
         if not isinstance(in_settings, dict):
@@ -173,13 +176,13 @@ class Settings:
 
         if self.sys_settings("aws_profile_name") is not None:
             return { 
-                "profile_name": self.sys_settings("aws_profile_name")
+                "profile_name": os.environ.get("AWS_PROFILE_NAME", self.sys_settings("aws_profile_name"))
             }
 
         if self.sys_settings("aws_access_key") is not None:
             return { 
-                "aws_access_key_id": self.sys_settings("aws_access_key"), 
-                "aws_secret_access_key": self.sys_settings("aws_secret_key")
+                "aws_access_key_id": os.environ.get('AWS_ACCESS_KEY', self.sys_settings("aws_access_key")), 
+                "aws_secret_access_key": os.environ.get('AWS_SECRET_KEY', self.sys_settings("aws_secret_key"))
             }
 
         return {}

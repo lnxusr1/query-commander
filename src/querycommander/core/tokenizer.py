@@ -16,9 +16,9 @@ class Tokens:
         self.token = None
         self.data = None
         self._is_loaded = False
-        self.safe_password = str(kwargs.get("safe_password", "default_password"))
+        self.safe_password = str(os.environ.get('TOKENIZER_SAFE_PASSWORD', kwargs.get("safe_password", "default_password")))
         self.remote_addr = ""
-        self.timeout = int(kwargs.get("timeout", 20))
+        self.timeout = int(os.environ.get('TOKENIZER_TIMEOUT', kwargs.get("timeout", 20)))
         self._connections = None
         self._username = None
         self._do_update = False
@@ -301,7 +301,7 @@ class LocalTokens(Tokens):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.path = kwargs.get("path", os.path.join(tempfile.gettempdir(), "tokens"))
+        self.path = os.environ.get("TOKENIZER_PATH", kwargs.get("path", os.path.join(tempfile.gettempdir(), "tokens")))
 
     def _get_token_data(self):
         if self.token is None or self._username is None:
@@ -377,14 +377,14 @@ class RedisTokens(Tokens):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.host = kwargs.get("host", "localhost")
-        self.port = kwargs.get("port", 6379)
+        self.host = os.environ.get("TOKENIZER_HOST", kwargs.get("host", "localhost"))
+        self.port = os.environ.get("TOKENIZER_PORT", kwargs.get("port", 6379))
 
         import redis
         self.conn = redis.Redis(
             host=self.host,
             port=self.port,
-            ssl=kwargs.get("options", {}).get("ssl", False),
+            ssl=(os.environ.get("TOKENIZER_SSL", str(kwargs.get("options", {}).get("ssl", False))).lower() == "true"),
             ssl_cert_reqs="none",
             decode_responses=True
         )
@@ -460,7 +460,7 @@ class DynamoDBTokens(Tokens):
         boto3.set_stream_logger('botocore', logging.WARNING)
         logging.getLogger('urllib3').setLevel(logging.WARNING)
 
-        self.table_name = kwargs.get("table", "tokens")
+        self.table_name = os.environ.get("TOKENIZER_TABLE", kwargs.get("table", "tokens"))
 
         session = boto3.Session(**cfg.aws_credentials(kwargs))
         self.conn = session.client('dynamodb', region_name=cfg.aws_region_name(kwargs))

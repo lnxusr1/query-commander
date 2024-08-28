@@ -265,6 +265,7 @@ overlay.chooser .message-box .buttons { user-select: none; border-bottom-left-ra
 overlay.chooser .message-box .buttons ul { margin: 0; display: flex; list-style: none; flex-direction: row; justify-content: flex-end; }
 overlay.chooser .message-box .buttons ul li { padding: 10px 0 10px 6px; }
 overlay.chooser .message-box .buttons button { border: 1px solid #000000; padding: 0 12px; line-height: 28px; height: 28px; border-radius: 3px;}
+overlay.chooser .message-box .buttons button:active { background: var(--results-table-bg-selected-alt); }
 overlay .message-box { max-width: 90%; max-height: 90%; }
 overlay .message { overflow: auto; }
 

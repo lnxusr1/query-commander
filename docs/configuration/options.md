@@ -7,6 +7,11 @@ The following is a list of optional values you can specify in the *settings.yml*
 | log_level           | "info"  | Standard python logging levels (debug, info, error, etc.)    |
 | records_per_request | 200     | Number of records returned in a single page request.         |
 | profiles            | enable  | Enables/disables user profiles                               |
+| application_name    | *None*  | Override for branding application name                       |
+| img_login_bg        | *None*  | Login page main backgroung image                             |
+| img_logo            | *None*  | Image URL for main logo on login screen                      |
+| img_logo_sm         | *None*  | Image URL for smaller logo (on app screen)                   |
+| img_favicon         | *None*  | Browser "favicon" image                                      |
 | aws_access_key      | *None*  | AWS Access Key for Key-based authentication to AWS services. |
 | aws_secret_key      | *None*  | AWS Secret Key for Key-based authentication to AWS services. | 
 | aws_profile_name    | *None*  | Name for Profile-based authentication to AWS services.       |

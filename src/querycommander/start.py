@@ -60,6 +60,11 @@ def as_cgi():
             if path_value == "index.html":
                 page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
                 page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+                page_content = page_content.replace("<!-- page_login_bg -->", cfg.img_login_bg)
+                page_content = page_content.replace("<!-- page_logo -->", cfg.img_logo)
+                page_content = page_content.replace("<!-- page_logo_sm -->", cfg.img_logo_sm)
+                page_content = page_content.replace("<!-- page_favicon -->", cfg.img_favicon)
+                page_content = page_content.replace("##APP_NAME##", cfg.app_name)
 
             sys.stdout.buffer.write(page_content.encode())
         sys.exit()
@@ -110,6 +115,11 @@ def as_lambda(event, context):
             if path_value == "index.html":
                 page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
                 page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+                page_content = page_content.replace("<!-- page_login_bg -->", cfg.img_login_bg)
+                page_content = page_content.replace("<!-- page_logo -->", cfg.img_logo)
+                page_content = page_content.replace("<!-- page_logo_sm -->", cfg.img_logo_sm)
+                page_content = page_content.replace("<!-- page_favicon -->", cfg.img_favicon)
+                page_content = page_content.replace("##APP_NAME##", cfg.app_name)
 
             return {
                 'statusCode': '200',

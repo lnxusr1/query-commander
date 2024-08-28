@@ -43,7 +43,7 @@ class Connector:
         self.err.append("Not implemented.")
         return None
 
-    def fetchmany(self, sql, params):
+    def fetchmany(self, sql, params, size=None, query_type=None):
         self.err.append("Not implemented.")
         return
     

@@ -4,14 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<title>Query Commander</title>
+	<title>##APP_NAME##</title>
 
-    <link rel="icon" type="image/png" href="?page=favicon.svg">
-    <meta name="msapplication-TileImage" content="?page=favicon.svg">
+    <link rel="icon" type="image/png" href="<!-- page_favicon -->">
+    <meta name="msapplication-TileImage" content="<!-- page_favicon -->">
 
     <!-- fontawesome -->
     <link rel="stylesheet" href="?page=structure.css">
     <!-- <link rel="stylesheet" href="?page=theme.css"> -->
+    <style type="text/css">
+        overlay#login .card-left { background-image: url('<!-- page_login_bg -->') !important; }
+    </style>
     <!-- jquery -->
 
     <script src="?page=script.js" type="module"></script>
@@ -38,7 +41,7 @@
         <div>
             <div class="card-left"></div>
             <div class="card">
-                <h1 class="logo"><img src="?page=logo.png" alt="Query Commander" /></h1>
+                <h1 class="logo"><img src="<!-- page_logo -->" alt="##APP_NAME##" /></h1>
                 <form id="form-login">
                     <h2>Sign In</h2>
                     <div id="login-error">Username or password is invalid. Login failed.</div>
@@ -50,7 +53,7 @@
                     <span>&nbsp;</span>
                     <h2>&nbsp;</h2>
                 </form>
-                <div class="footer"><a href="https://www.querycommander.com">Query Commander</a> <version></version></div>
+                <div class="footer"><a href="https://www.querycommander.com">##APP_NAME##</a> <version></version></div>
             </div>
         </div>
     </overlay>
@@ -172,7 +175,7 @@
     <toolbar>
         <div>
             <item class="logo">
-                <a target="_new" title="Query Commander" href="https://www.querycommander.com"><img alt="Query Commander" src="?page=favicon.svg" /></a>
+                <a target="_new" title="##APP_NAME##" href="https://www.querycommander.com"><img alt="##APP_NAME##" src="<!-- page_logo_sm -->" /></a>
             </item>
             <item>
                 <button id="btn-save-profile" title="Save"><i class="fas fa-floppy-disk fa-fw"></i></button>
@@ -255,7 +258,7 @@
     </page>
     <statusbar>
         <div>
-            <item tabindex="-1" ><a target="_new" tabindex="-1" href="https://www.querycommander.com">Query Commander</a> <version></version></item>
+            <item tabindex="-1" ><a target="_new" tabindex="-1" href="https://www.querycommander.com">##APP_NAME##</a> <version></version></item>
             <item tabindex="-1" >Pos <span id="cur_pos">0</span></item>
             <item tabindex="-1" >Sel <span id="sel_pos">0 : 0</span></item>
         </div>

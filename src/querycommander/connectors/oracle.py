@@ -126,7 +126,7 @@ class Oracle(Connector):
             self.err.append("Unable to establish connection")
             raise ConnectionError("Unable to establish connection")
         
-    def fetchmany(self, sql, params=None, size=None):
+    def fetchmany(self, sql, params=None, size=None, query_type=None):
         if self.connection is not None:
             cur = self.execute(sql, params=params)
             

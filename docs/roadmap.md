@@ -17,6 +17,7 @@ The application roadmap will continue to evolve over the next several months as 
     - DB Lock Viewer - **COMPLETE** *v0.4.3*
     - Rate Limits - **COMPLETE** *v0.4.2*
     - Client-side Results Filtering - **COMPLETE** *v0.5.4*
+    - Branding customizations - **COMPLETE** *v0.7.2*
 
 - [Authenticators](configuration/authenticator.md)
     - Local Database authentication - **COMPLETE** *v0.0.1*
@@ -58,4 +59,3 @@ As no good tool is ever truly complete please find below the scratch-pad of feat
 - Microsoft SQL Server
 - IBM DB2 (LUW)
 - Result download options for CSV, XML, JSON, etc.
-- Provide overrides for login background, logos, and application name

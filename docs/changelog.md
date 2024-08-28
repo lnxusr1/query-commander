@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.2] - 2024-08-27
+
+- Bug fix in explain plans for postgres failing to display
+- Button adjustments to provide more natural feedback
+- Added overrides for images/logos for branding customizations
+- Documentation cleanup (Network diagram)
+
 ## [0.7.1] - 2024-08-25
 
 - Enabled environment variable overrides for most common settings

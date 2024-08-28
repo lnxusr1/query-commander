@@ -100,6 +100,11 @@ The following environment variables can be used to override settings at the path
 | :------------------------- | :--------------------------------------- |
 | QRYCOMM_CONFIG_PATH        | Sets the path to the *setting.yml* containing folder |
 | LOG_LEVEL                  | settings/log_level                       |
+| APP_NAME                   | settings/application_name                |
+| IMG_LOGIN_BG               | settings/img_login_bg                    |
+| IMG_LOGO                   | settings/img_logo                        |
+| IMG_LOGO_SM                | settings/img_logo_sm                     |
+| IMG_FAVICON                | settings/img_favicon                     |
 | RECORD_PER_REQUEST         | settings/records_per_request             |
 | RATE_LIMIT_RECORDS         | settings/rate_limit.records              |
 | RATE_LIMIT_PERIOD          | settings/rate_limit.period               |

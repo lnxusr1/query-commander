@@ -71,6 +71,26 @@ class Settings:
         return self._connections.get(conn_name)
 
     @property
+    def img_login_bg(self):
+        return os.environ.get("IMG_LOGIN_BG", self.data.get("settings", {}).get("img_login_bg", "?page=bglogin.jpg"))
+
+    @property
+    def img_logo(self):
+        return os.environ.get("IMG_LOGO", self.data.get("settings", {}).get("img_logo", "?page=logo.png"))
+    
+    @property
+    def img_logo_sm(self):
+        return os.environ.get("IMG_LOGO_SM", self.data.get("settings", {}).get("img_logo_sm", "?page=favicon.svg"))
+    
+    @property
+    def img_favicon(self):
+        return os.environ.get("IMG_FAVICON", self.data.get("settings", {}).get("img_favicon", "?page=favicon.svg"))
+
+    @property
+    def app_name(self):
+        return os.environ.get("APP_NAME", self.data.get("settings", {}).get("application_name", "Query Commander"))
+
+    @property
     def web_socket(self):
         wss = os.environ.get("WEB_SOCKET", self.data.get("settings", {}).get("web_socket", ""))
         if self.is_lambda and (wss is None or len(str(wss)) <= 5):

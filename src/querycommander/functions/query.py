@@ -41,7 +41,7 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
         i = 0
         end_record = start_record + records_per_request
         if records_per_request > 0:
-            for headers, record in connection.fetchmany(sql, params=None, size=201):
+            for headers, record in connection.fetchmany(sql, params=None, size=201, query_type=query_type):
                 data["headers"] = headers
                 if i >= start_record and i < end_record:
                     data["records"].append(record)
@@ -79,7 +79,7 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
             history_data.append([get_utc_now().strftime("%Y-%m-%d %H:%M:%S"), len(data["records"])])
             tokenizer.set("history", history_data)
 
-    logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Query results retrieved: {connection_name}/{db_name} - {tokenizer.token}")
+    logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Query results retrieved: {connection_name}/{db_name} - {tokenizer.token}")
 
     resp.output({ 
         "ok": True, 

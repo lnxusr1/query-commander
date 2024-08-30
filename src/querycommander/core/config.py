@@ -71,6 +71,13 @@ class Settings:
         return self._connections.get(conn_name)
 
     @property
+    def codemirror(self):
+        if str(os.environ.get("DISABLE_CODEMIRROR", self.data.get("settings", {}).get("disable_codemirror", False))).lower() == "true":
+            return False
+        
+        return True
+
+    @property
     def img_login_bg(self):
         return os.environ.get("IMG_LOGIN_BG", self.data.get("settings", {}).get("img_login_bg", "?page=bglogin.jpg"))
 
@@ -151,7 +158,43 @@ class Settings:
     def cdn_jquery(self):
         far = self.data.get("settings", {}).get("cdns", {}).get("jquery", {})
         fa = {
-            "src": os.environ.get("JQUERY_URL", far.get("url", "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"))
+            "src": os.environ.get("JQUERY_URL", far.get("url", "https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js")),
+            "integrity": os.environ.get("JQUERY_INTEGRITY", far.get("integrity", "sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==")),
+            "crossorigin": os.environ.get("JQUERY_CROSSORIGIN", far.get("crossorigin", "anonymous")),
+            "referrerpolicy": os.environ.get("JQUERY_REFERRERPOLICY", far.get("referrerpolicy", "no-referrer"))
+        }
+        return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
+
+    @property
+    def cdn_codemirror_css(self):
+        far = self.data.get("settings", {}).get("cdns", {}).get("codemirror_css", {})
+        fa = {
+            "href": os.environ.get("CODEMIRROR_CSS_URL", far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css")),
+            "integrity": os.environ.get("CODEMIRROR_CSS_INTEGRITY", far.get("integrity", "sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ==")),
+            "crossorigin": os.environ.get("CODEMIRROR_CSS_CROSSORIGIN", far.get("crossorigin", "anonymous")),
+            "referrerpolicy": os.environ.get("CODEMIRROR_CSS_REFERRERPOLICY", far.get("referrerpolicy", "no-referrer"))
+        }
+        return f"<link rel=\"stylesheet\" " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + " />"
+
+    @property
+    def cdn_codemirror_js(self):
+        far = self.data.get("settings", {}).get("cdns", {}).get("codemirror_js", {})
+        fa = {
+            "src": os.environ.get("CODEMIRROR_JS_URL", far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js")),
+            "integrity": os.environ.get("CODEMIRROR_JS_INTEGRITY", far.get("integrity", "sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g==")),
+            "crossorigin": os.environ.get("CODEMIRROR_JS_CROSSORIGIN", far.get("crossorigin", "anonymous")),
+            "referrerpolicy": os.environ.get("CODEMIRROR_JS_REFERRERPOLICY", far.get("referrerpolicy", "no-referrer"))
+        }
+        return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
+
+    @property
+    def cdn_codemirror_sql(self):
+        far = self.data.get("settings", {}).get("cdns", {}).get("codemirror_sql", {})
+        fa = {
+            "src": os.environ.get("CODEMIRROR_SQL_URL", far.get("url", "https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/sql/sql.min.js")),
+            "integrity": os.environ.get("CODEMIRROR_SQL_INTEGRITY", far.get("integrity", "sha512-JOURLWZEM9blfKvYn1pKWvUZJeFwrkn77cQLJOS6M/7MVIRdPacZGNm2ij5xtDV/fpuhorOswIiJF3x/woe5fw==")),
+            "crossorigin": os.environ.get("CODEMIRROR_SQL_CROSSORIGIN", far.get("crossorigin", "anonymous")),
+            "referrerpolicy": os.environ.get("CODEMIRROR_SQL_REFERRERPOLICY", far.get("referrerpolicy", "no-referrer"))
         }
         return f"<script " + " ".join([f"{x}=\"{fa[x]}\"" for x in fa]) + "></script>"
 

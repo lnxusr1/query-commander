@@ -10,6 +10,8 @@ var tab_counter = 0;
 var escape_key = false;
 var fade_login = false;
 var wss_url = '';
+var editor_type = 'default';
+var editors = {};
 
 $.ajaxSetup({
     cache: false
@@ -233,30 +235,80 @@ function doHideMenus() {
 function updateStatusBar() {
 
     setTimeout(function() {
-        if ($('tab.active.query textarea.editor').val() === undefined) { $('#cur_pos').text('0'); $('#sel_pos').text('0 : 0'); return; }
 
-        /*
-        if ($('box.active textarea.code').val().length > 0) {
-            $('.btn-execute').prop('disabled', false);
-        } else {
-            $('.btn-execute').prop('disabled', true);
-        }
-        */
+        if (editor_type == "codemirror") {
+            if ($('tab.active').hasClass('query')) {
+                $('#cur_pos').text('0'); $('#sel_pos').text('0 : 0');
+                let editor = editors[$('tab.active').prop('id')];
 
-        if ($('tab.active.query textarea.editor').is(':focus')) {
-            $('#cur_pos').text('0');
-            let p_loc = $('tab.active.query textarea.editor').prop("selectionEnd");
-            if ($('tab.active.query textarea.editor').val().length == 0) { p_loc = 0; }
-            if ((p_loc) && ($('tab.active.query textarea.editor').is(':focus'))) {
-                $('#cur_pos').text(p_loc);
+                let selection = editor.getSelection();
+    
+                if (selection) {
+                    // Calculate number of lines and total length of the selection
+                    let selectionStart = editor.getCursor("start");
+                    let selectionEnd = editor.getCursor("end");
+                    
+                    let startLine = selectionStart.line;
+                    let endLine = selectionEnd.line;
+                    let startCh = selectionStart.ch;
+                    let endCh = selectionEnd.ch;
+            
+                    let numLines = endLine - startLine + 1;
+                    let totalLength = 0;
+            
+                    // Calculate total length of the selected text
+                    for (let i = startLine; i <= endLine; i++) {
+                        let lineContent = editor.getLine(i);
+                        if (i === startLine && i === endLine) {
+                            // Single line selection
+                            totalLength = endCh - startCh;
+                        } else if (i === startLine) {
+                            // Start line
+                            totalLength += lineContent.length - startCh;
+                        } else if (i === endLine) {
+                            // End line
+                            totalLength += endCh;
+                        } else {
+                            // Middle lines
+                            totalLength += lineContent.length;
+                        }
+                    }
+                    
+                    $('#sel_pos').text(totalLength + ' : ' + numLines);
+                    return;
+                }
+
+                let cursor = editor.getCursor();
+                let line = cursor.line;
+                let column = cursor.ch;
+                
+                // Calculate the absolute position
+                var absolutePosition = column; // Start with the column of the current line
+                for (var i = 0; i < line; i++) {
+                    absolutePosition += editor.getLine(i).length + 1; // +1 for the newline character
+                }
+                
+                $('#cur_pos').text(absolutePosition);
             }
+        } else {
 
-            $('#sel_pos').text('0 : 0');
-            if (window.getSelection().toString()) {
-                let s = window.getSelection().toString();
-                let s_len = s.length;
-                let s_lines = (s.indexOf("\n") !== -1) ? s.split('\n').length : 1;
-                $('#sel_pos').text(s_len + ' : ' + s_lines);
+            if ($('tab.active.query textarea.editor').val() === undefined) { $('#cur_pos').text('0'); $('#sel_pos').text('0 : 0'); return; }
+
+            if ($('tab.active.query textarea.editor').is(':focus')) {
+                $('#cur_pos').text('0');
+                let p_loc = $('tab.active.query textarea.editor').prop("selectionEnd");
+                if ($('tab.active.query textarea.editor').val().length == 0) { p_loc = 0; }
+                if ((p_loc) && ($('tab.active.query textarea.editor').is(':focus'))) {
+                    $('#cur_pos').text(p_loc);
+                }
+
+                $('#sel_pos').text('0 : 0');
+                if (window.getSelection().toString()) {
+                    let s = window.getSelection().toString();
+                    let s_len = s.length;
+                    let s_lines = (s.indexOf("\n") !== -1) ? s.split('\n').length : 1;
+                    $('#sel_pos').text(s_len + ' : ' + s_lines);
+                }
             }
         }
     }, 100);
@@ -300,6 +352,19 @@ function doLoadMore(tab_id) {
 
 function doGetSQL(tab_id) {
     let sql = '';
+
+    if (editor_type == "codemirror") {
+        let editor = editors[tab_id.slice(1)];
+        let selectedText = editor.getSelection();
+        if (selectedText) {
+            return selectedText;
+        } else {
+            let fullContent = editor.getValue();
+            return fullContent;
+        }
+    }
+
+    $(tab_id + ' textarea.editor').focus(); 
     if ($(tab_id + ' textarea.editor').is(":focus")) {
         sql = window.getSelection().toString();
     }
@@ -314,7 +379,6 @@ function doGetSQL(tab_id) {
 
 function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=false) {
 
-    $(tab_id + ' textarea.editor').focus(); 
     let sql = sql_statement
     if (sql_statement == '') {
         sql = doGetSQL(tab_id);
@@ -1181,6 +1245,36 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
         }
     }
 
+    editors[tab_id] = CodeMirror.fromTextArea($('#' + tab_id + ' textarea.editor')[0], {
+        mode: 'text/x-sql',
+        lineNumbers: true,
+        theme: 'default',
+        matchBrackets: true,
+        scrollbarStyle: 'native',
+        tabSize: 4,
+        indentUnit: 4,
+        indentWithTabs: false,
+        extraKeys: {
+            Tab: function(cm) {
+                if (cm.somethingSelected()) {
+                    cm.indentSelection("add");
+                } else {
+                    var spaces = Array(cm.getOption("indentUnit") + 1).join(" ");
+                    cm.replaceSelection(spaces);
+                }
+            },
+            "Shift-Tab": "indentLess",
+            "Ctrl-Enter": function(cm) {
+                $('#btn-execute').trigger('click');
+            },
+            "Ctrl-Q": function(cm) {
+                $('#btn-execute').trigger('click');
+            }
+        }
+      });
+
+      editors[tab_id].on('cursorActivity', updateStatusBar);
+
     doWireUpQueryTab('#' + tab_id);
 
     $('#' + tab_id + ' textarea.editor').focus();
@@ -1452,7 +1546,11 @@ function doLoadContextData(obj, type_name) {
 
             addQueryTab(false, target, '', tab_title+' ['+target+']');
             $('tab.active').children().eq(0).css('height','0px');        
-            $('tab.active').find('.editor').val(sql_statement);
+            if (editor_type == "codemirror") {
+                editors[$('tab.active').prop('id')].setValue(sql_statement);
+            } else {
+                $('tab.active').find('.editor').val(sql_statement);
+            }
             $('#btn-execute').trigger("click");
         }
     });
@@ -1788,6 +1886,7 @@ function doLoginSuccess(data, hide_login) {
     }
 
     connection_list = data.connections;
+    editor_type = data.editor;
 
     doStartTimer();
 
@@ -1969,7 +2068,11 @@ function doLoadProfile() {
                     let dbs = data.connections[data.tabs[i]["connection"]];
 
                     addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"], dbs);
-                    $('core > tab.active textarea.editor').val(data.tabs[i]["content"]);
+                    if (editor_type == "codemirror") {
+                        editors[$('core > tab.active').prop('id')].setValue(data.tabs[i]["content"]);
+                    } else {
+                        $('core > tab.active textarea.editor').val(data.tabs[i]["content"]);
+                    }
                 }
             }
         },
@@ -2096,8 +2199,24 @@ $(document).ready(function() {
     $('#btn-outdent').click(function() {
         doHideMenus();
         if ($('tab.active').hasClass('query')) {
-            $('tab.active textarea.editor').focus();
-            doManageTab($('tab.active textarea.editor'), true);
+            if (editor_type == "codemirror") {
+                let editor = editors[$('tab.active').prop('id')];
+                if (editor.somethingSelected()) {
+                    editor.indentSelection("subtract"); // Un-indents all selected lines
+                } else {
+                    var cursor = editor.getCursor();
+                    var lineContent = editor.getLine(cursor.line);
+                    var indentUnit = editor.getOption("indentUnit");
+                    var leadingSpaces = lineContent.match(/^\s*/)[0].length;
+            
+                    // Determine how much to un-indent based on the current indentation level
+                    var newIndentLevel = Math.max(leadingSpaces - indentUnit, 0);
+                    editor.replaceRange(" ".repeat(newIndentLevel), { line: cursor.line, ch: 0 }, { line: cursor.line, ch: leadingSpaces });
+                }
+            } else {
+                $('tab.active textarea.editor').focus();
+                doManageTab($('tab.active textarea.editor'), true);
+            }
         }
         return false;
     });
@@ -2105,8 +2224,18 @@ $(document).ready(function() {
     $('#btn-indent').click(function() {
         doHideMenus();
         if ($('tab.active').hasClass('query')) {
-            $('tab.active textarea.editor').focus();
-            doManageTab($('tab.active textarea.editor'), false);
+            if (editor_type == "codemirror") {
+                let editor = editors[$('tab.active').prop('id')];
+                if (editor.somethingSelected()) {
+                    editor.indentSelection("add"); // Indents all selected lines
+                } else {
+                    var spaces = Array(editor.getOption("indentUnit") + 1).join(" ");
+                    editor.replaceSelection(spaces);
+                }
+            } else {
+                $('tab.active textarea.editor').focus();
+                doManageTab($('tab.active textarea.editor'), false);
+            }
         }
         return false;
     });

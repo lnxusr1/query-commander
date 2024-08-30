@@ -94,7 +94,7 @@ connections:
 
 ## Environment Variable Overrides
 
-The following environment variables can be used to override settings at the paths indicated in the table below.
+The following environment variables can be used to override [settings](./options.md) at the paths indicated in the table below.
 
 | ENV VAR                    | Setting                                  |
 | :------------------------- | :--------------------------------------- |
@@ -113,6 +113,19 @@ The following environment variables can be used to override settings at the path
 | FONTAWESOME_INTEGRITY      | settings/cdns/fontawesome/integrity      |
 | FONTAWESOME_CROSSORIGIN    | settings/cdns/fontawesome/crossorigin    |
 | FONTAWESOME_REFERRERPOLICY | settings/cdns/fontawesome/referrerpolicy |
+| DISABLE_CODEMIRROR         | settings/disable_codemirror              |
+| CODEMIRROR_CSS_URL         | settings/cdns/codemirror_css/url         |
+| CODEMIRROR_CSS_INTEGRITY      | settings/cdns/codemirror_css/integrity      |
+| CODEMIRROR_CSS_CROSSORIGIN    | settings/cdns/codemirror_css/crossorigin    |
+| CODEMIRROR_CSS_REFERRERPOLICY | settings/cdns/codemirror_css/referrerpolicy |
+| CODEMIRROR_JS_URL          | settings/cdns/codemirror_js/url          |
+| CODEMIRROR_JS_INTEGRITY      | settings/cdns/codemirror_js/integrity      |
+| CODEMIRROR_JS_CROSSORIGIN    | settings/cdns/codemirror_js/crossorigin    |
+| CODEMIRROR_JS_REFERRERPOLICY | settings/cdns/codemirror_js/referrerpolicy |
+| CODEMIRROR_SQL_URL         | settings/cdns/codemirror_sql/url         |
+| CODEMIRROR_SQL_INTEGRITY      | settings/cdns/codemirror_sql/integrity      |
+| CODEMIRROR_SQL_CROSSORIGIN    | settings/cdns/codemirror_sql/crossorigin    |
+| CODEMIRROR_SQL_REFERRERPOLICY | settings/cdns/codemirror_sql/referrerpolicy |
 | AWS_REGION_NAME            | settings/aws_region_name                 |
 | AWS_PROFILE_NAME           | settings/aws_profile_name                |
 | AWS_ACCESS_KEY             | settings/aws_access_key                  |

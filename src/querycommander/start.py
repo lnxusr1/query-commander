@@ -60,6 +60,12 @@ def as_cgi():
             if path_value == "index.html":
                 page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
                 page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+
+                if cfg.codemirror:
+                    page_content = page_content.replace("<!-- codemirror_css -->", cfg.cdn_codemirror_css)
+                    page_content = page_content.replace("<!-- codemirror_js -->", cfg.cdn_codemirror_js)
+                    page_content = page_content.replace("<!-- codemirror_sql -->", cfg.cdn_codemirror_sql)
+
                 page_content = page_content.replace("<!-- page_login_bg -->", cfg.img_login_bg)
                 page_content = page_content.replace("<!-- page_logo -->", cfg.img_logo)
                 page_content = page_content.replace("<!-- page_logo_sm -->", cfg.img_logo_sm)
@@ -115,6 +121,12 @@ def as_lambda(event, context):
             if path_value == "index.html":
                 page_content = page_content.replace("<!-- fontawesome -->", cfg.cdn_fontawesome)
                 page_content = page_content.replace("<!-- jquery -->", cfg.cdn_jquery)
+
+                if cfg.codemirror:
+                    page_content = page_content.replace("<!-- codemirror_css -->", cfg.cdn_codemirror_css)
+                    page_content = page_content.replace("<!-- codemirror_js -->", cfg.cdn_codemirror_js)
+                    page_content = page_content.replace("<!-- codemirror_sql -->", cfg.cdn_codemirror_sql)
+
                 page_content = page_content.replace("<!-- page_login_bg -->", cfg.img_login_bg)
                 page_content = page_content.replace("<!-- page_logo -->", cfg.img_logo)
                 page_content = page_content.replace("<!-- page_logo_sm -->", cfg.img_logo_sm)

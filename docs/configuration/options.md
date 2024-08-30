@@ -8,6 +8,7 @@ The following is a list of optional values you can specify in the *settings.yml*
 | records_per_request | 200     | Number of records returned in a single page request.         |
 | profiles            | enable  | Enables/disables user profiles                               |
 | application_name    | *None*  | Override for branding application name                       |
+| disable_codemirror  | false   | Disables the codemirror editor (uses plain textarea)         |
 | img_login_bg        | *None*  | Login page main backgroung image                             |
 | img_logo            | *None*  | Image URL for main logo on login screen                      |
 | img_logo_sm         | *None*  | Image URL for smaller logo (on app screen)                   |
@@ -49,6 +50,7 @@ The CDNs used to pull the client libraries are configurable, but by default will
 | :---------- | :--------------------------------------------------------- | :------ |
 | jquery      | The [jQuery](https://www.jquery.com) JavaScript framework  | 6.5+    |
 | fontawesome | The [FontAwesome](https://fontawesome.com/) icon library   | 3.7+    |
+| codemirror  | The [CodeMirror](https://codemirror.net/) editor library   | 5.65+   |
 
 ### Default CDN Configuration
 
@@ -63,5 +65,23 @@ settings:
       crossorigin: anonymous
       referrerpolicy: no-referrer
     jquery:
-      url: https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js
+      url: https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js
+      integrity: sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==
+      crossorigin: anonymous 
+      referrerpolicy: no-referrer
+    codemirror_css:
+      url: https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css
+      integrity: sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ==
+      crossorigin: anonymous 
+      referrerpolicy: no-referrer
+    codemirror_js:
+      url: https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js
+      integrity: sha512-8RnEqURPUc5aqFEN04aQEiPlSAdE0jlFS/9iGgUyNtwFnSKCXhmB6ZTNl7LnDtDWKabJIASzXrzD0K+LYexU9g==
+      crossorigin: anonymous 
+      referrerpolicy: no-referrer
+    codemirror_sql:
+      url: https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/sql/sql.min.js
+      integrity: sha512-JOURLWZEM9blfKvYn1pKWvUZJeFwrkn77cQLJOS6M/7MVIRdPacZGNm2ij5xtDV/fpuhorOswIiJF3x/woe5fw== 
+      crossorigin: anonymous 
+      referrerpolicy: no-referrer
 ```

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0] - 2024-08-29
+
+- Added CodeMirror support (use settings/disable_codemirror = true to disable)
+- Bug fix in session cookie management for unexpected timeout on Lambda calls
+- Bug fix to include integrity checks for all CDN libraries
+- Bug fix for sessions, locks, and detail pages
+
 ## [0.7.2] - 2024-08-27
 
 - Bug fix in explain plans for postgres failing to display

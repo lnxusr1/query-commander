@@ -18,6 +18,7 @@ The application roadmap will continue to evolve over the next several months as 
     - Rate Limits - **COMPLETE** *v0.4.2*
     - Client-side Results Filtering - **COMPLETE** *v0.5.4*
     - Branding customizations - **COMPLETE** *v0.7.2*
+    - Syntax highlighting - **COMPLETE** *v0.8.0*
 
 - [Authenticators](configuration/authenticator.md)
     - Local Database authentication - **COMPLETE** *v0.0.1*
@@ -54,7 +55,6 @@ The application roadmap will continue to evolve over the next several months as 
 As no good tool is ever truly complete please find below the scratch-pad of features that will be considered for releases after v1.0.
 
 - Integrated Intellisense
-- Syntax highlighting
 - SQL Autocomplete
 - Microsoft SQL Server
 - IBM DB2 (LUW)

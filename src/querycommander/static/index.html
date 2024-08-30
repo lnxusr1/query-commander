@@ -10,13 +10,15 @@
     <meta name="msapplication-TileImage" content="<!-- page_favicon -->">
 
     <!-- fontawesome -->
+    <!-- codemirror_css -->
     <link rel="stylesheet" href="?page=structure.css">
-    <!-- <link rel="stylesheet" href="?page=theme.css"> -->
     <style type="text/css">
         overlay#login .card-left { background-image: url('<!-- page_login_bg -->') !important; }
     </style>
     <!-- jquery -->
-
+    <!-- codemirror_js -->
+    <!-- codemirror_sql -->
+    
     <script src="?page=script.js" type="module"></script>
 
 </head>
@@ -277,7 +279,7 @@
                     </item>
                 </navmenu>
                 <div>
-                    <textarea class="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea>
+                    <div class="editor-area"><textarea class="editor" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"></textarea></div>
                     <div class="editor-selector-area"><span>Database:</span><select><option value="database-name">database-name</option></select><span class="loading"><i class="fas fa-spinner fa-spin"></i></span></div>
                 </div>
             </item>

@@ -13,6 +13,7 @@ def process_request(request, response):
     logger.setLevel(cfg.log_level)
 
     command = str(request.json_data.get("command", "auth")).lower()
+    response.req_type = command
     logger.debug(f"[{request.host}] COMMAND: {command}")
 
     if command == "login":
@@ -37,7 +38,8 @@ def process_request(request, response):
             tokenizer.set("username", username)
             tokenizer.set("roles", authenticator.roles)
             tokenizer.set("connections", tokenizer.connections())
-            resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, "profiles": cfg.profiles, "web_socket": cfg.web_socket }
+            editor = "codemirror" if cfg.codemirror else "default"
+            resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, "profiles": cfg.profiles, "web_socket": cfg.web_socket, "editor": editor }
 
             resp_data["role_selected"] = authenticator.roles[0]
             tokenizer.set("role_selected", resp_data["role_selected"])
@@ -92,6 +94,7 @@ def process_request(request, response):
             else:
                 logger.info(f"[{username}@{tokenizer.remote_addr}] Session check successful - {tokenizer.token}")
             
+            editor = "codemirror" if cfg.codemirror else "default"
             response.output({ 
                 "ok": True, 
                 "username": username,
@@ -99,7 +102,8 @@ def process_request(request, response):
                 #"role_selected": tokenizer.role_selected, 
                 "connections": tokenizer.connections(),
                 "profiles": cfg.profiles,
-                "web_socket": cfg.web_socket
+                "web_socket": cfg.web_socket,
+                "editor": editor
             }, extend=False)
 
             return

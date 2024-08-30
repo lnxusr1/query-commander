@@ -98,6 +98,7 @@ core > tab.query > item > navmenu button { display: block; border: none; margin:
 core > tab.query > item > navmenu button:hover { background: var(--button-hover); }
 core > tab.query > item > navmenu button.active { background-color: var(--button-active); }
 core > tab.query .editor { border: none; border-radius: 0; overflow: scroll; outline: 0; margin: 0; padding: 4px; white-space: pre; resize: none; font-size: 0.95rem; }
+core > tab.query .editor-area { position: relative; }
 core > tab.query > item > results { display: flex; flex-direction: row; position: relative; width: calc(100% - 26px); }
 core > tab.query > item > results > * { flex: 1; }
 core > tab.query > item > results .statement,
@@ -288,6 +289,18 @@ server-type { display: inline; opacity: 0.4; font-size: 0.8rem; }
 server-type::before { content: "-"; display: inline-block; margin: 0 4px; }
 templates { display: none; }
 hr { border: none; border-top: 1px solid var(--toolbar-border-color-dark); }
+
+.CodeMirror {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 100%;
+    width: 100%;
+    font-size: 0.95rem;
+  }
+
 @keyframes rotation {
     from {
         transform:rotate(0deg);

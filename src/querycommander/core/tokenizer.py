@@ -263,7 +263,7 @@ class Tokens:
             else:
                 return []
 
-    def cookie(self, extend=None):
+    def cookie(self, extend=None, req_type=None):
         ret = None
 
         if self._is_loaded and self.token is not None and self.data is not None:
@@ -281,12 +281,18 @@ class Tokens:
             
             if self.token is not None and str(self.token) != "None":
                 cookie['token'] = self.token
-                cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+                if str(req_type) == "logout":
+                    cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+
+                #cookie['token']['expires'] = 0 # Session cookie
                 cookie['token']['secure'] = True
             
             if self._username is not None and str(self._username) != "None":
                 cookie['username'] = self._username
-                cookie['username']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+                if str(req_type) == "logout":
+                    cookie['username']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
+
+                #cookie['username']['expires'] = 0 # Session cookie
                 cookie['username']['secure'] = True
 
             ret = cookie.output()

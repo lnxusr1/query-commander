@@ -61,9 +61,9 @@ def get_info(request, response, data_type="meta"):
 
     if data_type == "details":
         details = connection.details(str(request.json_data.get("type"))[0:100], str(request.json_data.get("target"))[0:255], in_path)
-
+        detail_type = str(request.json_data.get("type"))[0:100]
         tokenizer.update()
         logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Meta Detail request complete {connection_name}/{database} - {tokenizer.token}")
-        logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] {meta} - {tokenizer.token}")
+        logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] {detail_type} - {tokenizer.token}")
         resp.output({ "ok": True, "properties": details })
         return

@@ -17,6 +17,7 @@ class Response:
         self.raw_data = None
         self.extend = None
         self.cookie = None
+        self.req_type = str(kwargs.get("req_type", ""))
 
     def add_header(self, name, value):
         if name is not None and value is not None:
@@ -45,15 +46,16 @@ class Response:
         self.add_header('X-Frame-Options', 'deny')
         self.add_header('X-XSS-Protection', '1; mode=block')
 
-        cookie = tokenizer.cookie(extend=self.extend)
-        if cookie is not None:
-            import logging
-            if "\n" in cookie:
-                cookies = cookie.split("\r\n")
-                for c in cookies:
-                    self.add_header(c.split(":", 1)[0].strip(), c.split(":", 1)[1].strip())
-            else:
-                self.add_header(cookie.split(":", 1)[0].strip(), cookie.split(":", 1)[1].strip())
+        if self.req_type in ["login","logout"]:
+            cookie = tokenizer.cookie(extend=self.extend, req_type=self.req_type)
+            if cookie is not None:
+                import logging
+                if "\n" in cookie:
+                    cookies = cookie.split("\r\n")
+                    for c in cookies:
+                        self.add_header(c.split(":", 1)[0].strip(), c.split(":", 1)[1].strip())
+                else:
+                    self.add_header(cookie.split(":", 1)[0].strip(), cookie.split(":", 1)[1].strip())
 
     def send(self):
         data = self.raw_data

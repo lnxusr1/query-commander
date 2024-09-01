@@ -9,6 +9,10 @@ class Connector:
         self.columns = []
         self.logger = logging.getLogger("CONNECTION")
         self.logger.setLevel(cfg.log_level)
+        
+        self.database = kwargs.get("database")
+        self.schema = kwargs.get("schema")
+
 
     @property
     def explain_as_output(self):

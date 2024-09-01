@@ -330,6 +330,24 @@ class MySQL(Connector):
         params = None
         meta = { "type": None, "color": None, "class": None, "children": True, "menu_items": [] }
 
+        if type == "database-list":
+            meta["type"] = "database-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            sql = self._sql("databases")
+            params = None
+
+        if type == "schema-list":
+            meta["type"] = "schema-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            # MySQL only uses Schemas (like Oracle)
+            return meta, None
+
         if type == "connection":
             meta["type"] = "database"
             meta["color"] = "brown"
@@ -346,7 +364,7 @@ class MySQL(Connector):
             meta["menu_items"] = ["refresh"]
 
             return meta, ["Tables", "Views", "Functions", "Procedures"]
-        
+
         if type == "db-folder" and target == "Tables":
             meta["type"] = "table"
             meta["color"] = "navy"

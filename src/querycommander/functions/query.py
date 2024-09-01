@@ -8,7 +8,7 @@ from querycommander.connectors.selector import get_db_connection
 
 logger = logging.getLogger()
 
-def get_query_results(response, connection_name, db_name, sql, query_type, start_record=0):
+def get_query_results(response, connection_name, db_name, sql, query_type, schema_name=None, start_record=0):
 
     resp = response
     records_per_request = cfg.records_per_request
@@ -19,7 +19,7 @@ def get_query_results(response, connection_name, db_name, sql, query_type, start
         if records_per_request > remaining_records:
             records_per_request = remaining_records
 
-    connection = get_db_connection(connection_name, database=db_name)
+    connection = get_db_connection(connection_name, database=db_name, schema=schema_name)
     if connection is None:
         logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] QUERY: Invalid database connection: {connection_name}/{db_name} - {tokenizer.token}")
         resp.output({ "ok": False, "error": "Invalid connection specified." })

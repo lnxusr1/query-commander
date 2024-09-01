@@ -10,7 +10,7 @@ from querycommander.core.config import settings as cfg
 
 class Profiler:
     def __init__(self, **kwargs):
-        self.format_version = 2
+        self.format_version = 3
         self.username = None
         self.settings = kwargs
         self.data = None
@@ -59,18 +59,20 @@ class Profiler:
     def set(self, name, value=None):
         self._get()
         if name == "tabs":
-            if isinstance(value, list) and len(value) < 10: # max 10 tabs
+            if isinstance(value, list) and len(value) <= 10: # max 10 tabs
                 for x in value:
                     if not isinstance(x, dict):
                         return
-                    if len(x) != 4:
+                    if len(x) != 6:
                         return
                     if x.get("name") is None or x.get("content") is None:
                         return
                     x["name"] = str(x.get("name"))[0:255]
                     x["connection"] = str(x.get("connection"))[0:255]
                     x["database"] = str(x.get("database"))[0:100]
-                    x["content"] = str(x.get("content"))[0:20000]
+                    x["schema"] = str(x.get("schema"))[0:100]
+                    x["db_only"] = str(x.get("db_only"))[0:100]
+                    x["content"] = str(x.get("content")).rstrip()[0:20000]
             else:
                 return
 
@@ -79,7 +81,28 @@ class Profiler:
                 pass
             else:
                 return
+            
+        if name == "defaults":
+            if isinstance(value, dict):
+                if len(value) == 1:
+                    if "connections" in value:
+                        # connections[connection][database] = schema
+                        if isinstance(value.get("connections"), dict):
+                            for conn in value.get("connections"):
+                                if not isinstance(value.get("connections").get(conn), dict):
+                                    for db in value.get("connections").get(conn):
+                                        if not isinstance(value.get("connections").get(conn).get(db), str):
+                                            return
+                        else:
+                            return
+                elif len(value) > 1:
+                    return
+                else:
+                    pass
+            else:
+                return
 
+        self.logger.debug(name)
         self.data[name] = value
 
 

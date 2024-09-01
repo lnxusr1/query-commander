@@ -150,20 +150,21 @@ def process_request(request, response):
 
                 tabs = prf.get("tabs", [])
                 page_settings = prf.get("settings", {})
+                connection_defaults = prf.get("defaults", {}).get("connections", {})
 
-                connection_details = {}
+                #connection_details = {}
 
-                if len(tabs) > 0:
-                    from querycommander.functions.meta import get_info_dbs
-                    for t in tabs:
-                        c_name = t.get("connection")
-                        if c_name in connection_details:
-                            continue
+                #if len(tabs) > 0:
+                #    from querycommander.functions.meta import get_info_dbs
+                #    for t in tabs:
+                #        c_name = t.get("connection")
+                #        if c_name in connection_details:
+                #            continue
 
-                        logger.debug(c_name)
-                        dbs = get_info_dbs(c_name)
-                        if dbs is not None:
-                            connection_details[c_name] = dbs
+                #        logger.debug(c_name)
+                #        dbs = get_info_dbs(c_name)
+                #        if dbs is not None:
+                #            connection_details[c_name] = dbs
 
                 logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Profile retrieved - {tokenizer.token}")
 
@@ -171,7 +172,10 @@ def process_request(request, response):
                     "ok": True,
                     "tabs": tabs,
                     "settings": page_settings,
-                    "connections": connection_details
+                    "defaults": {
+                        "connections": connection_defaults
+                    }
+                    #"connections": connection_details
                 })
 
             except:
@@ -188,6 +192,8 @@ def process_request(request, response):
 
                 prf.set("tabs", request.json_data.get("tabs", []))
                 prf.set("settings", request.json_data.get("settings", {}))
+                prf.set("defaults", request.json_data.get("defaults", {}))
+                
                 ret = prf.update()
 
                 logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Profile saved - {tokenizer.token}")
@@ -247,6 +253,7 @@ def process_request(request, response):
             request.json_data.get("database"), 
             request.json_data.get("statement"), 
             request.json_data.get("type"),
+            request.json_data.get("schema"),
             int(request.json_data.get("row_count", 0))
         )
 

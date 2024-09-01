@@ -8,7 +8,7 @@ The following is a list of optional values you can specify in the *settings.yml*
 | records_per_request | 200     | Number of records returned in a single page request.         |
 | profiles            | enable  | Enables/disables user profiles                               |
 | application_name    | *None*  | Override for branding application name                       |
-| disable_codemirror  | false   | Disables the codemirror editor (uses plain textarea)         |
+| codemirror          | enable  | Enables/disables the codemirror editor (uses plain textarea) |
 | img_login_bg        | *None*  | Login page main backgroung image                             |
 | img_logo            | *None*  | Image URL for main logo on login screen                      |
 | img_logo_sm         | *None*  | Image URL for smaller logo (on app screen)                   |

@@ -11,7 +11,7 @@ import pg8000
 import pg8000.dbapi
 from querycommander.connectors import Connector
 from querycommander.core.tokenizer import tokenizer
-
+from querycommander.core.helpers import quote_ident
 
 class Postgres(Connector):
     def __init__(self, **kwargs):
@@ -111,6 +111,10 @@ class Postgres(Connector):
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
+                if self.schema is not None:
+                    #raise Exception(f"SET search_path TO {quote_ident(self.schema)};")
+                    cur.execute(f"SET search_path TO {quote_ident(self.schema)};")
+
                 #cur.execute("SET AUTOCOMMIT TO ON")
                 if params is None or len(params) == 0:
                     cur.execute(sql)
@@ -193,10 +197,6 @@ class Postgres(Connector):
             #        self.logger.debug(str(traceback.format_exc()))
             #        self.stats["end_time"] = time.time()
             #        return
-            except StopIteration:
-                pass
-            except GeneratorExit:
-                pass
             except:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
@@ -922,6 +922,24 @@ class Postgres(Connector):
         params = None
         meta = { "type": None, "color": None, "class": None, "children": True, "menu_items": [] }
 
+        if type == "database-list":
+            meta["type"] = "database-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            sql = self._sql("databases")
+            params = None
+
+        if type == "schema-list":
+            meta["type"] = "schema-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            sql = self._sql("schemas")
+            params = None
+
         if type == "connection":
             meta["type"] = "database"
             meta["color"] = "brown"
@@ -943,7 +961,7 @@ class Postgres(Connector):
             meta["type"] = "schema"
             meta["color"] = "purple"
             meta["classes"] = ["fas", "fa-file-lines"]
-            meta["menu_items"] = ["refresh", "copy", "ddl", "details"]
+            meta["menu_items"] = ["refresh", "copy", "ddl", "details", "tab"]
 
             sql = self._sql("schemas")
             params = None

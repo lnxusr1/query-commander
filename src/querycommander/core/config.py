@@ -72,7 +72,7 @@ class Settings:
 
     @property
     def codemirror(self):
-        if str(os.environ.get("DISABLE_CODEMIRROR", self.data.get("settings", {}).get("disable_codemirror", False))).lower() == "true":
+        if str(os.environ.get("CODEMIRROR", self.data.get("settings", {}).get("codemirror", False))).lower() == "disable":
             return False
         
         return True

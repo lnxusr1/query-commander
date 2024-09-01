@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0] - 2024-09-01
+
+#### Breaking Changes
+
+- New *default* feature requires meta additions for database-list and schema-list
+- New *default* feature requires previously saved tab connection updates
+- Updated CodeMirror enable/disable option to be consistent with other settings
+
+#### Other Updates
+
+- Added ability to update tab connection details
+- Added default schema for execution context to improve user experience
+- Bug fix related to codemirror in saving profiles
+- Bug fix in session update for extension
+- Bug fix in Redshift connector for displaying returned records
+- Bug fix in Redshift connector documentation
+- Improved handling of semicolons for oracle connector
+- Aligned Redshift object tree with PostgreSQL where possible
+- Aligned Oracle object tree with logical segments from other DBs
+- Smoothed out page handling of various login/logout/refresh calls
+- Added better visual notification of on screen actions
+
 ## [0.8.0] - 2024-08-29
 
 - Added CodeMirror support (use settings/disable_codemirror = true to disable)

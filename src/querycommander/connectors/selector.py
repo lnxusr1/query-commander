@@ -5,7 +5,7 @@ from querycommander.core.helpers import decrypt
 from querycommander.core.tokenizer import tokenizer
 
 
-def get_db_connection(connection_name, database=None):
+def get_db_connection(connection_name, database=None, schema=None):
 
     logger = logging.getLogger("DB_CONN")
     logger.setLevel(cfg.log_level)
@@ -14,6 +14,8 @@ def get_db_connection(connection_name, database=None):
         database = None
 
     conn = cfg.sys_connections(connection_name)
+    conn["schema"] = schema
+
     if conn is not None and tokenizer.validate_connection(conn):
 
         logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - Connection selected: {connection_name} - {tokenizer.token}")
@@ -54,6 +56,7 @@ def get_db_connection(connection_name, database=None):
             return MySQL(**conn)
 
         if conn.get("type") in ["oracle", "oracledb"]:
+            conn["database"] = database if database is not None else conn["database"] if "database" in conn else None
             from querycommander.connectors.oracle import Oracle
             return Oracle(**conn)
         

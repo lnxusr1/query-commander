@@ -27,6 +27,7 @@ Introducing **Query Commander**, the *opensource* browser-based SQL tool designe
     - Intuitive, familiar, and user-friendly interface
     - Browser-based multi-tab and multi-window interface
     - SQL Editor: Custom SQL Execution and results display
+    - Syntax highlighting
 
 6. **Enhanced Security**
     - Support for End-to-End Encryption

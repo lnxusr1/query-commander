@@ -1,4 +1,5 @@
 import sys
+import re
 import logging
 import traceback
 
@@ -11,6 +12,33 @@ import oracledb.exceptions
 from querycommander.connectors import Connector
 from querycommander.core.tokenizer import tokenizer
 
+
+def quote_ident_oracle(identifier):
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', identifier):
+        raise ValueError("Invalid identifier")
+    return f'"{identifier.upper()}"'
+
+def is_plsql_block(query):
+    query = query.strip().lower()
+
+    if query.startswith('begin') and 'end' in query:
+        return True
+
+    if 'declare' in query or 'exception' in query:
+        return True
+
+    return False
+
+def preprocess_query(sql):
+    sql = sql.strip()
+    if is_plsql_block(sql):
+        if not sql.endswith(';'):
+            sql += ';'
+    else:
+        if sql.endswith(';'):
+            sql = sql.rstrip(';')
+    
+    return sql
 
 oracledb.defaults.fetch_lobs = False 
 
@@ -104,9 +132,14 @@ class Oracle(Connector):
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
+
+                if self.schema is not None:
+                    cur.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {quote_ident_oracle(self.database)}")
+
                 #if sql.rstrip().endswith(";"):
                 #    sql = sql.rstrip().rstrip(";")
                 cur.callproc("dbms_output.enable")
+                sql = preprocess_query(sql)
                 cur.execute(sql, parameters=params)
 
                 if sql.startswith("EXPLAIN PLAN FOR "):
@@ -363,10 +396,36 @@ class Oracle(Connector):
         params = None
         meta = { "type": None, "color": None, "class": None, "children": True, "menu_items": [] }
 
+        if type == "database-list":
+            meta["type"] = "database-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            sql = self._sql("schemas")
+            params = None
+
+        if type == "schema-list":
+            meta["type"] = "schema-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            # Oracle only uses Schemas
+            return meta, None
+
         if type == "connection":
+            meta["type"] = "db-folder"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            return meta, ["Schemas"]
+        
+        if type == "db-folder":
             meta["type"] = "database"
-            meta["color"] = "brown"
-            meta["classes"] = ["fa", "fa-database"]
+            meta["color"] = "purple"
+            meta["classes"] = ["fas", "fa-file-lines"]
             meta["menu_items"] = ["refresh", "tab", "copy"]
 
             sql = self._sql("schemas")

@@ -12,6 +12,7 @@ var fade_login = false;
 var wss_url = '';
 var editor_type = 'default';
 var editors = {};
+var connection_defaults = {};
 
 $.ajaxSetup({
     cache: false
@@ -189,8 +190,6 @@ function selectRow(table, cell, ri_start) {
         r_end = ridx;
     }
 
-    //console.log({ start: r_start, end: r_end, idx: ridx });
-
     for (let i = r_start; i <= r_end; i++) {
         table.find("tr").eq(i).find("td").addClass('selected');
     }
@@ -227,9 +226,44 @@ function doTableSort(container, column_index, sort_direction="ascending") {
     doApplyFilterOptions();
 }
 
+function doSimpleNotice(xhr) {
+    $('.simple-notice a').trigger('click');
+    $('.simple-notice a').off();
+    $('.simple-notice a').click(function() {
+        if (xhr) {
+            try {
+                xhr.abort();
+            } catch {}
+        }
+        $('.simple-notice').hide();
+        return false;
+    });
+    $('.simple-notice').show();
+
+}
+
 function doHideMenus() {
     $('.sidebar-context-menu').hide();
     $(".tab-list-items").removeClass('active');
+    $('.database-select').hide();
+    $('.simple-notice').hide();
+}
+
+function getMetaPath(obj) {
+    let obj_path = {};
+    let itm = obj.parent();
+    while (true) {
+        if (itm.prop('tagName') == "LI") {
+            if (!(itm.attr('data-type') in obj_path)) {
+                obj_path[itm.attr('data-type')] = itm.children('a').find('span').text();
+            }
+            itm = itm.parent().parent();
+        } else {
+            break;
+        }
+    }
+
+    return obj_path;
 }
 
 function updateStatusBar() {
@@ -327,8 +361,6 @@ function doManageTab(obj, is_shift) {
     if (is_shift) {
         if (p_end != p_start) {
             x_sel = ("\n" + x_sel).replace(/(\r?\n)\s{4}/g, "\n").slice(1);
-        //} else {
-        //    if ((p_start > 4) && (x.slice(p_start - 4, p_start) == text_to_insert)) { console.log('prior tab'); }
         }
     } else {
         x_sel = text_to_insert + x_sel.replace(/\n/g, "\n" + text_to_insert)
@@ -346,7 +378,7 @@ function doManageTab(obj, is_shift) {
 
 function doLoadMore(tab_id) {
     if ($(tab_id + ' div.section.data').find('thead').first().hasClass('has-more')) {
-        doExecuteSQL(tab_id, 'query', $(tab_id + ' div.section.statement > div').text(), $(tab_id).attr('selected-db'), true);
+        doExecuteSQL(tab_id, 'query', $(tab_id + ' div.section.statement > div').text(), true);
     }
 }
 
@@ -377,7 +409,7 @@ function doGetSQL(tab_id) {
     return sql;
 }
 
-function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=false) {
+function doExecuteSQL(tab_id, exec_type, sql_statement='', as_more=false) {
 
     let sql = sql_statement
     if (sql_statement == '') {
@@ -385,10 +417,8 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
     }
 
     let connection_name = $('tablist > item > a.active').attr('connection');
-    if (db_name == '') {
-        db_name = $(tab_id + ' select option:selected').val();
-        $(tab_id).attr('selected-db', db_name);
-    }
+    let db_name = $('tablist > item > a.active').attr('database');
+    let schema_name = $('tablist > item > a.active').attr('schema');
 
     if ((sql == '') || (connection_name == '')) { return; }
 
@@ -406,11 +436,10 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
         statement: sql,
         connection: connection_name,
         database: db_name,
+        schema: schema_name,
         row_count: row_count
     }
 
-    //if ($(tab_id + ' div.section.data').hasClass('is-loading')) { console.log('data loading...'); return; }
-    
     $(tab_id + ' div.section.data').addClass('is-loading');
 
     if (wss_url != '') {
@@ -422,7 +451,6 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
         $(tab_id + ' .tab-loading').css('display', '');
         $(tab_id + ' div.section.statement div').text(req_data["statement"]);
 
-        //console.log("Starting socket request: ", wss_url);
         let socket = new WebSocket(wss_url);
         let socket_timer = setTimeout(function() { $(tab_id + ' .tab-loading').find('.btn-stop-loading').trigger('click'); }, 960000); // 16 mins
 
@@ -456,13 +484,11 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', db_name='', as_more=f
         
         socket.onclose = function(event) {
             clearTimeout(socket_timer);
-            //console.log('WebSocket is closed now.');
             $(tab_id + ' .tab-loading').hide();
             $(tab_id + ' div.section.data').removeClass('is-loading');
         };
 
         socket.onopen = function(event) { 
-            //console.log('WebSocket is open now.'); 
             socket.send(JSON.stringify(req_data)); 
         };
 
@@ -973,8 +999,6 @@ function doLoadQueryData(container, data, with_types=true, with_numbers=true, as
         })
         .mouseover(function() {
             if (!is_mouse_down) return;
-            //$('box.active output controls button.copy').prop('disabled', false);
-            //if ($(this).parent().parent().index() == 0) { console.log('parent'); return; }
             table.find('.selected').removeClass('selected');
             selectRow(table, $(this), ri_start);
         })
@@ -1095,7 +1119,6 @@ function doWireUpQueryTab(tab_id) {
             }
     
             content = doGetTableContents($(tab_id + ' div.section.data'), selected_only);
-            //console.log(content);
         }
 
         if ($(tab_id + ' .btn-tab-code').hasClass('active')) {
@@ -1171,7 +1194,7 @@ function doWireUpQueryTab(tab_id) {
         doHideMenus();
         let sql_statement = $(tab_id + ' .section.statement > div').text();
         if (sql_statement.length > 0) {
-            doExecuteSQL(tab_id, "query", sql_statement, $(tab_id).attr('selected-db'));
+            doExecuteSQL(tab_id, "query", sql_statement);
         }
 
         return false; 
@@ -1189,7 +1212,320 @@ function doWireUpQueryTab(tab_id) {
     doClearQueryResults($(tab_id + ' .data'));
 }
 
-function addQueryTab(check_exists, connection_name, database="", tab_name="", databases=null) {
+function doLoadSchemaList(tab_id) {
+    if (!$('.database-select').find('div').eq(1).is(':visible')) {
+        $('#btn-database').prop('disabled', false);
+        return;
+    } 
+
+    let connection_name = $('#btn-connection').find('span').text();
+    let database_name = $('.database-select').find('div').eq(0).find('a.selected').text();
+
+    let qry2 = {
+        command: "meta",
+        path: { connection: connection_name, database: database_name },
+        target: database_name,
+        type: "schema-list"
+    }
+
+    $.ajax({
+        url: generate_url(),
+        dataType: "json",
+        method: "POST",
+        headers: no_cache_headers,
+        data: JSON.stringify(qry2),
+        contentType: "application/json",
+        beforeSend: function() {
+            $('#btn-database').prop('disabled', true);
+        },
+        complete: function() {
+            $('#btn-database').prop('disabled', false);
+        },
+        success: function(data) {
+            if (!data.ok) {
+                if (data.error) { alert(data.error); }
+                if (data.logout) { doLogout(); }
+                return;
+            }
+
+            if ((!data.items) || (!Array.isArray(data.items))) {
+                return;
+            }
+
+            if (data.items.length == 0) {
+                return;
+            }
+
+            let dv = $('.database-select').find('div').eq(1);
+            dv.empty();
+            let schema_name = $('#btn-database').find('span').eq(2).text();
+            for(let i=0;i<data.items.length;i++) {
+                let opt = $('<a href="#"></a>');
+                opt.text(data.items[i]);
+                opt.click(function() {
+                    $(this).parent().find('a').removeClass('selected');
+                    $(this).addClass("selected");
+                    let schema_name = $(this).text();
+                    $('#btn-database').find('span').eq(2).text(schema_name);
+                    $('tablist').find('a').each(function(x,o) {
+                        if ($(o).attr('data-target') == '#' + tab_id) {
+                            $(o).attr('schema', schema_name);
+                        }
+                    });
+                    doHideMenus();
+                    return false;
+                });
+                if (data.items[i] == schema_name) { opt.addClass("selected"); }
+                opt.appendTo(dv);
+            }
+
+            if (dv.find('a.selected').length == 0) {
+                dv.find('a').first().addClass('selected');
+                let schema_name = dv.find('a').first().text();
+                $('#btn-database').find('span').eq(2).text(schema_name);
+                $('tablist').find('a').each(function(x,o) {
+                    if ($(o).attr('data-target') == '#' + tab_id) {
+                        $(o).attr('schema', schema_name);
+                    }
+                });
+            }
+
+        }
+    });
+
+}
+
+function doLoadDBList() {
+    let tab_id = $('tab.active').prop('id');
+
+    let connection_name = $('#btn-connection').find('span').text();
+
+    let qry1 = {
+        command: "meta",
+        path: { connection: connection_name },
+        target: connection_name,
+        type: "database-list"
+    }
+
+    $.ajax({
+        url: generate_url(),
+        dataType: "json",
+        method: "POST",
+        headers: no_cache_headers,
+        data: JSON.stringify(qry1),
+        contentType: "application/json",
+        beforeSend: function() {
+            $('#btn-database').prop('disabled', true);
+        },
+        success: function(data) {
+            if (!data.ok) {
+                if (data.error) { alert(data.error); }
+                if (data.logout) { doLogout(); }
+                return;
+            }
+
+            if ((!data.items) || (!Array.isArray(data.items))) {
+                return;
+            }
+
+            if (data.items.length == 0) {
+                return;
+            }
+
+            let dv = $('.database-select').find('div').eq(0);
+            dv.empty();
+            let db_name = $('#btn-database').find('span').eq(0).text();
+            for(let i=0;i<data.items.length;i++) {
+                let opt = $('<a href="#"></a>');
+                opt.text(data.items[i]);
+                opt.click(function() {
+                    $(this).parent().find('a').removeClass('selected');
+                    $(this).addClass("selected");
+                    if (!$('.database-select').find('div').eq(1).is(':visible')) {
+                        let db_name = $(this).text();
+                        $('#btn-database').find('span').eq(0).text(db_name);
+                        $('tablist').find('a').each(function(x,o) {
+                            if ($(o).attr('data-target') == '#' + tab_id) {
+                                $(o).attr('database', db_name);
+                            }
+                        });
+                        doHideMenus();
+                    }
+                    
+                    doLoadSchemaList(tab_id);
+                    return false;
+                });
+                if (data.items[i] == db_name) { opt.addClass("selected"); }
+                opt.appendTo(dv);
+            }
+
+            doLoadSchemaList(tab_id);
+            
+        },
+        error: function() {
+            $('#btn-database').prop('disabled', false);
+        }
+    });
+}
+
+function doRefreshDBOptions() {
+
+    let tab_id = $('tab.active').prop('id'); // b/c of async call
+    let connection_name = $('#btn-connection').find('span').text();
+    let database_name = $('#btn-database').find('span').eq(0).text();
+    let schema_name = $('#btn-database').find('span').eq(2).text();
+
+    if (schema_name != "<not set>") {
+        if (database_name != "<not set>") {
+            $('#btn-database').find('span').eq(0).show(); 
+        }
+
+        if ($('#btn-database').find('span').eq(2).text() != '') {
+            $('#btn-database').find('span').eq(1).show(); 
+        } else {
+            $('#btn-database').find('span').eq(1).hide(); 
+        }
+        $('#btn-database').find('span').eq(2).show();
+        return;
+    }
+
+    if (database_name != "<not set>") {
+        let qry2 = {
+            command: "meta",
+            path: { connection: connection_name, database: database_name },
+            target: database_name,
+            type: "schema-list"
+        }
+
+        $.ajax({
+            url: generate_url(),
+            dataType: "json",
+            method: "POST",
+            headers: no_cache_headers,
+            data: JSON.stringify(qry2),
+            contentType: "application/json",
+            beforeSend: function() {
+                $('#btn-database').prop('disabled', true);
+            },
+            complete: function() {
+                $('#btn-database').prop('disabled', false);
+            },
+            success: function(data) {
+                if (!data.ok) {
+                    if (data.error) { alert(data.error); }
+                    if (data.logout) { doLogout(); }
+                    return;
+                }
+    
+                if ((!data.items) || (!Array.isArray(data.items))) {
+                    $('#btn-database').find('span').eq(2).text('');
+                    $('#btn-database').find('span').eq(1).hide(); 
+                    $('#btn-database').find('span').eq(2).hide(); 
+                    $('tablist').find('a').each(function(i,o) {
+                        if ($(o).attr('data-target') == '#'+tab_id) {
+                            $(o).attr('schema', '');
+                            $(o).attr('db-only', '1');
+                        }
+                    });
+                    return;
+                }
+
+                if (data.items.length == 0) { 
+                    $('#btn-database').find('span').eq(1).hide(); 
+                    $('#btn-database').find('span').eq(2).hide(); 
+                } else {
+                    if ($('#btn-database').find('span').eq(0).text() != '') {
+                        $('#btn-database').find('span').eq(1).show(); 
+                    }
+                    $('#btn-database').find('span').eq(2).show();
+                }
+                
+                $('#btn-database').find('span').eq(2).text(data.items[0]);
+                $('tablist').find('a').each(function(i,o) {
+                    if ($(o).attr('data-target') == '#'+tab_id) {
+                        $(o).attr("schema", data.items[0]);
+                        $(o).attr('db-only', '0');
+                    }
+                });
+            }
+        });
+
+        return;
+    }
+
+    $('#btn-database').find('span').eq(1).hide();
+    $('#btn-database').find('span').eq(2).hide();
+
+    let qry1 = {
+        command: "meta",
+        path: { connection: connection_name },
+        target: connection_name,
+        type: "database-list"
+    }
+
+    $.ajax({
+        url: generate_url(),
+        dataType: "json",
+        method: "POST",
+        headers: no_cache_headers,
+        data: JSON.stringify(qry1),
+        contentType: "application/json",
+        beforeSend: function() {
+            $('#btn-database').prop('disabled', true);
+        },
+        success: function(data) {
+            if (!data.ok) {
+                if (data.error) { alert(data.error); }
+                if (data.logout) { doLogout(); }
+                return;
+            }
+
+            if ((!data.items) || (!Array.isArray(data.items))) {
+                $('#btn-database').find('span').eq(0).hide();
+                $('#btn-database').find('span').eq(0).text(''); // not supported by DB
+                $('tablist').find('a').each(function(i,o) {
+                    if ($(o).attr('data-target') == '#'+tab_id) {
+                        $(o).attr('database', '');
+                    }
+                });
+                doRefreshDBOptions();
+                return;
+            }
+
+            if (data.items.length == 0) { 
+                $('#btn-database').find('span').eq(0).hide(); 
+            } else {
+                $('#btn-database').find('span').eq(0).show(); 
+            }
+            
+            $('#btn-database').find('span').eq(0).text(data.items[0]);
+            $('tablist').find('a').each(function(i,o) {
+                if ($(o).attr('data-target') == '#'+tab_id) {
+                    $(o).attr('database', data.items[0]);
+                }
+            });
+
+            doRefreshDBOptions();
+        }
+    });
+
+}
+
+function addQueryTab(check_exists, connection_name, database="", tab_name="", schema="", do_active=true, do_save=true) {
+
+    if (connection_name != "") {
+        if (((database == "") || (database == "<not set>")) && (connection_name in connection_defaults)) {
+            let db_key = Object.keys(connection_defaults[connection_name])[0];
+            if (db_key != "") {
+                database = db_key
+                if (((schema == "") || (schema == "<not set>")) && (database in connection_defaults[connection_name])) {
+                    if (connection_defaults[connection_name][database] != "") {
+                        schema = connection_defaults[connection_name][database];
+                    }
+                }
+            }
+        }
+    }
 
     if (check_exists) {
         if ($('core > tablist').children().length > 2) { return; }
@@ -1204,15 +1540,31 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
     let tab = $('<tab class="query"></tab>');
     tab.html($('templates > tab_query').html())
     tab.prop('id', tab_id);
+    if (!do_save) {
+        tab.addClass('skip');
+    }
 
     tab_button.find('a').attr('connection', connection_name);
+    tab_button.find('a').attr('database', database);
+    tab_button.find('a').attr('schema', schema);
+
     tab_button.find('span').text(tab_name);
     tab_button.find('a').attr('data-target', '#'+tab_id);
     tab_button.find('button').click(function() {
         doHideMenus();
         let t_id = $(this).parent().attr('data-target');
+        
+        if (editor_type == "codemirror") {
+            let t_nm = t_id.slice(1);
+            editors[t_nm].off('cursorActivity', updateStatusBar);
+            delete editors[t_nm];
+        }
+
         $(this).parent().parent().remove();
         $(t_id).remove();
+        $('#btn-connection').hide();
+        $('#btn-database').hide();
+
         $('core > tablist').find('a').first().trigger('click');
         return false;
     });
@@ -1225,6 +1577,23 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
         $('core > tablist > item > a').removeClass('active');
         $(this).addClass('active');
         $(t_id).find('textarea').focus();
+
+        if (!$($(this).attr('data-target')).hasClass('skip')) {
+            $('#btn-connection').show();
+            $('#btn-database').show();
+
+            $('#btn-connection').find('span').text($(this).attr('connection'));
+            $('#btn-database').find('span').eq(0).text($(this).attr('database'));
+            $('#btn-database').find('span').eq(2).text($(this).attr('schema'));
+            doRefreshDBOptions();
+
+            $('#btn-connection').css('display', 'inline-flex');
+            $('#btn-database').css('display', 'inline-flex');
+    
+        } else {
+            $('#btn-connection').hide();
+            $('#btn-database').hide();
+        }
         return false;
     });
 
@@ -1234,7 +1603,13 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
     $('core > tablist > item:first-child').after(tab_button);
     $('core').append(tab);
     tab.addClass('active');
+    tab.find('textarea').prop('name','editor_'+tab_id);
 
+    if (do_active) {
+        tab_button.find('a').trigger('click');
+    }
+
+    /*
     let do_load_conns = true;
     for (let i=0; i<connection_list.length; i++) {
         if (connection_list[i]["name"] == connection_name) {
@@ -1244,6 +1619,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
             }
         }
     }
+    */
 
     editors[tab_id] = CodeMirror.fromTextArea($('#' + tab_id + ' textarea.editor')[0], {
         mode: 'text/x-sql',
@@ -1269,6 +1645,9 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
             },
             "Ctrl-Q": function(cm) {
                 $('#btn-execute').trigger('click');
+            },
+            "Ctrl-S": function(cm) {
+                $('#btn-save-profile').trigger('click');
             }
         }
       });
@@ -1279,9 +1658,20 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
 
     $('#' + tab_id + ' textarea.editor').focus();
 
+    //$('#' + tab_id + ' > item:first-child select').children().remove();
+    //let o = $('<option></option>');
+    //o.val(database);
+    //o.text(database);
+    //o.prop('selected', true);
+    //$('#' + tab_id + ' > item:first-child select').append(o);
+
+    /*
+    let databases = [];
+
     if (!do_load_conns) {
         return;
     }
+
 
     if (databases != null) {
         if (databases) {
@@ -1347,6 +1737,10 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", da
         }
     });
 
+    */
+
+    return tab_id;
+
 }
 
 function doAddDetailTab(obj_details) {
@@ -1361,6 +1755,12 @@ function doAddDetailTab(obj_details) {
         headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
+        beforeSend: function(xhr) {
+            doSimpleNotice(xhr);
+        },
+        complete: function() {
+            doHideMenus();
+        },
         success: function(data) {
             if (!data.ok) {
                 if (data.error) { alert(data.error); }
@@ -1395,6 +1795,10 @@ function doAddDetailTab(obj_details) {
                 $('core > tablist > item > a').removeClass('active');
                 $(this).addClass('active');
                 $(t_id).find('textarea').focus();
+
+                $('#btn-connection').hide();
+                $('#btn-database').hide();
+        
                 return false;
             });
 
@@ -1472,6 +1876,8 @@ function doAddDetailTab(obj_details) {
             height = height + $('#' + tab_id + ' properties').height();
             height = height + 4;
             $('#' + tab_id + ' propdetail .section').css('height', 'calc(100vh - '+height+'px)');
+
+            if (tab_button.find('a').hasClass('active')) { tab_button.find('a').trigger('click'); }
         }
     });
 
@@ -1490,6 +1896,9 @@ function doGenerateDDL(obj_details) {
         headers: no_cache_headers,
         data: JSON.stringify(obj_details),
         contentType: "application/json",
+        beforeSend: function(xhr) {
+            doSimpleNotice(xhr);
+        },
         success: function(data) {
             if (!data.ok) {
                 if (data.error) { alert(data.error); }
@@ -1522,6 +1931,9 @@ function doGenerateDDL(obj_details) {
                 return false;
             });
             $('overlay.chooser#ddl-data').show();
+        },
+        complete: function() {
+            doHideMenus();
         }
     });
 }
@@ -1544,7 +1956,7 @@ function doLoadContextData(obj, type_name) {
                 tab_title = "Locks";
             }
 
-            addQueryTab(false, target, '', tab_title+' ['+target+']');
+            addQueryTab(false, target, '', tab_title+' ['+target+']', '', true, false);
             $('tab.active').children().eq(0).css('height','0px');        
             if (editor_type == "codemirror") {
                 editors[$('tab.active').prop('id')].setValue(sql_statement);
@@ -1565,6 +1977,8 @@ function doLoadContextMenu(obj, event, menu_items) {
     $(obj).addClass('highlight');
     $('.sidebar-context-menu a').off();
 
+    let obj_path = getMetaPath(obj);
+
     $('.sidebar-context-menu > ul > li').hide();
     for (let z=0; z < menu_items.length; z++) {
         if (menu_items[z] == "refresh") { $('#btn-context-refresh-item').parent().show(); }
@@ -1572,8 +1986,37 @@ function doLoadContextMenu(obj, event, menu_items) {
         if (menu_items[z] == "extra") { $('.context-extra').show(); }
         if (menu_items[z] == "ddl") { $('.sidebar-context-menu > ul > li.optional').show(); }
         if (menu_items[z] == "details") { $('#btn-context-view-details').parent().show(); }
-        if (menu_items[z] == "tab") { $('.sidebar-context-menu > ul > li.new-tab').show(); }
+        if (menu_items[z] == "tab") { 
+            $('.sidebar-context-menu > ul > li.new-tab').show(); 
+            if ((!obj_path.database) && (!obj_path.schema)) {
+                $('.sidebar-context-menu > ul > li.connection-only').hide(); 
+            }
+        }
     }
+
+    $('#btn-set-default').click(function() {
+        doHideMenus();
+        if ((obj_path.connection) && (obj_path.connection != "")) {
+            if (!(obj_path.connection in connection_defaults)) {
+                connection_defaults[obj_path.connection] = {};
+            }
+
+            if ((obj_path.database) && (obj_path.database != "")) {
+                if (!(obj_path.database in connection_defaults[obj_path.connection])) {
+                    connection_defaults[obj_path.connection] = {};
+                    connection_defaults[obj_path.connection][obj_path.database] = "";
+                }
+
+                if ((obj_path.schema) && (obj_path.schema != "")) {
+                    connection_defaults[obj_path.connection][obj_path.database] = obj_path.schema;
+                }
+            }
+        }
+
+        alert('Default set successfully.');
+
+        return false;
+    });
 
     $('#btn-context-refresh-item').click(function() {
         doHideMenus();
@@ -1588,9 +2031,13 @@ function doLoadContextMenu(obj, event, menu_items) {
 
     $('#btn-new-tab').click(function() {
         doHideMenus();
-        let conn_name = $(obj).parent().parent().parent().children('a').find('span').text();
-        let db_name = $(obj).find('span').text();
-        addQueryTab(false, conn_name, db_name);
+        
+        let obj_path = getMetaPath(obj);
+        let conn_name = obj_path.connection;
+        let db_name = (obj_path.database) ? obj_path.database : '<not set>';
+        let schema_name = (obj_path.schema) ? obj_path.schema : '<not set>';
+
+        addQueryTab(false, conn_name, db_name, conn_name, schema_name);
         return false;
     });
 
@@ -1621,18 +2068,8 @@ function doLoadContextMenu(obj, event, menu_items) {
 
     $('#btn-context-generate-ddl').click(function() {
         doHideMenus();
-        let obj_path = {};
-        let itm = $(obj).parent();
-        while (true) {
-            if (itm.prop('tagName') == "LI") {
-                if (!(itm.attr('data-type') in obj_path)) {
-                    obj_path[itm.attr('data-type')] = itm.children('a').find('span').text();
-                }
-                itm = itm.parent().parent();
-            } else {
-                break;
-            }
-        }
+        
+        let obj_path = getMetaPath(obj);
 
         doGenerateDDL({
             target: $(obj).find('span').text(),
@@ -1706,18 +2143,7 @@ function doLoadMeta(obj) {
         }
 
         $(obj).addClass('loading');
-        let obj_path = {};
-        let itm = obj.parent();
-        while (true) {
-            if (itm.prop('tagName') == "LI") {
-                if (!(itm.attr('data-type') in obj_path)) {
-                    obj_path[itm.attr('data-type')] = itm.children('a').find('span').text();
-                }
-                itm = itm.parent().parent();
-            } else {
-                break;
-            }
-        }
+        let obj_path = getMetaPath(obj);
 
         let data = {
             command: "meta",
@@ -1808,7 +2234,7 @@ function doRefreshConnections() {
         el.find('server-type').text(connection_list[i]["type"]);
         el.appendTo($('sidebar > metadata > ul'));
         el.find('a').prop('title', connection_list[i]["type"]);
-        el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh", "extra"]); return false; });        
+        el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh", "extra", "tab"]); return false; });        
         el.find('a').click(function() {
             doHideMenus();
             doLoadMeta($(this));
@@ -1817,7 +2243,13 @@ function doRefreshConnections() {
     }
 }
 
-function doShowConnectionDialog() {
+function doShowConnectionDialog(update_tab=false) {
+    if (update_tab) {
+        $('#chooser-select-connection').attr('tabupdate', 'yes');
+    } else {
+        $('#chooser-select-connection').attr('tabupdate', 'no');
+    }
+
     connection_list.sort((a, b) => {
         if (a.name < b.name) {
           return -1;
@@ -1872,11 +2304,15 @@ function doOpenForm() {
         }
     }
 
+    $('#page-loading').hide();
+
     if (!fade_login) {
         $('#login').hide();
     } else {
         $('#login').fadeOut('fast');
     }
+
+    doDisableLoginLoading();
 }
 
 function doLoginSuccess(data, hide_login) {
@@ -1908,6 +2344,14 @@ function doLoginSuccess(data, hide_login) {
         doOpenForm();
     }
 
+}
+
+function doDisableLoginLoading() {
+    $('#username').prop('disabled', false);
+    $('#password').prop('disabled', false);
+    $('#btn-login').prop('disabled', false);
+    $('#span-login').show();
+    $('#span-login-loading').hide();
 }
 
 function doLogin() { 
@@ -1952,6 +2396,8 @@ function doLogin() {
             $('#username').prop('disabled', true);
             $('#password').prop('disabled', true);
             $('#btn-login').prop('disabled', true);
+            $('#span-login').hide();
+            $('#span-login-loading').show();
         },
         error: function() {
             $('#login-error').text('An error occurred attempting to connect to the service.');
@@ -1963,13 +2409,12 @@ function doLogin() {
             } else {
                 $('#login-error').text('Login failed.  Invalid username or password.');
                 $('#login-error').show();
+
+                doDisableLoginLoading();
                 return;
             }
         },
         complete: function() {
-            $('#username').prop('disabled', false);
-            $('#password').prop('disabled', false);
-            $('#btn-login').prop('disabled', false);
         }
     });
 }
@@ -1994,13 +2439,12 @@ function doLogout() {
         error: function() {
             $('#login-error').text('Call failed.  Please try again.');
             $('#login-error').show();
-            $('#login').fadeIn('fast');     
+            $('#login').fadeIn('fast');
         },
         complete: function(data) {
-            $('#username').prop('disabled', false);
-            $('#password').prop('disabled', false);
-            $('#btn-login').prop('disabled', false);
+            doDisableLoginLoading();
             $('#login').fadeIn('fast');
+
         }
     });
 }
@@ -2031,7 +2475,6 @@ function doCheckSession(extend=false) {
                 doClearTimer();
             } else {
                 if (extend) {
-                    $('#page-loading').hide();
                     doLoginSuccess(data, true);
                 } else {
                     doStartTimer();
@@ -2063,16 +2506,33 @@ function doLoadProfile() {
                 return;
             }
 
-            if (data.tabs) {
-                for (let i=data.tabs.length-1; i>=0; i--) {
-                    let dbs = data.connections[data.tabs[i]["connection"]];
+            if ((data.defaults) && (data.defaults.connections)) {
+                connection_defaults = data.defaults.connections;
+            }
 
-                    addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"], dbs);
+            if (data.tabs) {
+                let tab_id = '';
+                for (let i=data.tabs.length-1; i>=0; i--) {
+                    tab_id = addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"], data.tabs[i]["schema"], false);
+                    $('tablist').find('a').each(function(x,o) {
+                        if ($(o).attr('data-target') == '#' + tab_id) {
+                            $(o).attr('db-only', data.tabs[i]["db_only"]);
+                        }
+                    });
+
                     if (editor_type == "codemirror") {
-                        editors[$('core > tab.active').prop('id')].setValue(data.tabs[i]["content"]);
+                        editors[tab_id].setValue(data.tabs[i]["content"]);
                     } else {
-                        $('core > tab.active textarea.editor').val(data.tabs[i]["content"]);
+                        $('#'+tab_id+' textarea.editor').val(data.tabs[i]["content"]);
                     }
+                }
+                if (tab_id != '') {
+                    $('tablist').find('a').each(function(i,o) {
+                        if ($(o).attr('data-target') == '#'+tab_id) {
+                            $(o).trigger('click');
+                            return;
+                        }
+                    });
                 }
             }
         },
@@ -2085,15 +2545,32 @@ function doLoadProfile() {
 function doSaveProfile() {
     let tab_items = [];
     $('tablist').find('item').each(function(i,o) {
+        if ((i == 0) || (i >= $('tablist').find('item').length - 1)) { return; }
+        if ($($(o).find('a').attr('data-target')).hasClass('skip')) { return; }
+        if (!$($(o).find('a').attr('data-target')).hasClass('query')) { return; }
+
         let tab_name = $(o).find('a').text();
         let tab_connection = $(o).find('a').attr('connection');
-        let tab_content = $($(o).find('a').attr('data-target')).find('.editor').val();
-        let tab_db_name = $($(o).find('a').attr('data-target')).find('select option:selected').val();
+        let tab_content = '';
+
+        if (editor_type == "codemirror") {
+            tab_content = editors[$($(o).find('a').attr('data-target')).prop('id')].getValue();
+        } else {
+            tab_content = $($(o).find('a').attr('data-target')).find('.editor').val();
+        }
+
+        let tab_db_name = $(o).find('a').attr('database');
+        let tab_db_schema = $(o).find('a').attr('schema');
+        let tab_db_only = $(o).find('a').attr('db-only');
+        if (tab_db_only != '1') { tab_db_only = '0'; }
+
         if (tab_name != '') {
             let tab_data = {
                 name: tab_name,
                 connection: tab_connection,
                 database: tab_db_name,
+                schema: tab_db_schema,
+                db_only: tab_db_only,
                 content: tab_content
             }
 
@@ -2104,7 +2581,10 @@ function doSaveProfile() {
     let data = {
         command: "save-profile",
         tabs: tab_items,
-        settings: {}
+        settings: {},
+        defaults: {
+            connections: connection_defaults
+        }
     }
 
     $.ajax({
@@ -2181,7 +2661,25 @@ $(document).ready(function() {
     $('#chooser-select-connection .btn-chooser-select').click(function() { 
         doHideMenus();
         connection_selected = $('input[name="connection"]:checked').val(); 
-        addQueryTab(false, connection_selected);
+        if ($('#chooser-select-connection').attr('tabupdate') == "yes") {
+            
+            if ($("#btn-connection").find('span').text() != connection_selected) {
+                $("#btn-connection").find('span').text(connection_selected);
+                $("#btn-database").find('span').eq(0).text('<not set>');
+                $("#btn-database").find('span').eq(2).text('<not set>');
+                $('tablist a.active').attr('connection', connection_selected);
+                $('tablist a.active').attr('database', '');
+                $('tablist a.active').attr('schema', '');
+                doRefreshDBOptions();
+                
+                let tab_name = $('tablist a.active').find('span').text();
+                if (tab_name == connection_selected) {
+                    $('tablist a.active').find('span').text(connection_selected);
+                }
+            }
+        } else {
+            addQueryTab(false, connection_selected, "<not set>", connection_selected, "<not set>");
+        }
         $('#chooser-select-connection').fadeOut('fast');
         return false; 
     });
@@ -2189,7 +2687,7 @@ $(document).ready(function() {
     $('#btn-new-tab-menu').click(function() {
         doHideMenus();
         if ((connection_list.length == 1) && (connection_selected == connection_list[0]["name"])) {
-            addQueryTab(false, connection_selected);
+            addQueryTab(false, connection_selected, "<not set>", connection_selected, "<not set>");
         } else {
             doShowConnectionDialog();
         }
@@ -2245,6 +2743,50 @@ $(document).ready(function() {
         if (!$(this).prop('disabled')) {
             doSaveProfile();
         }
+        return false;
+    });
+
+    $('#btn-connection').click(function() {
+        doHideMenus();
+        connection_selected = $(this).find('span').text();
+
+        doShowConnectionDialog(true);
+        return false;
+    });
+
+    $('#btn-database').click(function() {
+        if ($('.database-select').css('display') == 'flex') {
+            doHideMenus();
+            return;            
+        }
+
+        doHideMenus();
+
+        let pos = $('#btn-database').offset();
+        $('.database-select').css('left', pos.left);
+
+        $('.database-select').find('div').eq(1).show();
+        let c_offset = $('#btn-database').width() / 2;
+        let tab_id = $('tab.active').prop('id');
+        
+        $('tablist').find('a').each(function(i,o) {
+            if ($(o).attr('data-target') == '#'+tab_id) {
+                if ($(o).attr('db-only') == "1") {
+                    $('.database-select').find('div').eq(1).hide();
+                    $('.database-select').css('left', pos.left - Math.abs((176/2) - c_offset));
+                } else {
+                    $('.database-select').css('left', pos.left - Math.abs(172 - c_offset)); // 176+168 / 2
+                }
+            }
+        });
+
+        $('.database-select').find('div').eq(0).html('<span class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</span>');
+        $('.database-select').find('div').eq(1).html('<span class="loading"><i class="fas fa-spinner fa-spin"></i> Loading...</span>');
+
+        doLoadDBList();
+
+        $('.database-select').css('display', 'flex');
+
         return false;
     });
 
@@ -2341,8 +2883,6 @@ $(document).ready(function() {
             o.find('a').attr('data-index', i);
             o.appendTo($('.tab-list-items > ul'));
             o.find('a').click(function() {
-                //console.log($(this));
-                //console.log($(this).attr('data-index'));
                 let t = $('tablist').children().eq($(this).attr('data-index'));
                 $('tablist').children().eq(0).after(t);
                 t.find('a').trigger('click');
@@ -2389,6 +2929,8 @@ $(document).ready(function() {
         doApplyFilterOptions();
         return false;
     });
+
+    $('.simple-notice a').click(function() { return false; });
 
     doCheckSession(true);
 

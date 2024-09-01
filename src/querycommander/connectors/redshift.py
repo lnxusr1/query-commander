@@ -11,6 +11,7 @@ import pg8000
 import pg8000.dbapi
 from querycommander.connectors import Connector
 from querycommander.core.tokenizer import tokenizer
+from querycommander.core.helpers import quote_ident
 
 
 class Redshift(Connector):
@@ -63,7 +64,7 @@ class Redshift(Connector):
                     database=self.database,
                     user=self.user,
                     password=self.password,
-                    autocommit=True,
+                    #autocommit=True,
                     **self.options
                 )
 
@@ -112,6 +113,11 @@ class Redshift(Connector):
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
+
+                if self.schema is not None:
+                    #raise Exception(f"SET search_path TO {quote_ident(self.schema)};")
+                    cur.execute(f"SET search_path TO {quote_ident(self.schema)};")
+
                 #cur.execute("SET AUTOCOMMIT TO ON")
                 if params is None or len(params) == 0:
                     cur.execute(sql)
@@ -146,10 +152,6 @@ class Redshift(Connector):
             
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
-            except StopIteration:
-                pass
-            except GeneratorExit:
-                pass
             except TypeError:
                 self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
                 self.logger.debug(str(sql))
@@ -166,10 +168,10 @@ class Redshift(Connector):
                 raise
 
             self.columns = headers
-            
-            if str(query_type).lower() != "explain" and cur.rowcount <= 0:
-                self.stats["end_time"] = time.time()
-                return
+
+            #if str(query_type).lower() != "explain" and cur.rowcount <= 0:
+            #    self.stats["end_time"] = time.time()
+            #    return
 
             try:
                 while True:
@@ -226,13 +228,13 @@ class Redshift(Connector):
         category = str(category).lower().strip()
         
         if category == "databases":
-            return "select datname from pg_catalog.pg_database where not datistemplate order by datname"
+            return "select datname from pg_catalog.pg_database where not datistemplate and datname not in ('sys:internal','padb_harvest') order by datname"
         
         if category == "schemas":
-            return "select nspname from pg_catalog.pg_namespace where nspname not in ('pg_catalog', 'pg_toast', 'information_schema') order by nspname"
+            return "select nspname from pg_catalog.pg_namespace where nspname not in ('pg_auto_copy','catalog_history','pg_internal','pg_catalog', 'pg_toast', 'information_schema') order by nspname"
         
         if category == "schema":
-            return "select CONCAT('CREATE SCHEMA ', nspname, ' AUTHORIZATION ', nspowner::regrole::text, ';') as definition, nspname, nspowner::regrole::text as nspowner from pg_catalog.pg_namespace where nspname = %s"
+            return "select 'CREATE SCHEMA ' || nspname || ';' as definition from pg_catalog.pg_namespace where nspname = %s"
 
         if category == "tables":
             return " ".join(
@@ -412,16 +414,49 @@ class Redshift(Connector):
         params = None
         meta = { "type": None, "color": None, "class": None, "children": True, "menu_items": [] }
 
-        if type == "connection":
-            meta["type"] = "database"
-            meta["color"] = "purple"
-            meta["classes"] = ["fas", "fa-file-lines"]
-            meta["menu_items"] = ["refresh", "copy", "tab"]
+        if type == "database-list":
+            meta["type"] = "database-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            return meta, [self.database]
+
+        if type == "schema-list":
+            meta["type"] = "schema-list"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
 
             sql = self._sql("schemas")
             params = None
 
+        if type == "connection":
+            meta["type"] = "database"
+            meta["color"] = "brown"
+            meta["classes"] = ["fa", "fa-database"]
+            meta["menu_items"] = ["refresh", "copy", "tab"]
+
+            return meta, [self.database]
+
         if type == "database":
+            meta["type"] = "db-folder"
+            meta["color"] = "orange"
+            meta["classes"] = ["fas", "fa-folder"]
+            meta["menu_items"] = ["refresh"]
+
+            return meta, ["Schemas"]
+        
+        if type == "db-folder" and target == "Schemas":
+            meta["type"] = "schema"
+            meta["color"] = "purple"
+            meta["classes"] = ["fas", "fa-file-lines"]
+            meta["menu_items"] = ["refresh", "copy", "ddl", "tab"]
+
+            sql = self._sql("schemas")
+            params = None
+
+        if type == "schema":
             meta["type"] = "schema-folder"
             meta["color"] = "orange"
             meta["classes"] = ["fas", "fa-folder"]
@@ -542,6 +577,12 @@ class Redshift(Connector):
         sql = None
         params = None
         meta = { "type": None }
+
+        if type == "schema":
+            meta["type"] = "schema"
+
+            sql = self._sql("schema")
+            params = [target]
 
         if type == "table":
             meta["type"] = "table"

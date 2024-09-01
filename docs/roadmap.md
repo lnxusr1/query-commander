@@ -54,6 +54,8 @@ The application roadmap will continue to evolve over the next several months as 
 
 As no good tool is ever truly complete please find below the scratch-pad of features that will be considered for releases after v1.0.
 
+- Sensitive Data Masking (Column-level masking)
+- Record-level filtering
 - Integrated Intellisense
 - SQL Autocomplete
 - Microsoft SQL Server

@@ -113,7 +113,7 @@ The following environment variables can be used to override [settings](./options
 | FONTAWESOME_INTEGRITY      | settings/cdns/fontawesome/integrity      |
 | FONTAWESOME_CROSSORIGIN    | settings/cdns/fontawesome/crossorigin    |
 | FONTAWESOME_REFERRERPOLICY | settings/cdns/fontawesome/referrerpolicy |
-| DISABLE_CODEMIRROR         | settings/disable_codemirror              |
+| CODEMIRROR                 | settings/codemirror                      |
 | CODEMIRROR_CSS_URL         | settings/cdns/codemirror_css/url         |
 | CODEMIRROR_CSS_INTEGRITY      | settings/cdns/codemirror_css/integrity      |
 | CODEMIRROR_CSS_CROSSORIGIN    | settings/cdns/codemirror_css/crossorigin    |

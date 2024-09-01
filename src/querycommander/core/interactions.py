@@ -46,8 +46,8 @@ class Response:
         self.add_header('X-Frame-Options', 'deny')
         self.add_header('X-XSS-Protection', '1; mode=block')
 
+        cookie = tokenizer.cookie(extend=self.extend, req_type=self.req_type)
         if self.req_type in ["login","logout"]:
-            cookie = tokenizer.cookie(extend=self.extend, req_type=self.req_type)
             if cookie is not None:
                 import logging
                 if "\n" in cookie:

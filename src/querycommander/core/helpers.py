@@ -23,6 +23,12 @@ def get_utc_now():
     except:
         return datetime.datetime.utcnow()
 
+def quote_ident(identifier):
+    # Ensure the identifier is a valid schema name (e.g., no special characters)
+    if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', identifier):
+        raise ValueError("Invalid schema name")
+    return f'"{identifier}"'
+
 # Validate a string is reasonable.  This is not a perfect test.
 def validate_string(text, is_username=False, max_length=None):
     if text == "" or text is None:

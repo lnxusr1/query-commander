@@ -36,4 +36,7 @@
     --sidebar-highlight: rgba(109, 174, 228,.3);
     --overlay-transparent-bg: rgba(0, 0, 0, .3);
     --output-overlay-bg: rgba(0, 0, 0, .4);
+    --option-select-outline: #cdddf0;
+    --simple-loading: rgb(255, 217, 0);
+    --option-select-border: #f1f1f1;
 }

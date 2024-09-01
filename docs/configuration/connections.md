@@ -230,8 +230,6 @@ connections:
       username: mydblogin
       password: mydbpassword
       database: mydbname
-      options:
-        client_encoding: utf-8
       roles:
         - MyGroup1
         - MyGroup2

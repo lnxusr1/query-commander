@@ -183,7 +183,7 @@ class DynamoDBProfiler(Profiler):
 
         try:
             response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self.username) } }, ConsistentRead=True)
-            d = response["Item"].get("data").get("S")
+            d = response["Item"].get("data", {}).get("S")
             data = json.loads(d if isinstance(d, str) else "{}")
         except:
             return super()._get_profile_data()
@@ -195,7 +195,7 @@ class DynamoDBProfiler(Profiler):
             return False
         
         try:
-            self.conn.put_item(TableName=self.table_name, Item={ "username": { 'S': self.username}, "data": {'S': json.dumps(self.data) }})
+            self.conn.put_item(TableName=self.table_name, Item={ "username": { "S": self.username }, "data": {"S": json.dumps(self.data) } })
         except:
             return False
         
@@ -284,4 +284,4 @@ def get_profiler(connection_details):
     return Profiler(**connection_details)
 
 
-profiler = get_profiler(cfg.sys_profiler)
+#profiler = get_profiler(cfg.sys_profiler)

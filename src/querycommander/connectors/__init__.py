@@ -3,13 +3,14 @@ from querycommander.core.config import settings as cfg
 
 class Connector:
     def __init__(self, **kwargs):
+        self.tokenizer = kwargs.get("tokenizer")
         self._type = kwargs.get("type")
         self.connection = None
         self.err = []
         self.columns = []
         self.logger = logging.getLogger("CONNECTION")
         self.logger.setLevel(cfg.log_level)
-        
+
         self.database = kwargs.get("database")
         self.schema = kwargs.get("schema")
 

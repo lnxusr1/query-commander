@@ -2298,7 +2298,7 @@ function doShowConnectionDialog(update_tab=false) {
 function doOpenForm() {
     if ($('core > tablist').children().length == 2) {
         if (connection_selected != "") { 
-            addQueryTab(true, connection_selected);
+            addQueryTab(true, connection_selected, "<not set>", connection_selected, "<not set>");
         } else {
             doShowConnectionDialog();
         }

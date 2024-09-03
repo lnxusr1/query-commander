@@ -9,7 +9,7 @@ import logging
 import http.cookies
 from querycommander.core.helpers import get_utc_now, generate_session_token, validate_string
 from querycommander.core.config import settings as cfg
-from querycommander.core.profiler import profiler as prf
+from querycommander.core.profiler import get_profiler
 
 class Tokens:
     def __init__(self, **kwargs):
@@ -164,11 +164,14 @@ class Tokens:
 
     def set_username(self, value):
         #self.logger.debug(f"Setting username: {value}")
+        if value is None:
+            return
+        
         if value is not None:
             if not validate_string(value, max_length=256):
                 raise ValueError("Invalid username format")
         
-        self._username = value
+        self._username = str(value).lower()
     
     def set_remote_addr(self, value):
         self.remote_addr = str(value)[0:256]
@@ -233,35 +236,36 @@ class Tokens:
         return r_count if r_count > 0 else 0
 
     def connections(self):
-        if self._connections is not None:
+        if self._connections is not None and isinstance(self._connections, list) and len(self._connections) > 0:
+            #self.logger.debug("CONNECTIONS FROM LOCAL CACHE")
             return self._connections
         
         if len(self.data.get("connections", [])) > 0:
+            #self.logger.debug("CONNECTIONS FROM LOCAL DATA")
             return self.data.get("connections", [])
         
         if cfg.sys_authenticator.get("type", "local") == "local":
-            self._connections = [{ "name": str(x), "type": cfg.sys_connections(x).get("type") } for x in cfg.sys_connections()]
+            #self.logger.debug("CONNECTIONS FROM CONFIG")
+            self._connections = [{ "name": str(x), "type": str(cfg.sys_connections(x).get("type")).lower() } for x in cfg.sys_connections()]
             return self._connections
         else:
+            #self.logger.debug("CONNECTIONS FROM PROCESSING")
             self._get()
-            if True:
-#            if self.role_selected != "":
-#                if self.role_selected not in self.roles:
-#                    return []
+            #self.logger.debug(f"{self._connections}")
+            conns = []
+            for x in cfg.sys_connections():
+                for r in self.roles:
+                    #self.logger.debug(f"Role {r}")
+                    l_conn = cfg.sys_connections(x)
+                    conn_roles = [x.lower().strip() for x in l_conn.get("roles", [])]
+                    if r.lower().strip() in conn_roles:
+                        #self.logger.debug(f"Role {r} in {conn_roles}")
+                        conns.append({ "name": str(x), "type": str(cfg.sys_connections(x).get("type")).lower() })
+                        break
 
-                conns = []
-                for x in cfg.sys_connections():
-#                    if self.role_selected in cfg.sys_connections.get(x).get("roles"):
-#                        conns.append({ "name": str(x), "type": cfg.sys_connections.get(x).get("type")})
-                    for r in self.roles:
-                        if r in cfg.sys_connections(x).get("roles"):
-                            conns.append({ "name": str(x), "type": cfg.sys_connections(x).get("type")})
-                            break
-
-                self._connections = conns
-                return self._connections
-            else:
-                return []
+            #self.logger.debug(f"{self._connections}")
+            self._connections = conns
+            return self._connections
 
     def cookie(self, extend=None, req_type=None):
         ret = None
@@ -300,6 +304,7 @@ class Tokens:
         return ret
     
     def get_profiler(self):
+        prf = get_profiler(cfg.sys_profiler)
         prf.set_username(self.username)  # NOTICE: this is the property and not the key
         return prf
 
@@ -478,7 +483,9 @@ class DynamoDBTokens(Tokens):
         data = super()._get_token_data()
 
         try:
+            #self.logger.debug(f"Getting token from dynamodb key={self._username}")
             response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self._username) } }, ConsistentRead=True)
+            #self.logger.debug(f"Token data = {response['Item'].get('data')}")
             d = response["Item"].get("data").get("S")
             data = json.loads(d if isinstance(d, str) else "{}")
         except:
@@ -498,7 +505,7 @@ class DynamoDBTokens(Tokens):
         
         try:
             #self.logger.debug(f"Sending {self.username} and {self.token} and {self.data}")
-            self.conn.put_item(TableName=self.table_name, Item={ "username": { 'S': self._username}, "data": {'S': json.dumps(self.data) }})
+            self.conn.put_item(TableName=self.table_name, Item={ "username": { "S": str(self._username) }, "data": { "S": json.dumps(self.data) } })
         except:
             self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             self.logger.debug(str(sys.exc_info()[0]))
@@ -552,4 +559,4 @@ def get_tokenizer(connection_details):
     return Tokens(**connection_details)
 
 
-tokenizer = get_tokenizer(cfg.sys_tokenizer)
+#tokenizer = get_tokenizer(cfg.sys_tokenizer)

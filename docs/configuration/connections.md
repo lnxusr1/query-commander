@@ -57,6 +57,7 @@ connections:
 | port<br>&nbsp; | No<br>&nbsp; | Number<br>&nbsp; | The TCP port (1 - 65535) to initiation the<br>connection |
 | database | redshift | String | **Redshift Only**: Name of database for connection |
 | service_name | oracle | String | **Oracle Only**: Service Name for connection |
+| databases | No | List | List of databases (or schemas) to display if present |
 | options | No | Dictionary | Extra arguments to send to constructor |
 | username<br>&nbsp; | *Auth<br>&nbsp; | String<br>&nbsp; | Username for connection.  **Req.** if using Authenticator<br> type other than *local*. |
 | password<br>&nbsp; | *Auth<br>&nbsp; | String<br>&nbsp; | Password for connection.  **Req.** if using Authenticator<br> type other than *local*. |
@@ -78,8 +79,11 @@ connections:
       type: postgres
       host: my-db-server.lan
       port: 5432
+      databases:
+        - mydbname1
+        - mydbname2
       options:
-        ssl: true
+        sslmode: require
         application_name: querycommander
 ```
 
@@ -106,7 +110,7 @@ connections:
         - MyGroupName1
         - MyGroupName2
       options:
-        ssl: true
+        sslmode: require
 
     - name: myconn2
       type: postgres
@@ -118,7 +122,7 @@ connections:
         - MyGroupName1
         - MyGroupName3
       options:
-        ssl: true
+        sslmode: require
 ```
 
 ### &raquo; Storing Connections in AWS Secrets Manager

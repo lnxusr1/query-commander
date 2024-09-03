@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.1] - 2024-09-02
+
+- **(Security)** Bug fix with Lambda caching results across browser sessions
+- Added connector option for limiting which databases (or schemas) to display in metadata sidebar
+
+!!! danger "Important"
+    This is an important security update for **AWS Lambda** users.  Please upgrade to v0.9.1 or later.
+
+!!! note
+    Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
+
 ## [0.9.0] - 2024-09-01
 
 #### Breaking Changes

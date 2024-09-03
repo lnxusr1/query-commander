@@ -5,7 +5,7 @@ The application roadmap will continue to evolve over the next several months as 
 ## &raquo; Road to Version 1.0
 
 !!! important
-    All core features are in process of being tested for final validation for the upcoming 1.0 release.
+    All core features are in process of being tested for final validation for the upcoming **v1.0** release.  Bug fixes and related updates will continue to be published on a rapid pace as this milestone approaches.  Post the major release a more modest release schedule will be adopted and shared via this page.
 
 - Features
     - SQL Editor - **COMPLETE** *v0.0.1*
@@ -48,7 +48,7 @@ The application roadmap will continue to evolve over the next several months as 
 
 - Installers
     - CGI Configuration (Apache/httpd) - [**Instructions**](installation/apache.md)
-    - AWS CloudFormation / CDK - [**Instructions**](installation/aws.md)
+    - AWS (Lambda Layer) - [**Instructions**](installation/aws.md)
 
 ## Future Thinking
 
@@ -61,3 +61,6 @@ As no good tool is ever truly complete please find below the scratch-pad of feat
 - Microsoft SQL Server
 - IBM DB2 (LUW)
 - Result download options for CSV, XML, JSON, etc.
+
+!!! note "Help Build Query Commander's Roadmap"
+    **GET INVOLVED:** You can help develop the roadmap and set priority on future enhancements and features.  Join in the [discussion](https://github.com/lnxusr1/query-commander/discussions) on [Github](https://github.com/lnxusr1/query-commander/discussions).

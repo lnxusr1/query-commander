@@ -40,6 +40,10 @@ Introducing **Query Commander**, the *opensource* browser-based SQL tool designe
 
 ## Installation
 
+**&raquo; Check out** the [**Apache 2.x**](https://docs.querycommander.com/en/stable/installation/apache/) and [**AWS Lambda**](https://docs.querycommander.com/en/stable/installation/aws/) installation options.
+
+#### General Installation
+
 For local installations the easiest way to get started is to use pip as shown below:
 
 ``` shell

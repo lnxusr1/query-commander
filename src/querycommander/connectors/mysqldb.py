@@ -9,7 +9,7 @@ import time
 import mysql.connector
 from mysql.connector import errorcode
 from querycommander.connectors import Connector
-from querycommander.core.tokenizer import tokenizer
+#from querycommander.core.tokenizer import tokenizer
 
 
 class MySQL(Connector):
@@ -17,7 +17,6 @@ class MySQL(Connector):
         super().__init__(**kwargs)
 
         self._type = "mysql"
-
         self.host = kwargs.get("host", "localhost")
         self.port = kwargs.get("port", 5432)
         self.options = kwargs.get("options", {})
@@ -25,6 +24,7 @@ class MySQL(Connector):
         self.user = kwargs.get("username")
         self.password = kwargs.get("password")
         self.database = kwargs.get("database")
+        self.databases = kwargs.get("databases")
         self.stats = {}
 
         self._notices = []
@@ -54,24 +54,24 @@ class MySQL(Connector):
 
             except mysql.connector.Error as err:
                 if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                    self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                     self.logger.debug(str(traceback.format_exc()))
                     self.err.append("Invalid username or password.")
                     self.connection = None
                 elif err.errno == errorcode.ER_BAD_DB_ERROR:
-                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                    self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                     self.logger.debug(str(traceback.format_exc()))
                     self.err.append("Selected database does not exist.")
                     self.connection = None
                 else:
-                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                    self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                     self.logger.debug(str(traceback.format_exc()))
                     self.err.append("Unable to connect to database.")
                     self.connection = None
 
                 return False
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to connect to database.")
                 self.connection = None
@@ -84,7 +84,7 @@ class MySQL(Connector):
             try:
                 self.connection.commit()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to commit transaction.")
                 return False
@@ -96,7 +96,7 @@ class MySQL(Connector):
             try:
                 self.connection.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close database connection.")
                 return False
@@ -106,9 +106,9 @@ class MySQL(Connector):
     def execute(self, sql, params=None):
         if self.connection is not None:
             try:
-                self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {tokenizer.token}")
+                self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {self.tokenizer.token}")
                 if params is not None:
-                    self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
+                    self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {self.tokenizer.token}")
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
@@ -117,13 +117,13 @@ class MySQL(Connector):
 
                 return cur
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Query execution failed.")
                 raise
             
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             raise ConnectionError("Unable to establish connection")
     
@@ -142,13 +142,13 @@ class MySQL(Connector):
             except GeneratorExit:
                 pass
             except TypeError:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
                 headers = []
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
@@ -184,7 +184,7 @@ class MySQL(Connector):
             
                         yield headers, record
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to fetch rows for query.")
                 self.stats["end_time"] = time.time()
@@ -193,14 +193,14 @@ class MySQL(Connector):
             try:
                 cur.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close cursor for query.")
                 self.stats["end_time"] = time.time()
                 raise
 
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")
@@ -473,6 +473,10 @@ class MySQL(Connector):
 
         if sql is not None:
             for _, record in self.fetchmany(sql, params, 1000):
+                if meta["type"] in ["database-list", "database"] and isinstance(self.databases, list) and len(self.databases) > 0:
+                    if str(record[0]) not in self.databases:
+                        continue
+
                 records.append(str(record[0]))
 
         return meta, records

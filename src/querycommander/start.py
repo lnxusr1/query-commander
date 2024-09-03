@@ -35,6 +35,7 @@ def send_socket_message(endpoint_url, connection_id, message):
 
 
 def as_cgi():
+    os.environ["AWS_LAMBDA"] = "OFF"
     if os.environ.get("REQUEST_METHOD", "GET") == "GET":
         import cgi
 
@@ -91,7 +92,7 @@ def as_cgi():
 
 
 def as_lambda(event, context):
-
+    os.environ["AWS_LAMBDA"] = "ON"
     cfg.is_lambda = True
     cfg.context = context
 

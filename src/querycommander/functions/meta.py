@@ -1,29 +1,28 @@
 import logging
-from querycommander.core.tokenizer import tokenizer
 from querycommander.connectors.selector import get_db_connection
 
 logger = logging.getLogger()
 
-def get_info_dbs(connection_name):
-    logger.debug(f"================> {connection_name}")
-    connection = get_db_connection(connection_name)
-    if connection is None:
-        return None
-    
-    if not connection.open():
-        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] META: Unable to connect to server: {connection_name} - {tokenizer.token}")
-        return
-        
-    _, data = connection.meta("connection", connection_name, { "connection": connection_name })
-    return data
+#def get_info_dbs(tokenizer, connection_name):
+#    logger.debug(f"================> {connection_name}")
+#    connection = get_db_connection(connection_name)
+#    if connection is None:
+#        return None
+#    
+#    if not connection.open():
+#        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] META: Unable to connect to server: {connection_name} - {tokenizer.token}")
+#        return
+#        
+#    _, data = connection.meta("connection", connection_name, { "connection": connection_name })
+#    return data
 
 
-def get_info(request, response, data_type="meta"):
+def get_info(tokenizer, request, response, data_type="meta"):
     resp = response
 
     connection_name = request.json_data.get("path", {}).get("connection")
     database = request.json_data.get("path", {}).get("database")
-    connection = get_db_connection(connection_name, database=database)
+    connection = get_db_connection(tokenizer, connection_name, database=database)
     if connection is None:
         logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] META: Invalid database connection: {connection_name}/{database} - {tokenizer.token}")
         resp.output({ "ok": False, "error": "Invalid connection specified." })

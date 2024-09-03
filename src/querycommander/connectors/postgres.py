@@ -10,7 +10,7 @@ import time
 import pg8000
 import pg8000.dbapi
 from querycommander.connectors import Connector
-from querycommander.core.tokenizer import tokenizer
+#from querycommander.core.tokenizer import tokenizer
 from querycommander.core.helpers import quote_ident
 
 class Postgres(Connector):
@@ -23,11 +23,13 @@ class Postgres(Connector):
         self.port = kwargs.get("port", 5432)
         self.options = kwargs.get("options", {})
         if "application_name" not in self.options:
-            self.options["application_name"] = f"Query Commander [{str(tokenizer.username)[0:50]}]"
+            self.options["application_name"] = f"Query Commander [{str(self.tokenizer.username)[0:50]}]"
         
         self.user = kwargs.get("username")
         self.password = kwargs.get("password")
         self.database = kwargs.get("database")
+        self.databases = kwargs.get("databases")
+
         self.stats = {}
 
         self._notices = []
@@ -70,7 +72,7 @@ class Postgres(Connector):
                 self.autocommit = True
 
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to connect to database.")
                 self.connection = None
@@ -83,7 +85,7 @@ class Postgres(Connector):
             try:
                 self.connection.commit()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to commit transaction.")
                 return False
@@ -95,7 +97,7 @@ class Postgres(Connector):
             try:
                 self.connection.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close database connection.")
                 return False
@@ -105,9 +107,9 @@ class Postgres(Connector):
     def execute(self, sql, params=None):
         if self.connection is not None:
             try:
-                self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {tokenizer.token}")
+                self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {self.tokenizer.token}")
                 if params is not None:
-                    self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
+                    self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {self.tokenizer.token}")
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
@@ -130,13 +132,13 @@ class Postgres(Connector):
             except pg8000.dbapi.ProgrammingError as e:
                 raise Exception(e.args[0]['M'])
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Query execution failed.")
                 raise
             
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             raise ConnectionError("Unable to establish connection")
 
@@ -150,13 +152,13 @@ class Postgres(Connector):
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except TypeError:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
                 headers = []
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
@@ -193,12 +195,12 @@ class Postgres(Connector):
             #    if str(e) == "the last operation didn't produce a result":
             #        pass
             #    else:
-            #        self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {tokenizer.token}")
+            #        self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} -  {str(sys.exc_info()[0])} - {self.tokenizer.token}")
             #        self.logger.debug(str(traceback.format_exc()))
             #        self.stats["end_time"] = time.time()
             #        return
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to fetch rows for query.")
                 self.stats["end_time"] = time.time()
@@ -207,14 +209,14 @@ class Postgres(Connector):
             try:
                 cur.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close cursor for query.")
                 self.stats["end_time"] = time.time()
                 raise
 
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")
@@ -225,7 +227,14 @@ class Postgres(Connector):
         category = str(category).lower().strip()
         
         if category == "databases":
-            return "select datname from pg_catalog.pg_database where not datistemplate order by datname"
+            if isinstance(self.databases, list) and len(self.databases) > 0:
+                in_str = []
+                for i in range(0,len(self.databases)):
+                    in_str.append("%s")
+
+                return f"select datname from pg_catalog.pg_database where not datistemplate and datname in ({', '.join(in_str)}) order by datname"
+            else:
+                return "select datname from pg_catalog.pg_database where not datistemplate order by datname"
         
         if category == "schemas":
             return "select nspname from pg_catalog.pg_namespace where nspname not in ('pg_catalog', 'pg_toast', 'information_schema') order by nspname"
@@ -929,7 +938,7 @@ class Postgres(Connector):
             meta["menu_items"] = ["refresh"]
 
             sql = self._sql("databases")
-            params = None
+            params = self.databases if isinstance(self.databases, list) and len(self.databases) > 0 else None
 
         if type == "schema-list":
             meta["type"] = "schema-list"
@@ -947,7 +956,7 @@ class Postgres(Connector):
             meta["menu_items"] = ["refresh", "copy", "tab"]
 
             sql = self._sql("databases")
-            params = None
+            params = self.databases if isinstance(self.databases, list) and len(self.databases) > 0 else None
 
         if type == "database":
             meta["type"] = "db-folder"

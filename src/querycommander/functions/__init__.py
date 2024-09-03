@@ -5,10 +5,12 @@ import json
 
 from querycommander.core.config import settings as cfg
 from querycommander.core.helpers import encrypt, generate_session_token
-from querycommander.core.tokenizer import tokenizer
+from querycommander.core.tokenizer import get_tokenizer
 
 def process_request(request, response):
-
+    tokenizer = get_tokenizer(cfg.sys_tokenizer)
+    response.tokenizer = tokenizer
+    
     logger = logging.getLogger("PAGE")
     logger.setLevel(cfg.log_level)
 
@@ -17,8 +19,9 @@ def process_request(request, response):
     logger.debug(f"[{request.host}] COMMAND: {command}")
 
     if command == "login":
-        from querycommander.core.authenticator import authenticator
-
+        from querycommander.core.authenticator import get_authenticator
+        authenticator = get_authenticator(cfg.sys_authenticator)
+        
         #logger.debug(f"authenticator type = {cfg.sys_authenticator.get('type', 'local')}")
         #logger.debug(f"tokenizer type = {cfg.sys_tokenizer.get('type', 'local')}")
         #logger.debug(f"connections type = {cfg.sys_connections().get('type', 'config')}")
@@ -37,13 +40,16 @@ def process_request(request, response):
             tokenizer.set_remote_addr(request.host)
             tokenizer.set("username", username)
             tokenizer.set("roles", authenticator.roles)
-            tokenizer.set("connections", tokenizer.connections())
             editor = "codemirror" if cfg.codemirror else "default"
-            resp_data = { "ok": True, "username": tokenizer.username, "roles": authenticator.roles, "profiles": cfg.profiles, "web_socket": cfg.web_socket, "editor": editor }
+            resp_data = { "ok": True, "username": tokenizer.username, "roles": tokenizer.roles, "profiles": cfg.profiles, "web_socket": cfg.web_socket, "editor": editor }
 
-            resp_data["role_selected"] = authenticator.roles[0]
+            resp_data["role_selected"] = tokenizer.roles[0]
             tokenizer.set("role_selected", resp_data["role_selected"])
             resp_data["connections"] = tokenizer.connections()
+            tokenizer.set("connections", resp_data["connections"])
+
+            logger.debug(str(resp_data))
+
             if len(resp_data["connections"]) == 0:
                 response.output({ "ok": False, "error": "No connections." })
                 return
@@ -232,22 +238,23 @@ def process_request(request, response):
     if command == "meta":
         #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] meta request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
-        return get_info(request, response, "meta")
+        return get_info(tokenizer, request, response, "meta")
 
     if command == "ddl":
         #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] ddl request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
-        return get_info(request, response, "ddl")
+        return get_info(tokenizer, request, response, "ddl")
 
     if command == "details":
         #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
-        return get_info(request, response, "details")
+        return get_info(tokenizer, request, response, "details")
 
     if command == "query":
         #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from querycommander.functions.query import get_query_results
         return get_query_results(
+            tokenizer, 
             response, 
             request.json_data.get("connection"), 
             request.json_data.get("database"), 

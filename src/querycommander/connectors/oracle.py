@@ -10,7 +10,7 @@ import time
 import oracledb
 import oracledb.exceptions
 from querycommander.connectors import Connector
-from querycommander.core.tokenizer import tokenizer
+#from querycommander.core.tokenizer import tokenizer
 
 
 def quote_ident_oracle(identifier):
@@ -55,6 +55,7 @@ class Oracle(Connector):
         self.user = kwargs.get("username")
         self.password = kwargs.get("password")
         self.service_name = kwargs.get("service_name")
+        self.schemas = kwargs.get("schemas", kwargs.get("databases"))
         self.stats = {}
 
         self._notices = []
@@ -89,9 +90,9 @@ class Oracle(Connector):
                 )
 
                 cursor = self.connection.cursor()
-                cursor.callproc("DBMS_APPLICATION_INFO.SET_MODULE", (f"Query Commander [{tokenizer.username}]", "Initialization"))
+                cursor.callproc("DBMS_APPLICATION_INFO.SET_MODULE", (f"Query Commander [{self.tokenizer.username}]", "Initialization"))
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to connect to database.")
                 self.connection = None
@@ -104,7 +105,7 @@ class Oracle(Connector):
             try:
                 self.connection.commit()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to commit transaction.")
                 return False
@@ -116,7 +117,7 @@ class Oracle(Connector):
             try:
                 self.connection.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close database connection.")
                 return False
@@ -126,9 +127,9 @@ class Oracle(Connector):
     def execute(self, sql, params=None):
         if self.connection is not None:
             try:
-                self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {tokenizer.token}")
+                self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} -  SQL: {str(sql)} - {self.tokenizer.token}")
                 if params is not None:
-                    self.logger.debug(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {tokenizer.token}")
+                    self.logger.debug(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Params: {str(params)} - {self.tokenizer.token}")
 
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
@@ -149,13 +150,13 @@ class Oracle(Connector):
 
                 return cur
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Query execution failed.")
                 raise
 
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             raise ConnectionError("Unable to establish connection")
         
@@ -169,7 +170,7 @@ class Oracle(Connector):
             try:
                 headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except TypeError:
-                #self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                #self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 #self.logger.debug(str(sql))
                 #self.logger.debug(str(traceback.format_exc()))
                 #self.err.append("Unable to parse columns.")
@@ -179,7 +180,7 @@ class Oracle(Connector):
             except GeneratorExit:
                 pass
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to parse columns.")
@@ -230,14 +231,14 @@ class Oracle(Connector):
                             break
 
                 else:
-                    self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                    self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                     self.logger.debug(str(traceback.format_exc()))
                     self.err.append("Unable to fetch rows for query.")
                     self.stats["end_time"] = time.time()
                     raise
 
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to fetch rows for query.")
                 self.stats["end_time"] = time.time()
@@ -246,14 +247,14 @@ class Oracle(Connector):
             try:
                 cur.close()
             except:
-                self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {tokenizer.token}")
+                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))
                 self.err.append("Unable to close cursor for query.")
                 self.stats["end_time"] = time.time()
                 raise
 
         else:
-            self.logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {tokenizer.token}")
+            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {self.tokenizer.token}")
             self.err.append("Unable to establish connection")
             self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")
@@ -267,7 +268,14 @@ class Oracle(Connector):
             return "SELECT DBMS_METADATA.GET_DDL(:1, :2, :3) FROM DUAL"
         
         if category == "schemas":
-            return "select distinct table_schema from sys.all_tab_privs where table_schema NOT IN ('SYS', 'SYSTEM', 'MDSYS', 'ORDSYS', 'OLAPSYS', 'APEXSYS') order by table_schema"
+            if isinstance(self.schemas, list) and len(self.schemas) > 0:
+                in_str = []
+                for i in range(0,len(self.schemas)):
+                    in_str.append(":"+str(i+1))
+
+                return f"select distinct table_schema from sys.all_tab_privs where table_schema NOT IN ('SYS', 'SYSTEM', 'MDSYS', 'ORDSYS', 'OLAPSYS', 'APEXSYS') and table_schema in ({', '.join(in_str)}) order by table_schema"
+            else:
+                return "select distinct table_schema from sys.all_tab_privs where table_schema NOT IN ('SYS', 'SYSTEM', 'MDSYS', 'ORDSYS', 'OLAPSYS', 'APEXSYS') order by table_schema"
         
         if category == "tables":
             return "select table_name from sys.all_tables where owner = :1 and table_name not in (select mview_name from sys.all_mviews where owner = :2) order by table_name"
@@ -403,7 +411,7 @@ class Oracle(Connector):
             meta["menu_items"] = ["refresh"]
 
             sql = self._sql("schemas")
-            params = None
+            params = self.schemas if isinstance(self.schemas, list) and len(self.schemas) > 0 else None
 
         if type == "schema-list":
             meta["type"] = "schema-list"
@@ -429,7 +437,7 @@ class Oracle(Connector):
             meta["menu_items"] = ["refresh", "tab", "copy"]
 
             sql = self._sql("schemas")
-            params = None
+            params = self.schemas if isinstance(self.schemas, list) and len(self.schemas) > 0 else None
 
         if type == "database":
             meta["type"] = "schema-folder"

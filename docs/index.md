@@ -1,7 +1,7 @@
 # Query Commander &middot; [![GitHub license](https://img.shields.io/github/license/lnxusr1/query-commander)](https://github.com/lnxusr1/query-commander/blob/master/LICENSE) ![Python Versions](https://img.shields.io/pypi/pyversions/yt2mp3.svg) ![Read the Docs](https://img.shields.io/readthedocs/query-commander) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/lnxusr1/query-commander)
 
-!!! important
-    Please note that code is still being imported and upgraded to properly support the new architecture.  Not all features will be available until this process is completed.  The **v1.0 release** will mark the point at which all features have been fully integrated from the prior platform.
+!!! important "Works with AWS Lambda!"
+    You can install **Query Commander** in your AWS environment and run it completely *serverless*.  Upgrades/Downgrades are simple using AWS Lambda layers.  Check out more on the [AWS Lambda installation](./installation/aws.md) page.
 
 Introducing **Query Commander**, the *opensource* browser-based SQL tool designed for secure and efficient database management. 
 
@@ -51,6 +51,9 @@ Introducing **Query Commander**, the *opensource* browser-based SQL tool designe
 
 ## Installation
 
+**&raquo; Check out** the [**Apache 2.x**](./installation/apache.md) and [**AWS Lambda**](./installation/aws.md) installation options.
+
+#### General Installation
 For local installations the easiest way to get started is to use pip as shown below:
 
 ``` bash

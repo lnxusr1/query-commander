@@ -2,10 +2,10 @@ import json
 import logging
 from querycommander.core.config import settings as cfg
 from querycommander.core.helpers import decrypt
-from querycommander.core.tokenizer import tokenizer
+#from querycommander.core.tokenizer import tokenizer
 
 
-def get_db_connection(connection_name, database=None, schema=None):
+def get_db_connection(tokenizer, connection_name, database=None, schema=None):
 
     logger = logging.getLogger("DB_CONN")
     logger.setLevel(cfg.log_level)
@@ -15,6 +15,7 @@ def get_db_connection(connection_name, database=None, schema=None):
 
     conn = cfg.sys_connections(connection_name)
     conn["schema"] = schema
+    conn["tokenizer"] = tokenizer
 
     if conn is not None and tokenizer.validate_connection(conn):
 

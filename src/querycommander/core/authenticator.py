@@ -212,4 +212,4 @@ def get_authenticator(connection_details):
     
     return Authenticator(**connection_details)
 
-authenticator = get_authenticator(cfg.sys_authenticator)
+#authenticator = get_authenticator(cfg.sys_authenticator)

@@ -1341,14 +1341,15 @@ function doLoadDBList() {
                 opt.click(function() {
                     $(this).parent().find('a').removeClass('selected');
                     $(this).addClass("selected");
+                    //if (!$('.database-select').find('div').eq(1).is(':visible')) {
+                    let db_name = $(this).text();
+                    $('#btn-database').find('span').eq(0).text(db_name);
+                    $('tablist').find('a').each(function(x,o) {
+                        if ($(o).attr('data-target') == '#' + tab_id) {
+                            $(o).attr('database', db_name);
+                        }
+                    });
                     if (!$('.database-select').find('div').eq(1).is(':visible')) {
-                        let db_name = $(this).text();
-                        $('#btn-database').find('span').eq(0).text(db_name);
-                        $('tablist').find('a').each(function(x,o) {
-                            if ($(o).attr('data-target') == '#' + tab_id) {
-                                $(o).attr('database', db_name);
-                            }
-                        });
                         doHideMenus();
                     }
                     

@@ -258,7 +258,10 @@ class Tokens:
                     #self.logger.debug(f"Role {r}")
                     l_conn = cfg.sys_connections(x)
                     conn_roles = [x.lower().strip() for x in l_conn.get("roles", [])]
-                    if r.lower().strip() in conn_roles:
+                    if not isinstance(r, str):
+                        self.logger.debug(str(r))
+                        
+                    if str(r).lower().strip() in conn_roles:
                         #self.logger.debug(f"Role {r} in {conn_roles}")
                         conns.append({ "name": str(x), "type": str(cfg.sys_connections(x).get("type")).lower() })
                         break

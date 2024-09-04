@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+!!! note
+    Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
+
+## [0.9.2] - 2024-09-03
+
+- Bug fix in database picker process not allowing database to be changed
+- Bug fix in recordset processing for queries not returning records (insert/update/delete/create)
+- Bug fix in properly displaying results for queries with or without results.
+
 ## [0.9.1] - 2024-09-02
 
 - **(Security)** Bug fix with Lambda caching results across browser sessions
@@ -9,9 +18,6 @@ All notable changes to this project will be documented in this file.
 
 !!! danger "Important"
     This is an important security update for **AWS Lambda** users.  Please upgrade to v0.9.1 or later.
-
-!!! note
-    Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
 
 ## [0.9.0] - 2024-09-01
 

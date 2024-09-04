@@ -135,8 +135,10 @@ class MySQL(Connector):
             if size is None:
                 size = 1000
 
+            headers = []
             try:
-                headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
+                if cur.description is not None:
+                    headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except StopIteration:
                 pass
             except GeneratorExit:
@@ -157,6 +159,10 @@ class MySQL(Connector):
                 raise
 
             self.columns = headers
+
+            if len(headers) == 0:
+                self.stats["end_time"] = time.time()
+                return
             
 #            if cur.rowcount <= 0:
 #                self.stats["end_time"] = time.time()

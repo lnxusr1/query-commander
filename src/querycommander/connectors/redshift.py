@@ -150,8 +150,10 @@ class Redshift(Connector):
             if size is not None:
                 cur.arraysize=size
             
+            headers = []
             try:
-                headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
+                if cur.description is not None:
+                    headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except TypeError:
                 self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
@@ -168,6 +170,10 @@ class Redshift(Connector):
                 raise
 
             self.columns = headers
+
+            if len(headers) == 0:
+                self.stats["end_time"] = time.time()
+                return
 
             #if str(query_type).lower() != "explain" and cur.rowcount <= 0:
             #    self.stats["end_time"] = time.time()

@@ -33,7 +33,8 @@ def process_request(request, response):
 
             if len(authenticator.roles) == 0:
                 # No roles for this login.
-                response.output({ "ok": False, "error": "No roles" })
+                logger.error(f"[{username}@{request.host}] No roles found for user")
+                response.output({ "ok": False })
                 return
 
             tokenizer.set_username(username)
@@ -48,10 +49,11 @@ def process_request(request, response):
             resp_data["connections"] = tokenizer.connections()
             tokenizer.set("connections", resp_data["connections"])
 
-            logger.debug(str(resp_data))
+            #logger.debug(str(resp_data))
 
             if len(resp_data["connections"]) == 0:
-                response.output({ "ok": False, "error": "No connections." })
+                logger.error(f"[{username}@{tokenizer.remote_addr}] No connections for user")
+                response.output({ "ok": False })
                 return
 
             if authenticator.use_token:
@@ -68,7 +70,7 @@ def process_request(request, response):
             logger.debug(f"[{username}@{tokenizer.remote_addr}] Authentication complete, placing token - {tokenizer.token}")
             if not tokenizer.update():
                 logger.error(f"[{username}@{tokenizer.remote_addr}] Unable to create token - {tokenizer.token}")
-                response.output({ "ok": False, "error": "No token" })
+                response.output({ "ok": False })
                 return
 
             logger.info(f"[{username}@{tokenizer.remote_addr}] Login successful - {tokenizer.token}")
@@ -78,7 +80,7 @@ def process_request(request, response):
             return
         else:
             logger.error(f"[{username}@{tokenizer.remote_addr}] Authentication failed - {tokenizer.token}")
-            response.output({ "ok": False, "error": "Bad login" })
+            response.output({ "ok": False })
             return
 
     tokenizer.set_token(request.token)

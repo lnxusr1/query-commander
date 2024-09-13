@@ -106,6 +106,7 @@ The following environment variables can be used to override [settings](./options
 | IMG_LOGO_SM                | settings/img_logo_sm                     |
 | IMG_FAVICON                | settings/img_favicon                     |
 | RECORD_PER_REQUEST         | settings/records_per_request             |
+| PROFILES                   | settings/profiles                        |
 | RATE_LIMIT_RECORDS         | settings/rate_limit.records              |
 | RATE_LIMIT_PERIOD          | settings/rate_limit.period               |
 | JQUERY_URL                 | settings/cdns/jquery/url                 |

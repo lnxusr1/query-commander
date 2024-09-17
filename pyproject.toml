@@ -42,6 +42,9 @@ redshift = [
 redis = [
     "redis",
 ]
+trino = [
+    "trino",
+]
 ldap = [
     "ldap3",
 ]
@@ -49,6 +52,7 @@ all-dbs = [
     "oracledb",
     "pg8000",
     "mysql-connector-python",
+    "trino",
 ]
 all = [
     "oracledb",
@@ -57,6 +61,7 @@ all = [
     "redis",
     "boto3",
     "ldap3",
+    "trino",
 ]
 lambda = [
     "oracledb",
@@ -64,6 +69,7 @@ lambda = [
     "mysql-connector-python",
     "redis",
     "ldap3",
+    "trino"
 ]
 
 [project.urls]

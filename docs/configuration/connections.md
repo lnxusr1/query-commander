@@ -196,6 +196,7 @@ The libraries used in the built-in connectors are listed below:
 | [AWS Redshift](https://github.com/tlocke/pg8000)                 | pg8000                | 1.31.2+  | 
 | [Oracle](https://oracle.github.io/python-oracledb/)     | oracledb               | 2.3.0+  |
 | [MySQL](https://dev.mysql.com/doc/connector-python/en/) | mysql-connector-python | 9.0.0+  |
+| [Trino/Presto](https://github.com/trinodb/trino)        | trino | 0.329.0+ |
 
 ## Examples
 
@@ -271,6 +272,62 @@ connections:
       service_name: my_db_service_name
       username: mydblogin
       password: mydbpassword
+      roles:
+        - MyGroup1
+        - MyGroup2
+```
+
+### &raquo; Example For Trino/Presto Connections
+
+Note that Trino does not require authentication by default.  If you specify a password the tool will use HTTPS protocol and ```trino.auth.BasicAuthentication()```.
+
+**No authentication**
+
+``` yaml
+connections:
+  type: config
+  items:
+    - name: myconn4
+      type: trino
+      host: my-trino-server-name
+      port: 8080
+      username: admin
+      roles:
+        - MyGroup1
+        - MyGroup2
+```
+
+**Basic Authentication**
+
+``` yaml
+connections:
+  type: config
+  items:
+    - name: myconn4
+      type: trino
+      host: my-trino-server-name
+      port: 8080
+      username: admin
+      password: mypassword
+      roles:
+        - MyGroup1
+        - MyGroup2
+```
+
+**Basic Authentication + Disable SSL verification**
+
+``` yaml
+connections:
+  type: config
+  items:
+    - name: myconn4
+      type: trino
+      host: my-trino-server-name
+      port: 8080
+      username: admin
+      password: mypassword
+      options:
+        verify: false
       roles:
         - MyGroup1
         - MyGroup2

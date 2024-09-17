@@ -35,6 +35,7 @@ The application roadmap will continue to evolve over the next several months as 
     - Oracle database connector - **COMPLETE** *v0.2.0*
     - MySQL/MariaDB database connector - **COMPLETE** *v0.0.3*
     - AWS Redshift database connector - **COMPLETE** *v0.3.0*
+    - Trino/PrestoSQL connector - **COMPLETE** *v0.9.4*
 
 - [Database Connector Managers](configuration/connections.md)
     - Static Settings file (*settings.yml*) - **COMPLETE** *v0.0.1*

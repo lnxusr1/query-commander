@@ -7,8 +7,9 @@ Introducing **Query Commander**, the *opensource* browser-based SQL tool designe
 ## Features:
 
 1. **Database Connectivity**
-    - Support for multiple database types (Oracle, PostgreSQL, Redshift, MySQL, etc.)
     - Support for multiple server connections and heterogeneous targets
+    - Support for multiple database types:<br>
+      *(Oracle, PostgreSQL, Redshift, MySQL, Trino/PrestoSQL, etc.)*
 
 3. **Database Management**
     - Viewing of database objects
@@ -58,6 +59,7 @@ pip install querycommander[postgres]
 pip install querycommander[mysql]
 pip install querycommander[oracle]
 pip install querycommander[redshift]
+pip install querycommander[trino]
 
 # Other connectors
 pip install querycommander[redis] # For Redis session token storage

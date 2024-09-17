@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 !!! note
     Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
 
+## [0.9.4] - 2024-09-18
+
+- Bug fix in autocommit for PostgreSQL and Redshift connectors
+- Bug fix in viewing sessions and locks due to "Invalid Schema" error for PostgreSQL and Redshift connectors
+- Added initial support for Trino/PrestoSQL and updated documentation
+
 ## [0.9.3] - 2024-09-12
 
 - Bug fix in message box overlay not setting scroll window properly.
@@ -17,7 +23,7 @@ All notable changes to this project will be documented in this file.
 
     - Local and Lambda Installations
     - OpenLDAP Authenticator
-    - Local and DynamodB Session Manager
+    - Local and DynamoDB Session Manager
     - Local and SecretsManager Connection Manager
     - Local and S3 Profile Managers
     - PostgreSQL and MySQL database connectors

@@ -69,7 +69,7 @@ class Redshift(Connector):
                 )
 
                 #self.connection.add_notice_handler(self._save_notice)
-                self.autocommit = True
+                self.connection.autocommit = True
 
             except:
                 self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
@@ -114,7 +114,7 @@ class Redshift(Connector):
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
 
-                if self.schema is not None:
+                if self.schema is not None and str(self.schema) != "":
                     #raise Exception(f"SET search_path TO {quote_ident(self.schema)};")
                     cur.execute(f"SET search_path TO {quote_ident(self.schema)};")
 

@@ -64,5 +64,10 @@ def get_db_connection(tokenizer, connection_name, database=None, schema=None):
         if conn.get("type") in ["redshift"]:
             from querycommander.connectors.redshift import Redshift
             return Redshift(**conn)
+        
+        if conn.get("type") in ["trino"]:
+            from querycommander.connectors.trinodb import Trino
+            conn["database"] = database if database is not None else conn["database"] if "database" in conn else None
+            return Trino(**conn)
 
     return None

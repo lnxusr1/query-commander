@@ -134,7 +134,7 @@ class Oracle(Connector):
                 self.stats["start_time"] = time.time()
                 cur = self.connection.cursor()
 
-                if self.schema is not None:
+                if self.schema is not None and self.schema != "":
                     cur.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {quote_ident_oracle(self.database)}")
 
                 #if sql.rstrip().endswith(";"):

@@ -306,7 +306,7 @@ class MySQL(Connector):
                 "    p.ID"
             ])
         
-        if category == "locks":
+        if category == "locks-innodb":
             return "\n".join([
                 "SELECT",
                 "    rtrx.trx_id AS wait_trx_id,",
@@ -327,6 +327,35 @@ class MySQL(Connector):
                 "    ON btrx.trx_id = w.blocking_trx_id",
                 "ORDER BY",
                 "    rtrx.trx_mysql_thread_id"
+            ])
+        
+        if category == "locks-perf":
+            return "\n".join([
+                "SELECT",
+                "    req_trx.THREAD_ID AS wait_trx_id,",
+                "    req_thr.PROCESSLIST_ID AS wait_pid,",
+                "    req_thr.PROCESSLIST_INFO AS wait_statement,",
+                "    req_thr.PROCESSLIST_USER AS wait_user,",
+                "    blk_trx.THREAD_ID AS hold_trx_id,",
+                "    blk_thr.PROCESSLIST_ID AS hold_pid,",
+                "    blk_thr.PROCESSLIST_INFO AS hold_statement,",
+                "    blk_thr.PROCESSLIST_USER AS hold_user",
+                "FROM",
+                "    performance_schema.data_lock_waits AS dlw",
+                "JOIN",
+                "    performance_schema.data_locks AS req_trx",
+                "    ON dlw.REQUESTING_ENGINE_LOCK_ID = req_trx.ENGINE_LOCK_ID",
+                "JOIN",
+                "    performance_schema.threads AS req_thr",
+                "    ON req_trx.THREAD_ID = req_thr.THREAD_ID",
+                "JOIN",
+                "    performance_schema.data_locks AS blk_trx",
+                "    ON dlw.BLOCKING_ENGINE_LOCK_ID = blk_trx.ENGINE_LOCK_ID",
+                "JOIN",
+                "    performance_schema.threads AS blk_thr",
+                "    ON blk_trx.THREAD_ID = blk_thr.THREAD_ID",
+                "ORDER BY",
+                "    req_thr.PROCESSLIST_ID"
             ])
 
         return None
@@ -561,11 +590,25 @@ class MySQL(Connector):
         params = None
         data = None
 
-        if type in ["sessions", "locks"]:
+        if type in ["sessions"]:
             data = {
                 "meta": [], 
                 "sections": {
                     "Source": { "type": "code", "data": self._sql(type) }
+                }
+            }
+
+        if type in ["locks"]:
+            locks_query = "locks-perf"
+            for headers, record in self.fetchmany("show variables like 'performance_schema'"):
+                if str(record[0]).lower() == "performance_schema":
+                    if str(record[1].lower()) == "off":
+                        locks_query = "locks-innodb"
+
+            data = {
+                "meta": [], 
+                "sections": {
+                    "Source": { "type": "code", "data": self._sql(locks_query) }
                 }
             }
 

@@ -121,6 +121,8 @@ class Trino(Connector):
                 #    pass
 
                 return cur
+            except trino.exceptions.TrinoUserError as e:
+                raise Exception(e.message)
             except:
                 self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(traceback.format_exc()))

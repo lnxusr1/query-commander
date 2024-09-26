@@ -54,6 +54,9 @@ all-dbs = [
     "mysql-connector-python",
     "trino",
 ]
+aws = [
+    "boto3",
+]
 all = [
     "oracledb",
     "pg8000",

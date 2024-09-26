@@ -13,7 +13,7 @@ Introducing **Query Commander**, the *opensource* browser-based SQL tool designe
 
     - Support for multiple server connections and heterogeneous targets
     - Support for multiple database types: <br>
-      *(Oracle, PostgreSQL, Redshift, MySQL, Trino/PrestoSQL, etc.)*
+      *(Oracle, PostgreSQL, Redshift, MySQL, Trino, Presto, etc.)*
 
 3. **Database Management**
     - Viewing of database objects
@@ -62,7 +62,7 @@ For local installations the easiest way to get started is to use pip as shown be
 pip install querycommander
 ```
 
-The above installs the basic software and only includes AWS integrations by default.  To install specific connectors or components use one or more of the following commands:
+The above installs the basic software with no built-in connectors.  To install specific connectors or components use one or more of the following commands:
 
 ``` bash
 # Database Connectors
@@ -70,8 +70,10 @@ pip install querycommander[postgres]
 pip install querycommander[mysql]
 pip install querycommander[oracle]
 pip install querycommander[redshift]
+pip install querycommander[trino]
 
 # Other connectors
+pip install querycommander[aws] # For DynamoDB, S3, and SecretsManager features
 pip install querycommander[redis] # For Redis session token storage
 pip install querycommander[ldap]  # For LDAP authentication
 

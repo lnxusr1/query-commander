@@ -227,9 +227,9 @@ function doTableSort(container, column_index, sort_direction="ascending") {
 }
 
 function doSimpleNotice(xhr) {
-    $('.simple-notice a').trigger('click');
-    $('.simple-notice a').off();
-    $('.simple-notice a').click(function() {
+    $('.simple-notice alink').trigger('click');
+    $('.simple-notice alink').off();
+    $('.simple-notice alink').click(function() {
         if (xhr) {
             try {
                 xhr.abort();
@@ -255,7 +255,7 @@ function getMetaPath(obj) {
     while (true) {
         if (itm.prop('tagName') == "LI") {
             if (!(itm.attr('data-type') in obj_path)) {
-                obj_path[itm.attr('data-type')] = itm.children('a').find('span').text();
+                obj_path[itm.attr('data-type')] = itm.children('alink').find('span').text();
             }
             itm = itm.parent().parent();
         } else {
@@ -416,9 +416,9 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', as_more=false) {
         sql = doGetSQL(tab_id);
     }
 
-    let connection_name = $('tablist > item > a.active').attr('connection');
-    let db_name = $('tablist > item > a.active').attr('database');
-    let schema_name = $('tablist > item > a.active').attr('schema');
+    let connection_name = $('tablist > item > alink.active').attr('connection');
+    let db_name = $('tablist > item > alink.active').attr('database');
+    let schema_name = $('tablist > item > alink.active').attr('schema');
 
     if ((sql == '') || (connection_name == '')) { return; }
 
@@ -1219,7 +1219,7 @@ function doLoadSchemaList(tab_id) {
     } 
 
     let connection_name = $('#btn-connection').find('span').text();
-    let database_name = $('.database-select').find('div').eq(0).find('a.selected').text();
+    let database_name = $('.database-select').find('div').eq(0).find('alink.selected').text();
 
     let qry2 = {
         command: "meta",
@@ -1260,14 +1260,14 @@ function doLoadSchemaList(tab_id) {
             dv.empty();
             let schema_name = $('#btn-database').find('span').eq(2).text();
             for(let i=0;i<data.items.length;i++) {
-                let opt = $('<a href="#"></a>');
+                let opt = $('<alink></alink>');
                 opt.text(data.items[i]);
                 opt.click(function() {
-                    $(this).parent().find('a').removeClass('selected');
+                    $(this).parent().find('alink').removeClass('selected');
                     $(this).addClass("selected");
                     let schema_name = $(this).text();
                     $('#btn-database').find('span').eq(2).text(schema_name);
-                    $('tablist').find('a').each(function(x,o) {
+                    $('tablist').find('alink').each(function(x,o) {
                         if ($(o).attr('data-target') == '#' + tab_id) {
                             $(o).attr('schema', schema_name);
                         }
@@ -1279,11 +1279,11 @@ function doLoadSchemaList(tab_id) {
                 opt.appendTo(dv);
             }
 
-            if (dv.find('a.selected').length == 0) {
-                dv.find('a').first().addClass('selected');
-                let schema_name = dv.find('a').first().text();
+            if (dv.find('alink.selected').length == 0) {
+                dv.find('alink').first().addClass('selected');
+                let schema_name = dv.find('alink').first().text();
                 $('#btn-database').find('span').eq(2).text(schema_name);
-                $('tablist').find('a').each(function(x,o) {
+                $('tablist').find('alink').each(function(x,o) {
                     if ($(o).attr('data-target') == '#' + tab_id) {
                         $(o).attr('schema', schema_name);
                     }
@@ -1336,15 +1336,15 @@ function doLoadDBList() {
             dv.empty();
             let db_name = $('#btn-database').find('span').eq(0).text();
             for(let i=0;i<data.items.length;i++) {
-                let opt = $('<a href="#"></a>');
+                let opt = $('<alink></alink>');
                 opt.text(data.items[i]);
                 opt.click(function() {
-                    $(this).parent().find('a').removeClass('selected');
+                    $(this).parent().find('alink').removeClass('selected');
                     $(this).addClass("selected");
                     //if (!$('.database-select').find('div').eq(1).is(':visible')) {
                     let db_name = $(this).text();
                     $('#btn-database').find('span').eq(0).text(db_name);
-                    $('tablist').find('a').each(function(x,o) {
+                    $('tablist').find('alink').each(function(x,o) {
                         if ($(o).attr('data-target') == '#' + tab_id) {
                             $(o).attr('database', db_name);
                         }
@@ -1422,7 +1422,7 @@ function doRefreshDBOptions() {
                     $('#btn-database').find('span').eq(2).text('');
                     $('#btn-database').find('span').eq(1).hide(); 
                     $('#btn-database').find('span').eq(2).hide(); 
-                    $('tablist').find('a').each(function(i,o) {
+                    $('tablist').find('alink').each(function(i,o) {
                         if ($(o).attr('data-target') == '#'+tab_id) {
                             $(o).attr('schema', '');
                             $(o).attr('db-only', '1');
@@ -1442,7 +1442,7 @@ function doRefreshDBOptions() {
                 }
                 
                 $('#btn-database').find('span').eq(2).text(data.items[0]);
-                $('tablist').find('a').each(function(i,o) {
+                $('tablist').find('alink').each(function(i,o) {
                     if ($(o).attr('data-target') == '#'+tab_id) {
                         $(o).attr("schema", data.items[0]);
                         $(o).attr('db-only', '0');
@@ -1484,7 +1484,7 @@ function doRefreshDBOptions() {
             if ((!data.items) || (!Array.isArray(data.items))) {
                 $('#btn-database').find('span').eq(0).hide();
                 $('#btn-database').find('span').eq(0).text(''); // not supported by DB
-                $('tablist').find('a').each(function(i,o) {
+                $('tablist').find('alink').each(function(i,o) {
                     if ($(o).attr('data-target') == '#'+tab_id) {
                         $(o).attr('database', '');
                     }
@@ -1500,7 +1500,7 @@ function doRefreshDBOptions() {
             }
             
             $('#btn-database').find('span').eq(0).text(data.items[0]);
-            $('tablist').find('a').each(function(i,o) {
+            $('tablist').find('alink').each(function(i,o) {
                 if ($(o).attr('data-target') == '#'+tab_id) {
                     $(o).attr('database', data.items[0]);
                 }
@@ -1537,7 +1537,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", sc
     let tab_id = 'tab'+tab_counter;
     tab_counter++;
 
-    let tab_button = $('<item><a class="active" href="#"><span></span><button title="Close"><i class="fas fa-times"></i></button></a></item>');
+    let tab_button = $('<item><alink class="active"><span></span><button title="Close"><i class="fas fa-times"></i></button></alink></item>');
     let tab = $('<tab class="query"></tab>');
     tab.html($('templates > tab_query').html())
     tab.prop('id', tab_id);
@@ -1545,12 +1545,12 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", sc
         tab.addClass('skip');
     }
 
-    tab_button.find('a').attr('connection', connection_name);
-    tab_button.find('a').attr('database', database);
-    tab_button.find('a').attr('schema', schema);
+    tab_button.find('alink').attr('connection', connection_name);
+    tab_button.find('alink').attr('database', database);
+    tab_button.find('alink').attr('schema', schema);
 
     tab_button.find('span').text(tab_name);
-    tab_button.find('a').attr('data-target', '#'+tab_id);
+    tab_button.find('alink').attr('data-target', '#'+tab_id);
     tab_button.find('button').click(function() {
         doHideMenus();
         let t_id = $(this).parent().attr('data-target');
@@ -1566,16 +1566,16 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", sc
         $('#btn-connection').hide();
         $('#btn-database').hide();
 
-        $('core > tablist').find('a').first().trigger('click');
+        $('core > tablist').find('alink').first().trigger('click');
         return false;
     });
 
-    tab_button.find('a').click(function() {
+    tab_button.find('alink').click(function() {
         doHideMenus();
         let t_id = $(this).attr('data-target');
         $('core > tab').removeClass('active');
         $(t_id).addClass('active');
-        $('core > tablist > item > a').removeClass('active');
+        $('core > tablist > item > alink').removeClass('active');
         $(this).addClass('active');
         $(t_id).find('textarea').focus();
 
@@ -1598,7 +1598,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", sc
         return false;
     });
 
-    $('core > tablist > item > a').removeClass('active');
+    $('core > tablist > item > alink').removeClass('active');
     $('core > tab').removeClass('active');
 
     $('core > tablist > item:first-child').after(tab_button);
@@ -1607,7 +1607,7 @@ function addQueryTab(check_exists, connection_name, database="", tab_name="", sc
     tab.find('textarea').prop('name','editor_'+tab_id);
 
     if (do_active) {
-        tab_button.find('a').trigger('click');
+        tab_button.find('alink').trigger('click');
     }
 
     /*
@@ -1772,28 +1772,28 @@ function doAddDetailTab(obj_details) {
             let tab_id = 'tab'+tab_counter;
             tab_counter++;
 
-            let tab_button = $('<item><a class="active" href="#"><span></span><button title="Close"><i class="fas fa-times"></i></button></a></item>');
+            let tab_button = $('<item><alink class="active"><span></span><button title="Close"><i class="fas fa-times"></i></button></alink></item>');
             let tab = $('<tab class="properties"></tab>');
             tab.html($('templates > tab_properties').html())
             tab.prop('id', tab_id);    
 
             tab_button.find('span').text(obj_details["target"]);
-            tab_button.find('a').attr('data-target', '#'+tab_id);
+            tab_button.find('alink').attr('data-target', '#'+tab_id);
             tab_button.find('button').click(function() {
                 doHideMenus();
                 let t_id = $(this).parent().attr('data-target');
                 $(this).parent().parent().remove();
                 $(t_id).remove();
-                $('core > tablist').find('a').first().trigger('click');
+                $('core > tablist').find('alink').first().trigger('click');
                 return false;
             });
 
-            tab_button.find('a').click(function() {
+            tab_button.find('alink').click(function() {
                 doHideMenus();
                 let t_id = $(this).attr('data-target');
                 $('core > tab').removeClass('active');
                 $(t_id).addClass('active');
-                $('core > tablist > item > a').removeClass('active');
+                $('core > tablist > item > alink').removeClass('active');
                 $(this).addClass('active');
                 $(t_id).find('textarea').focus();
 
@@ -1803,7 +1803,7 @@ function doAddDetailTab(obj_details) {
                 return false;
             });
 
-            $('core > tablist > item > a').removeClass('active');
+            $('core > tablist > item > alink').removeClass('active');
             $('core > tab').removeClass('active');
 
             $('core > tablist > item:first-child').after(tab_button);
@@ -1878,7 +1878,7 @@ function doAddDetailTab(obj_details) {
             height = height + 4;
             $('#' + tab_id + ' propdetail .section').css('height', 'calc(100vh - '+height+'px)');
 
-            if (tab_button.find('a').hasClass('active')) { tab_button.find('a').trigger('click'); }
+            if (tab_button.find('alink').hasClass('active')) { tab_button.find('alink').trigger('click'); }
         }
     });
 
@@ -1976,7 +1976,7 @@ function doLoadContextMenu(obj, event, menu_items) {
     doHideMenus();
     doCloseContextMenu();
     $(obj).addClass('highlight');
-    $('.sidebar-context-menu a').off();
+    $('.sidebar-context-menu alink').off();
 
     let obj_path = getMetaPath(obj);
 
@@ -2091,9 +2091,9 @@ function doLoadContextMenu(obj, event, menu_items) {
         while (true) {
             if (itm.prop('tagName') == "LI") {
                 if (!(itm.attr('data-type') in obj_path)) {
-                    obj_path[itm.attr('data-type')] = itm.children('a').find('span').text();
+                    obj_path[itm.attr('data-type')] = itm.children('alink').find('span').text();
                     if (!itm.attr('data-type').includes("folder")) {
-                        breadcrumbs.push(itm.children('a').find('span').text());
+                        breadcrumbs.push(itm.children('alink').find('span').text());
                     }
                 }
                 itm = itm.parent().parent();
@@ -2125,7 +2125,7 @@ function doLoadContextMenu(obj, event, menu_items) {
 
 function doCloseContextMenu() {
     $('.sidebar-context-menu').hide();
-    $('a.highlight').removeClass('highlight');
+    $('alink.highlight').removeClass('highlight');
 }
 
 function doLoadMeta(obj) {
@@ -2169,7 +2169,7 @@ function doLoadMeta(obj) {
 
                 let ul = $('<ul></ul>');
                 for (let i=0; i < data.items.length; i++) {
-                    let el = $('<li><a href="#"><i class="fa fa-fw"></i><span></span></a></li>');
+                    let el = $('<li><alink><i class="fa fa-fw"></i><span></span></alink></li>');
                     el.attr('data-type', data.meta.type)
                     el.find('span').text(data.items[i]);
                     el.appendTo(ul);
@@ -2178,11 +2178,11 @@ function doLoadMeta(obj) {
                     }
                     el.find('i').css('color', data.meta.color);
                     if (!data.meta.children) {
-                        el.find('a').addClass('loaded');
-                        el.find('a').addClass('empty');
+                        el.find('alink').addClass('loaded');
+                        el.find('alink').addClass('empty');
                     }
-                    el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, data.meta.menu_items); return false; });        
-                    el.find('a').click(function() {
+                    el.find('alink').on('contextmenu', function(event) { doLoadContextMenu($(this), event, data.meta.menu_items); return false; });        
+                    el.find('alink').click(function() {
                         doHideMenus();
                         doLoadMeta($(this));
                         return false; 
@@ -2230,13 +2230,13 @@ function doRefreshConnections() {
         return 0;
       });
     for (let i = 0; i < connection_list.length; i++) {
-        let el = $('<li data-type="connection"><a href="#"><i class="fa fa-server fa-fw"></i><span></span><server-type></server-type></a></li>');
+        let el = $('<li data-type="connection"><alink><i class="fa fa-server fa-fw"></i><span></span><server-type></server-type></alink></li>');
         el.find('span').text(connection_list[i]["name"]);
         el.find('server-type').text(connection_list[i]["type"]);
         el.appendTo($('sidebar > metadata > ul'));
-        el.find('a').prop('title', connection_list[i]["type"]);
-        el.find('a').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh", "extra", "tab"]); return false; });        
-        el.find('a').click(function() {
+        el.find('alink').prop('title', connection_list[i]["type"]);
+        el.find('alink').on('contextmenu', function(event) { doLoadContextMenu($(this), event, ["refresh", "extra", "tab"]); return false; });        
+        el.find('alink').click(function() {
             doHideMenus();
             doLoadMeta($(this));
             return false; 
@@ -2515,7 +2515,7 @@ function doLoadProfile() {
                 let tab_id = '';
                 for (let i=data.tabs.length-1; i>=0; i--) {
                     tab_id = addQueryTab(false, data.tabs[i]["connection"], data.tabs[i]["database"], data.tabs[i]["name"], data.tabs[i]["schema"], false);
-                    $('tablist').find('a').each(function(x,o) {
+                    $('tablist').find('alink').each(function(x,o) {
                         if ($(o).attr('data-target') == '#' + tab_id) {
                             $(o).attr('db-only', data.tabs[i]["db_only"]);
                         }
@@ -2528,7 +2528,7 @@ function doLoadProfile() {
                     }
                 }
                 if (tab_id != '') {
-                    $('tablist').find('a').each(function(i,o) {
+                    $('tablist').find('alink').each(function(i,o) {
                         if ($(o).attr('data-target') == '#'+tab_id) {
                             $(o).trigger('click');
                             return;
@@ -2547,22 +2547,22 @@ function doSaveProfile() {
     let tab_items = [];
     $('tablist').find('item').each(function(i,o) {
         if ((i == 0) || (i >= $('tablist').find('item').length - 1)) { return; }
-        if ($($(o).find('a').attr('data-target')).hasClass('skip')) { return; }
-        if (!$($(o).find('a').attr('data-target')).hasClass('query')) { return; }
+        if ($($(o).find('alink').attr('data-target')).hasClass('skip')) { return; }
+        if (!$($(o).find('alink').attr('data-target')).hasClass('query')) { return; }
 
-        let tab_name = $(o).find('a').text();
-        let tab_connection = $(o).find('a').attr('connection');
+        let tab_name = $(o).find('alink').text();
+        let tab_connection = $(o).find('alink').attr('connection');
         let tab_content = '';
 
         if (editor_type == "codemirror") {
-            tab_content = editors[$($(o).find('a').attr('data-target')).prop('id')].getValue();
+            tab_content = editors[$($(o).find('alink').attr('data-target')).prop('id')].getValue();
         } else {
-            tab_content = $($(o).find('a').attr('data-target')).find('.editor').val();
+            tab_content = $($(o).find('alink').attr('data-target')).find('.editor').val();
         }
 
-        let tab_db_name = $(o).find('a').attr('database');
-        let tab_db_schema = $(o).find('a').attr('schema');
-        let tab_db_only = $(o).find('a').attr('db-only');
+        let tab_db_name = $(o).find('alink').attr('database');
+        let tab_db_schema = $(o).find('alink').attr('schema');
+        let tab_db_only = $(o).find('alink').attr('db-only');
         if (tab_db_only != '1') { tab_db_only = '0'; }
 
         if (tab_name != '') {
@@ -2668,14 +2668,14 @@ $(document).ready(function() {
                 $("#btn-connection").find('span').text(connection_selected);
                 $("#btn-database").find('span').eq(0).text('<not set>');
                 $("#btn-database").find('span').eq(2).text('<not set>');
-                $('tablist a.active').attr('connection', connection_selected);
-                $('tablist a.active').attr('database', '');
-                $('tablist a.active').attr('schema', '');
+                $('tablist alink.active').attr('connection', connection_selected);
+                $('tablist alink.active').attr('database', '');
+                $('tablist alink.active').attr('schema', '');
                 doRefreshDBOptions();
                 
-                let tab_name = $('tablist a.active').find('span').text();
+                let tab_name = $('tablist alink.active').find('span').text();
                 if (tab_name == connection_selected) {
-                    $('tablist a.active').find('span').text(connection_selected);
+                    $('tablist alink.active').find('span').text(connection_selected);
                 }
             }
         } else {
@@ -2770,7 +2770,7 @@ $(document).ready(function() {
         let c_offset = $('#btn-database').width() / 2;
         let tab_id = $('tab.active').prop('id');
         
-        $('tablist').find('a').each(function(i,o) {
+        $('tablist').find('alink').each(function(i,o) {
             if ($(o).attr('data-target') == '#'+tab_id) {
                 if ($(o).attr('db-only') == "1") {
                     $('.database-select').find('div').eq(1).hide();
@@ -2879,14 +2879,14 @@ $(document).ready(function() {
         $('.tab-list-items').addClass('active');
 
         for(let i=1;i < $('tablist').children().length - 1; i++) {
-            let o = $('<li><a href="#"></a></li>');
-            o.find('a').text($('tablist').children().eq(i).find('span').text());
-            o.find('a').attr('data-index', i);
+            let o = $('<li><alink></a></li>');
+            o.find('alink').text($('tablist').children().eq(i).find('span').text());
+            o.find('alink').attr('data-index', i);
             o.appendTo($('.tab-list-items > ul'));
-            o.find('a').click(function() {
+            o.find('alink').click(function() {
                 let t = $('tablist').children().eq($(this).attr('data-index'));
                 $('tablist').children().eq(0).after(t);
-                t.find('a').trigger('click');
+                t.find('alink').trigger('click');
                 doHideMenus();
                 return false;
             });
@@ -2931,7 +2931,7 @@ $(document).ready(function() {
         return false;
     });
 
-    $('.simple-notice a').click(function() { return false; });
+    $('.simple-notice alink').click(function() { return false; });
 
     doCheckSession(true);
 

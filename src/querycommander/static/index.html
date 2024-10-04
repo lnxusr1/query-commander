@@ -26,7 +26,7 @@
 <body>
 
     <div class="simple-notice">
-        <a href="#" title="Click to Cancel"><i class="fas fa-times"></i></a>
+        <alink title="Click to Cancel"><i class="fas fa-times"></i></alink>
         <div class="message"><i class="fas fa-spinner fa-spin"></i></div>
     </div>
 
@@ -41,17 +41,17 @@
 
     <div class="sidebar-context-menu">
         <ul>
-            <li><a id="btn-context-refresh-item" href="#">Refresh</a></li>
-            <li><a id="btn-context-copy-name" href="#">Copy to Clipboard</a></li>
+            <li><alink id="btn-context-refresh-item">Refresh</alink></li>
+            <li><alink id="btn-context-copy-name">Copy to Clipboard</alink></li>
             <li class="new-tab" class="context-extra"><hr /></li>
-            <li class="new-tab"><a id="btn-new-tab" href="#">New SQL Script...</a></li>
-            <li class="new-tab connection-only"><a id="btn-set-default" href="#">Set as Default</a></li>
+            <li class="new-tab"><alink id="btn-new-tab">New SQL Script...</alink></li>
+            <li class="new-tab connection-only"><alink id="btn-set-default">Set as Default</alink></li>
             <li class="context-extra"><hr /></li>
-            <li class="context-extra"><a id="btn-context-sessions" href="#">Sessions</a></li>
-            <li class="context-extra"><a id="btn-context-locks" href="#">Locks</a></li>
+            <li class="context-extra"><alink id="btn-context-sessions">Sessions</alink></li>
+            <li class="context-extra"><alink id="btn-context-locks">Locks</alink></li>
             <li class="optional"><hr /></li>
-            <li class="optional"><a id="btn-context-generate-ddl" href="#">Generate DDL...</a></li>
-            <li><a class="perms" id="btn-context-view-details" href="#">View Details</a></li>
+            <li class="optional"><alink id="btn-context-generate-ddl">Generate DDL...</alink></li>
+            <li><alink class="perms" id="btn-context-view-details">View Details</alink></li>
         </ul>
     </div>
 
@@ -224,34 +224,34 @@
             <metadata>
                 <ul>
                     <li>
-                        <a class="expanded" href="#"><i class="fa fa-server fa-fw"></i><span>myconn</span></a>
+                        <alink class="expanded"><i class="fa fa-server fa-fw"></i><span>myconn</span></alink>
                         <ul>
                             <li>
-                                <a class="expanded"  href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase1</span></a>
+                                <alink class="expanded" ><i class="fa fa-database fa-fw"></i><span>mydatabase1</span></alink>
                                 <ul>
                                     <li>
-                                        <a class="expanded"  href="#"><i class="fa fa-folder fa-fw"></i><span>Schemas</span></a>
+                                        <alink class="expanded" ><i class="fa fa-folder fa-fw"></i><span>Schemas</span></alink>
                                         <ul>
                                             <li>
-                                                <a href="#"><i class="fa fa-file-lines fa-fw"></i><span>myschema1</span></a>
+                                                <alink><i class="fa fa-file-lines fa-fw"></i><span>myschema1</span></alink>
                                             </li>
                                             <li>
-                                                <a href="#"><i class="fa fa-file-lines fa-fw"></i><span>myschema2</span></a>
+                                                <alink><i class="fa fa-file-lines fa-fw"></i><span>myschema2</span></alink>
                                             </li>
                                         </ul>
                                     </li>
                                     <li>
-                                        <a href="#"><i class="fa fa-folder fa-fw"></i><span>Roles</span></a>
+                                        <alink><i class="fa fa-folder fa-fw"></i><span>Roles</span></alink>
                                     </li>
                                 </ul>
                             </li>
-                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase2</span></a></li>
+                            <li><alink><i class="fa fa-database fa-fw"></i><span>mydatabase2</span></alink></li>
                         </ul>
                     </li>
-                    <a class="expanded"  href="#"><i class="fa fa-server fa-fw"></i><span>myconn</span></a>
+                    <alink class="expanded" ><i class="fa fa-server fa-fw"></i><span>myconn</span></alink>
                         <ul>
-                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase3</span></a></li>
-                            <li><a href="#"><i class="fa fa-database fa-fw"></i><span>mydatabase4</span></a></li>
+                            <li><alink><i class="fa fa-database fa-fw"></i><span>mydatabase3</span></alink></li>
+                            <li><alink><i class="fa fa-database fa-fw"></i><span>mydatabase4</span></alink></li>
                         </ul>
                     </li>
                 </ul>
@@ -266,13 +266,13 @@
             <div class="tab-list-items">
                 <button id="btn-tab-selector"><i class="fas fa-caret-down"></i></button>
                 <ul id="tab-selector-list">
-                    <li><a href="#">TAB </a></li>
+                    <li><alink>TAB </alink></li>
                 </ul>
             </div>
             <tablist>
                 <item></item>
-                <item><a href="#"><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></a></item>
-                <item><a class="active" href="#"><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></a></item>
+                <item><alink><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></alink></item>
+                <item><alink class="active"><span>tab item</span><button title="Close"><i class="fas fa-times"></i></button></alink></item>
                 <item></item>
             </tablist>
         </core>
@@ -320,7 +320,7 @@
                 <results>
                     <div class="tab-loading">
                         <div>
-                            <div><span><i class="fas fa-spinner fa-spin"></i></span><span>Loading...</span><a class="btn-stop-loading" title="Cancel" href="#"><i class="fas fa-times"></i></a></div>
+                            <div><span><i class="fas fa-spinner fa-spin"></i></span><span>Loading...</span><alink class="btn-stop-loading" title="Cancel"><i class="fas fa-times"></i></alink></div>
                         </div>
                     </div>
                     <div class="section data">

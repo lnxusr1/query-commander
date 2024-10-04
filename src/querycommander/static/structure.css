@@ -14,6 +14,7 @@ html, body {
 
 /* primary structure */
 page, statusbar, toolbar, data, overlay { display: block; box-sizing: border-box; }
+alink { display: inline; cursor:pointer; }
 
 button { cursor: pointer; }
 button:hover { background: var(--button-hover); }
@@ -49,35 +50,35 @@ sidebar > navmenu button { padding: 5px 5px 4px 5px; margin: 0 0 0 3px; font-siz
 sidebar > metadata { flex: 1; overflow: auto;}
 
 sidebar > metadata ul { list-style: none; padding: 0; margin: 1px 0 1px 16px; }
-sidebar > metadata a { border: 1px solid transparent; display: block; padding: 1px 0; color: var(--text-color); text-decoration: none; line-height: 16px;}
-sidebar > metadata a::before { display: inline-block; content: "\f0da"; /* \f0d7 \f0da */ font-family: "Font Awesome 6 Free"; font-weight: 900; width: 16px; text-align: center; }
-sidebar > metadata a.expanded::before { content: "\f0d7"; }
-sidebar > metadata a.loading::before { content: "\f110"; animation: rotation 2s infinite linear; }
-sidebar > metadata a.empty::before { content: ""; }
-sidebar > metadata a span { margin-left: 3px; font-size: 0.80rem; line-height: 16px; }
-sidebar > metadata a.highlight { border: 1px solid var(--toolbar-border-color); border-radius: 3px; }
+sidebar > metadata alink { border: 1px solid transparent; display: block; padding: 1px 0; color: var(--text-color); text-decoration: none; line-height: 16px;}
+sidebar > metadata alink::before { display: inline-block; content: "\f0da"; /* \f0d7 \f0da */ font-family: "Font Awesome 6 Free"; font-weight: 900; width: 16px; text-align: center; }
+sidebar > metadata alink.expanded::before { content: "\f0d7"; }
+sidebar > metadata alink.loading::before { content: "\f110"; animation: rotation 2s infinite linear; }
+sidebar > metadata alink.empty::before { content: ""; }
+sidebar > metadata alink span { margin-left: 3px; font-size: 0.80rem; line-height: 16px; }
+sidebar > metadata alink.highlight { border: 1px solid var(--toolbar-border-color); border-radius: 3px; }
 sidebar > metadata > ul { padding: 8px 0; margin-left: 12px; }
 
 slider { width: 6px; overflow: hidden; user-select: none; cursor: col-resize; line-height: 12px; align-content: center; background: var(--slider-bg); color: var(--slider-fg-color); }
 
 core { overflow: hidden; flex: 1; display: flex; width: 100%; flex-direction: column; position: relative; }
-core > div.tab-list-items { z-index: 6; display: block; position: absolute; top: 0; right: 0; height: 23px; padding-top: 3px; width: 28px; background: var(--toolbar-bg-dark); }
+core > div.tab-list-items { z-index: 6; user-select:none; display: block; position: absolute; top: 0; right: 0; height: 23px; padding-top: 3px; width: 28px; background: var(--toolbar-bg-dark); }
 core > div.tab-list-items > button { padding:0;margin:0;border:0; border: 1px solid var(--toolbar-border-color-dark); border-bottom: none; background: var(--toolbar-bg); display: block; height: 23px; width: 22px; border-top-left-radius: 3px; border-top-right-radius: 3px;}
 core > div.tab-list-items > button:hover { background: var(--editor-bg); }
 core > div.tab-list-items.active > button { background: var(--main-bg); border: 1px solid var(--slider-fg-color); border-bottom: none; }
 core > div.tab-list-items > ul { display:none; font-size: 0.8rem; position: absolute; top: 26px; right: 6px; list-style: none; white-space: nowrap; margin: 0; padding: 0; background: var(--toolbar-bg); border: 1px solid var(--toolbar-border-color); }
 core > div.tab-list-items.active > ul { display: block; }
-core > div.tab-list-items > ul > li > a { display: block; padding: 0 8px; line-height: 24px; text-decoration: none; color: var(--text-color); border-top: 1px solid #fff; border-bottom: 1px solid var(--toolbar-border-color); }
-core > div.tab-list-items > ul > li > a:hover { background: var(--toolbar-bg-dark); }
-core > div.tab-list-items > ul > li > a:active { background: var(--button-hover); }
+core > div.tab-list-items > ul > li > alink { display: block; padding: 0 8px; line-height: 24px; text-decoration: none; color: var(--text-color); border-top: 1px solid #fff; border-bottom: 1px solid var(--toolbar-border-color); }
+core > div.tab-list-items > ul > li > alink:hover { background: var(--toolbar-bg-dark); }
+core > div.tab-list-items > ul > li > alink:active { background: var(--button-hover); }
 core > tablist { user-select:none; display: flex; flex-direction: row; overflow: hidden; background: var(--toolbar-bg-dark); height: 26px; }
 core > tablist > item { padding-top: 3px; white-space: nowrap; }
 core > tablist > item:first-child { width: 25px; }
-core > tablist > item > a { color: var(--text-color); text-decoration: none; display: block; height: 21px; margin: 0 2px 0 0; padding: 0 4px 0 6px; line-height: 22px; border: 1px solid var(--toolbar-border-color-dark); background: var(--toolbar-bg); border-top-left-radius: 3px; border-top-right-radius: 3px; font-size: 0.9rem; }
+core > tablist > item > alink { color: var(--text-color); text-decoration: none; display: block; height: 21px; margin: 0 2px 0 0; padding: 0 4px 0 6px; line-height: 22px; border: 1px solid var(--toolbar-border-color-dark); background: var(--toolbar-bg); border-top-left-radius: 3px; border-top-right-radius: 3px; font-size: 0.9rem; }
 core > tablist > item:last-child { flex: 1; }
 core > tablist > item button { padding: 2px 0; border: 0; width: 8px; background: transparent; margin: 0 0 0 4px; font-size: 0.65rem; }
 core > tablist > item button:hover { background: transparent; color: var(--close-hover-color); }
-core > tablist > item > a.active { background: var(--tab-active); border-bottom: 1px solid var(--editor-bg); }
+core > tablist > item > alink.active { background: var(--tab-active); border-bottom: 1px solid var(--editor-bg); }
 
 core > tab { overflow: auto; flex: 1; display: flex; width: 100%; flex-direction: column;}
 core > tab > slider { height: 6px; line-height: 6px; text-align: center; cursor: row-resize; width: 100%; }
@@ -278,10 +279,10 @@ overlay.chooser#ddl-data .message-box .message { min-width: 350px; max-width: 10
 overlay.chooser#chooser-select-connection label > span { display: inline-block; }
 overlay.chooser#chooser-select-connection label > span:last-child::before { content: "-"; display: inline-block; margin: 0 6px; }
 overlay.chooser#chooser-select-connection label > span:last-child { opacity: 0.4; }
-.sidebar-context-menu { display:none; position: absolute; z-index: 10000; border: 1px solid var(--toolbar-border-color); font-size: 0.75rem; min-width: 140px; background: var(--toolbar-bg); }
+.sidebar-context-menu { display:none; position: absolute; z-index: 10000; border: 1px solid var(--toolbar-border-color); font-size: 0.75rem; min-width: 140px; background: var(--toolbar-bg); user-select: none; }
 .sidebar-context-menu ul { list-style: none; margin: 0; padding: 0; }
-.sidebar-context-menu a { text-decoration: none; display: block; padding: 4px 8px; color: var(--text-color); border-radius: 0; }
-.sidebar-context-menu a:hover { background: var(--button-hover); }
+.sidebar-context-menu alink { text-decoration: none; display: block; padding: 4px 8px; color: var(--text-color); border-radius: 0; }
+.sidebar-context-menu alink:hover { background: var(--button-hover); }
 
 overlay.chooser#tab-filter-options .message > div { display: flex; flex-direction: row; }
 overlay.chooser#tab-filter-options .message > div > item { border: 1px solid var(--toolbar-border-color); max-width: 250px; }
@@ -317,14 +318,14 @@ overlay.chooser#tab-filter-options .message > div input { display: block; line-h
 }
 
 .database-select > div > span.loading { display: block; padding: 4px 8px; color: var(--output-overlay-bg) }
-.database-select > div > a { display: block; padding: 4px 8px; text-decoration: none; color: var(--text-color); border-bottom: 1px solid var(--option-select-border); }
-.database-select > div > a:hover { background: var(--results-table-bg-alt); }
-.database-select > div > a.selected { font-weight: bold; }
+.database-select > div > alink { display: block; padding: 4px 8px; text-decoration: none; color: var(--text-color); border-bottom: 1px solid var(--option-select-border); }
+.database-select > div > alink:hover { background: var(--results-table-bg-alt); }
+.database-select > div > alink.selected { font-weight: bold; }
 
 .simple-notice { position: absolute; display: block; z-index: 22; font-size: 1.2rem; background: var(--simple-loading); top: 4px; right: 80px; height: 27px; line-height: 27px; width: 28px; text-align: center; border-radius: 14px; box-shadow: 0 0 3px #333; }
-.simple-notice a { display: none; }
-.simple-notice:hover a { position: absolute; width: 100%; text-align: center; display: block; height: 100%; font-size: 0.95rem; border-radius: 14px; background: var(--simple-loading); z-index: 2; }
-.simple-notice:hover a:active { background: var(--button-hover); color: var(--text-color); }
+.simple-notice alink { display: none; }
+.simple-notice:hover alink { position: absolute; width: 100%; text-align: center; display: block; height: 100%; font-size: 0.95rem; border-radius: 14px; background: var(--simple-loading); z-index: 2; }
+.simple-notice:hover alink:active { background: var(--button-hover); color: var(--text-color); }
 .simple-notice .message { display: block; }
 
 server-type { display: inline; opacity: 0.4; font-size: 0.8rem; }

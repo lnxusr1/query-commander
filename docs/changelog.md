@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 !!! note
     Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
 
+## [0.9.7] - 2024-10-03 -- v1.0-pre
+
+- Bug fix in UI drag-n-drop
+- Improvements in page text user-selection
+
 ## [0.9.6] - 2024-09-26
 
 - Updated Trino connector to print more descriptive error messages

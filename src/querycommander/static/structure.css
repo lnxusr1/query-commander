@@ -173,7 +173,7 @@ results table tr td, propdetail table tr td {
     border-left: 1px solid var(--results-table-bg);
     border-right: 1px solid var(--results-table-bg);
     border-bottom: 1px solid var(--results-table-bg);
-    font-size: 0.85rem;
+    font-size: 0.80rem;
 }
 
 results table tr.alt td, propdetail table tr:nth-child(even) td { 

@@ -2,8 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
-!!! note
-    Testing activities continue to be the primary focus.  Any related bug fixes will be released on a rapid pace as we approach **v1.0**.  Post the major release a more modest release schedule will be adopted and shared via the [roadmap](./roadmap.md).
+## [1.0.0] - 2024-11-16 
+
+- **MAJOR RELEASE**
+- Bug fix in UI for websocket pagination
+- See [roadmap](./roadmap.md) for future plans.
 
 ## [0.9.7] - 2024-10-03 -- v1.0-pre
 

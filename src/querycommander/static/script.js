@@ -460,6 +460,8 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', as_more=false) {
         socket.onmessage = function(event) {
             let data = JSON.parse(event.data);
 
+            let as_more = !(data.data.init == true);
+
             if ((data.message) && (data.message == "Endpoint request timed out")) {
                 return; // silently discard endpoint timeouts (lambda still running in background)
             }
@@ -499,12 +501,12 @@ function doExecuteSQL(tab_id, exec_type, sql_statement='', as_more=false) {
                 console.error('An error occurred:', error.message);
             }
 
-            if (!$(tab_id + ' .tab-loading').is(':visible')) {
-                doClearQueryResults($(tab_id + ' div.section.data'));
-            }
+            //if (!$(tab_id + ' .tab-loading').is(':visible')) {
+            //    doClearQueryResults($(tab_id + ' div.section.data'));
+            //    $(tab_id + ' div.section.output div').text('Request cancelled.');
+            //    $(tab_id + ' .btn-tab-output').trigger('click');
+            //}
 
-            $(tab_id + ' div.section.output div').text('Request cancelled.');
-            $(tab_id + ' .btn-tab-output').trigger('click');
             $(tab_id + ' .tab-loading').hide();
             $(tab_id + ' div.section.data').removeClass('is-loading');
 

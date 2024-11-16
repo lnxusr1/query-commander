@@ -29,7 +29,11 @@ def get_query_results(tokenizer, response, connection_name, db_name, sql, query_
         resp.output({ "ok": False, "error": "Unable to connect to server." })
         return
 
-    data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False }
+    as_init = True
+    if start_record > 0:
+        as_init = False
+
+    data = { "error": "", "headers": [], "records": [], "output": "", "stats": {}, "has_more": False, "init": as_init }
     try:
         if query_type == "explain":
             if connection._type == "oracle":

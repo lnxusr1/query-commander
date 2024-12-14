@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - TBD
+## [1.0.1] - 2024-12-14
 
 - Bug fix in trino connector for viewing Hive table details
 - Refactored connectors to optimize code management

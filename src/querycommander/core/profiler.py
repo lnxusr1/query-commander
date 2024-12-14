@@ -3,8 +3,6 @@ import tempfile
 import hashlib
 import json
 import logging
-import datetime
-
 from querycommander.core.config import settings as cfg
 
 
@@ -18,15 +16,12 @@ class Profiler:
         self.logger.setLevel(cfg.log_level)
 
     def _get_profile_data(self):
-        # OVERRIDE THIS METHOD
         return {}
     
     def _put_profile_data(self):
-        # OVERRIDE THIS METHOD
         return False
     
     def _remove_profile_data(self):
-        # OVERRIDE THIS METHOD
         return False
 
     def _get(self):
@@ -86,7 +81,6 @@ class Profiler:
             if isinstance(value, dict):
                 if len(value) == 1:
                     if "connections" in value:
-                        # connections[connection][database] = schema
                         if isinstance(value.get("connections"), dict):
                             for conn in value.get("connections"):
                                 if not isinstance(value.get("connections").get(conn), dict):
@@ -119,7 +113,6 @@ class LocalProfiler(Profiler):
         data = super()._get_profile_data()
 
         try:
-            # using sha1() simply to insure the filename is a string without special chars in it
             filename = os.path.join(self.path, f"{hashlib.sha1(self.username.encode()).hexdigest()}.json")
             if os.path.exists(filename):
                 with open(filename, "r", encoding="UTF-8") as fp:
@@ -134,7 +127,6 @@ class LocalProfiler(Profiler):
             return False
         
         try:
-            # using sha1() simply to insure the filename is a string without special chars in it
             filename = os.path.join(self.path, f"{hashlib.sha1(self.username.encode()).hexdigest()}.json")
             os.makedirs(self.path, exist_ok=True)
 
@@ -150,7 +142,6 @@ class LocalProfiler(Profiler):
             return False
         
         try:
-            # using sha1() simply to insure the filename is a string without special chars in it
             filename = os.path.join(self.path, f"{hashlib.sha1(self.username.encode()).hexdigest()}.json")
             if os.path.exists(filename):
                 os.remove(filename)
@@ -282,6 +273,3 @@ def get_profiler(connection_details):
         
         
     return Profiler(**connection_details)
-
-
-#profiler = get_profiler(cfg.sys_profiler)

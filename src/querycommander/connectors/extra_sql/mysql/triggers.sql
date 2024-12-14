@@ -1,0 +1,1 @@
+select trigger_name from information_schema.triggers where event_object_schema = %s and event_object_table = %s order by trigger_name

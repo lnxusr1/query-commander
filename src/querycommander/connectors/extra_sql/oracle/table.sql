@@ -1,0 +1,1 @@
+select owner, table_name, tablespace_name from sys.all_tables where owner = :1 and table_name = :2

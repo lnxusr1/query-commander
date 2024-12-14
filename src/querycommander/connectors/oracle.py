@@ -1,16 +1,11 @@
 import sys
 import re
-import logging
-import traceback
-
 from datetime import datetime
 from decimal import Decimal
 import time
-
 import oracledb
 import oracledb.exceptions
 from querycommander.connectors import Connector
-#from querycommander.core.tokenizer import tokenizer
 
 
 def quote_ident_oracle(identifier):
@@ -92,9 +87,7 @@ class Oracle(Connector):
                 cursor = self.connection.cursor()
                 cursor.callproc("DBMS_APPLICATION_INFO.SET_MODULE", (f"Query Commander [{self.tokenizer.username}]", "Initialization"))
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to connect to database.")
+                self.log(sys.exc_info()[0], message="Unable to connect to database.", with_trace=True)
                 self.connection = None
                 return False
 
@@ -105,9 +98,7 @@ class Oracle(Connector):
             try:
                 self.connection.commit()
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to commit transaction.")
+                self.log(sys.exc_info()[0], message="Unable to commit transaction.", with_trace=True)
                 return False
         
         return True
@@ -117,9 +108,7 @@ class Oracle(Connector):
             try:
                 self.connection.close()
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to close database connection.")
+                self.log(sys.exc_info()[0], message="Unable to close database connection.", with_trace=True)
                 return False
 
         return True
@@ -137,8 +126,6 @@ class Oracle(Connector):
                 if self.schema is not None and self.schema != "":
                     cur.execute(f"ALTER SESSION SET CURRENT_SCHEMA = {quote_ident_oracle(self.database)}")
 
-                #if sql.rstrip().endswith(";"):
-                #    sql = sql.rstrip().rstrip(";")
                 cur.callproc("dbms_output.enable")
                 sql = preprocess_query(sql)
                 cur.execute(sql, parameters=params)
@@ -150,14 +137,11 @@ class Oracle(Connector):
 
                 return cur
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Query execution failed.")
+                self.log(sys.exc_info()[0], message="Query execution failed.", with_trace=True)
                 raise
 
         else:
-            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection - {self.tokenizer.token}")
-            self.err.append("Unable to establish connection")
+            self.log("Unable to establish connection", with_trace=False)
             raise ConnectionError("Unable to establish connection")
         
     def fetchmany(self, sql, params=None, size=None, query_type=None):
@@ -172,20 +156,14 @@ class Oracle(Connector):
                 if cur.description is not None:
                     headers = [{ "name": desc[0], "type": "text" } for desc in cur.description]
             except TypeError:
-                #self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                #self.logger.debug(str(sql))
-                #self.logger.debug(str(traceback.format_exc()))
-                #self.err.append("Unable to parse columns.")
                 headers = []
             except StopIteration:
                 pass
             except GeneratorExit:
                 pass
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
                 self.logger.debug(str(sql))
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to parse columns.")
+                self.log(sys.exc_info()[0], message="Unable to parse columns.", with_trace=True)
                 headers = []
                 self.stats["end_time"] = time.time()
                 raise
@@ -214,18 +192,16 @@ class Oracle(Connector):
                             record[i] = str(item) if item is not None else item
             
                         yield headers, record
+
             except oracledb.InterfaceError as e:
                 error_obj, = e.args
-                if error_obj.full_code == "DPY-1003":
-                    # tune this size for your application
-                    chunk_size = 100
 
-                    # create variables to hold the output
+                if error_obj.full_code == "DPY-1003":
+                    chunk_size = 100
                     lines_var = cur.arrayvar(str, chunk_size)
                     num_lines_var = cur.var(int)
                     num_lines_var.setvalue(0, chunk_size)
 
-                    # fetch the text that was added by PL/SQL
                     while True:
                         cur.callproc("dbms_output.get_lines", (lines_var, num_lines_var))
                         num_lines = num_lines_var.getvalue()
@@ -236,31 +212,22 @@ class Oracle(Connector):
                             break
 
                 else:
-                    self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                    self.logger.debug(str(traceback.format_exc()))
-                    self.err.append("Unable to fetch rows for query.")
-                    self.stats["end_time"] = time.time()
                     raise
 
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to fetch rows for query.")
+                self.log(sys.exc_info()[0], message="Unable to fetch rows for query.", with_trace=True)
                 self.stats["end_time"] = time.time()
                 raise
 
             try:
                 cur.close()
             except:
-                self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(sys.exc_info()[0])} - {self.tokenizer.token}")
-                self.logger.debug(str(traceback.format_exc()))
-                self.err.append("Unable to close cursor for query.")
+                self.log(sys.exc_info()[0], message="Unable to close cursor for query.", with_trace=True)
                 self.stats["end_time"] = time.time()
                 raise
 
         else:
-            self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - Unable to establish connection. - {self.tokenizer.token}")
-            self.err.append("Unable to establish connection")
+            self.log("Unable to establish connection", with_trace=False)
             self.stats["end_time"] = time.time()
             raise ConnectionError("Unable to establish connection")
 
@@ -268,9 +235,6 @@ class Oracle(Connector):
 
     def _sql(self, category):
         category = str(category).lower().strip()
-
-        if category == "ddl":
-            return "SELECT DBMS_METADATA.GET_DDL(:1, :2, :3) FROM DUAL"
         
         if category == "schemas":
             if isinstance(self.schemas, list) and len(self.schemas) > 0:
@@ -281,128 +245,8 @@ class Oracle(Connector):
                 return f"select distinct table_schema from sys.all_tab_privs where table_schema NOT IN ('SYS', 'SYSTEM', 'MDSYS', 'ORDSYS', 'OLAPSYS', 'APEXSYS') and table_schema in ({', '.join(in_str)}) order by table_schema"
             else:
                 return "select distinct table_schema from sys.all_tab_privs where table_schema NOT IN ('SYS', 'SYSTEM', 'MDSYS', 'ORDSYS', 'OLAPSYS', 'APEXSYS') order by table_schema"
-        
-        if category == "tables":
-            return "select table_name from sys.all_tables where owner = :1 and table_name not in (select mview_name from sys.all_mviews where owner = :2) order by table_name"
-        
-        if category == "table":
-            return "select owner, table_name, tablespace_name from sys.all_tables where owner = :1 and table_name = :2"
-        
-        if category == "views":
-            return "select view_name from sys.all_views where owner = :1 order by view_name"
 
-        if category == "view":
-            return "select owner, view_name, read_only from sys.all_views where owner = :1 and view_name = :2 order by view_name"
-
-        if category == "mat_views":
-            return "select mview_name from sys.all_mviews where owner = :1 order by mview_name"
-        
-        if category == "mat_view":
-            return "select owner, mview_name, updatable, refresh_mode, refresh_method, build_mode, last_refresh_date from sys.all_mviews where owner = :1 and mview_name = :2 order by mview_name"
-        
-        if category == "sequences":
-            return "select sequence_name from sys.all_sequences where sequence_owner = :1 order by sequence_name"
-
-        if category == "sequence":
-            return "select sequence_owner, sequence_name, min_value, max_value, increment_by, cache_size, last_number from sys.all_sequences where sequence_owner = :1 and sequence_name = :2 order by sequence_name"
-
-        if category in ["functions","packages","procedures"]:
-            return "select object_name from sys.all_procedures where owner != 'SYS' and procedure_name is null and object_type = :1 and owner = :2 order by object_name"
-
-        if category in ["function","package","procedure"]:
-            return "select owner, object_name from sys.all_procedures where owner != 'SYS' and procedure_name is null and object_type = :1 and owner = :2 and object_name = :3 order by object_name"
-
-        if category == "columns":
-            return "select column_name as \"Column Name\", column_id as \"#\", data_type as \"Data Type\", data_length as \"Length\", data_precision as \"Precision\", data_scale as \"Scale\", nullable as \"Nullable\", data_default as \"Default\" from sys.all_tab_columns where owner = :1 and table_name = :2 order by column_id"
-
-        if category == "constraints":
-            return "select constraint_name from sys.all_constraints where constraint_type in ('R','P','U') and owner = :1 and table_name = :2 order by constraint_name"
-
-        if category == "indexes":
-            return "select index_name from sys.all_indexes where index_type != 'IOT - TOP' and table_owner = :1 and table_name = :2 order by index_name"
-
-        if category == "triggers":
-            return "select trigger_name from sys.all_triggers where table_owner = :1 and table_name = :2 order by trigger_name"
-
-        if category == "grants":
-            return "select grantee as \"Role\", privilege as \"Privilege\", grantor as \"Granted By\", grantable as \"With Grant\" from sys.all_tab_privs where type = :1 and table_schema = :2 and table_name = :3 order by grantee, privilege"
-
-        if category == "partitions":
-            return "select PARTITION_NAME from sys.all_tab_partitions where table_owner = :1 and table_name = :2 order by PARTITION_POSITION"
-
-        if category == "subpartitions":
-            return "select subpartition_name from sys.all_tab_subpartitions where table_owner = :1 and table_name = :2 and partition_name = :3 order by SUBPARTITION_POSITION"
-        
-        if category == "sessions":
-            return "\n".join(
-                [
-                    "SELECT",
-                    "    s.sid,",
-                    "    s.serial#,",
-                    "    s.username AS user_name,",
-                    "    s.osuser,",
-                    "    s.program AS application_name,",
-                    "    s.machine AS client_machine,",
-                    "    s.terminal,",
-                    "    s.status,",
-                    "    s.schemaname AS schema_name,",
-                    "    s.logon_time,",
-                    "    s.module,",
-                    "    s.action,",
-                    "    s.client_info,",
-                    "    s.event,",
-                    "    s.wait_class,",
-                    "    s.seconds_in_wait,",
-                    "    s.state,",
-                    "    s.sql_id,",
-                    "    q.sql_text",
-                    "FROM",
-                    "    sys.v$session s",
-                    "LEFT JOIN",
-                    "    sys.v$sql q",
-                    "    ON s.sql_id = q.sql_id",
-                    "WHERE s.status = 'ACTIVE'",
-                    "ORDER BY",
-                    "    s.sid"
-                ]
-            )
-        
-        if category == "locks":
-            return "\n".join(
-                [
-                    "SELECT",
-                    "    waiting_session.sid AS wait_sid,",
-                    "    waiting_session.username AS wait_user,",
-                    "    holding_session.sid AS hold_sid,",
-                    "    holding_session.username AS hold_user,",
-                    "    waiting_sql.sql_text AS wait_statement,",
-                    "    holding_sql.sql_text AS hold_statement",
-                    "FROM",
-                    "    sys.v$lock waiting_lock",
-                    "JOIN",
-                    "    sys.v$session waiting_session",
-                    "    ON waiting_lock.sid = waiting_session.sid",
-                    "JOIN",
-                    "    sys.v$lock holding_lock",
-                    "    ON waiting_lock.id1 = holding_lock.id1",
-                    "    AND waiting_lock.id2 = holding_lock.id2",
-                    "    AND holding_lock.block = 1",
-                    "JOIN",
-                    "    sys.v$session holding_session",
-                    "    ON holding_lock.sid = holding_session.sid",
-                    "LEFT JOIN",
-                    "    sys.v$sql waiting_sql",
-                    "    ON waiting_session.sql_id = waiting_sql.sql_id",
-                    "LEFT JOIN",
-                    "    sys.v$sql holding_sql",
-                    "    ON holding_session.sql_id = holding_sql.sql_id",
-                    "WHERE",
-                    "    waiting_lock.block = 0",
-                    "    AND waiting_lock.request > 0",
-                    "ORDER BY",
-                    "    wait_sid"
-                ]
-            )
+        return self.get_sql_file(category)
 
     def meta(self, type, target, path):
         sql = None
@@ -424,7 +268,6 @@ class Oracle(Connector):
             meta["classes"] = ["fas", "fa-folder"]
             meta["menu_items"] = ["refresh"]
 
-            # Oracle only uses Schemas
             return meta, None
 
         if type == "connection":
@@ -721,20 +564,9 @@ class Oracle(Connector):
             params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[0],
-                })
-
-                data["meta"].append({
-                    "name": "Tablespace",
-                    "value": record[2],
-                })
+                data["meta"].append({ "name": "Name", "value": record[1] })
+                data["meta"].append({ "name": "Owner", "value": record[0] })
+                data["meta"].append({ "name": "Tablespace", "value": record[2] })
 
             sql = self._sql("ddl")
             params = ["TABLE", target, path.get("database")]
@@ -767,20 +599,9 @@ class Oracle(Connector):
             params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[0],
-                })
-
-                data["meta"].append({
-                    "name": "Read Only",
-                    "value": record[2],
-                })
+                data["meta"].append({ "name": "Name", "value": record[1] })
+                data["meta"].append({ "name": "Owner", "value": record[0] })
+                data["meta"].append({ "name": "Read Only", "value": record[2] })
 
             sql = self._sql("ddl")
             params = ["VIEW", target, path.get("database")]
@@ -813,35 +634,12 @@ class Oracle(Connector):
             params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[0],
-                })
-
-                data["meta"].append({
-                    "name": "Updatable",
-                    "value": record[2],
-                })
-
-                data["meta"].append({
-                    "name": "Refresh Mode",
-                    "value": record[3],
-                })
-
-                data["meta"].append({
-                    "name": "Refresh Method",
-                    "value": record[4],
-                })
-
-                data["meta"].append({
-                    "name": "Last Refresh",
-                    "value": record[5],
-                })
+                data["meta"].append({ "name": "Name", "value": record[1] })
+                data["meta"].append({ "name": "Owner", "value": record[0] })
+                data["meta"].append({ "name": "Updatable", "value": record[2] })
+                data["meta"].append({ "name": "Refresh Mode", "value": record[3] })
+                data["meta"].append({ "name": "Refresh Method", "value": record[4] })
+                data["meta"].append({ "name": "Last Refresh", "value": record[5] })
 
             sql = self._sql("ddl")
             params = ["MATERIALIZED_VIEW", target, path.get("database")]
@@ -873,40 +671,13 @@ class Oracle(Connector):
             params = [path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[0],
-                })
-
-                data["meta"].append({
-                    "name": "Min Value",
-                    "value": record[2],
-                })
-
-                data["meta"].append({
-                    "name": "Max Value",
-                    "value": record[3],
-                })
-
-                data["meta"].append({
-                    "name": "Increment By",
-                    "value": record[4],
-                })
-
-                data["meta"].append({
-                    "name": "Cache Size",
-                    "value": record[5],
-                })
-
-                data["meta"].append({
-                    "name": "Last Value",
-                    "value": record[6],
-                })
+                data["meta"].append({ "name": "Name", "value": record[1] })
+                data["meta"].append({ "name": "Owner", "value": record[0] })
+                data["meta"].append({ "name": "Min Value", "value": record[2] })
+                data["meta"].append({ "name": "Max Value", "value": record[3] })
+                data["meta"].append({ "name": "Increment By", "value": record[4] })
+                data["meta"].append({ "name": "Cache Size", "value": record[5] })
+                data["meta"].append({ "name": "Last Value", "value": record[6] })
 
             sql = self._sql("ddl")
             params = ["SEQUENCE", target, path.get("database")]
@@ -934,15 +705,8 @@ class Oracle(Connector):
             params = [query_val, path.get("database"), target]
 
             for _, record in self.fetchmany(sql, params, 1000):
-                data["meta"].append({
-                    "name": "Name",
-                    "value": record[1],
-                })
-
-                data["meta"].append({
-                    "name": "Owner",
-                    "value": record[0],
-                })
+                data["meta"].append({ "name": "Name", "value": record[1] })
+                data["meta"].append({ "name": "Owner", "value": record[0] })
 
             sql = self._sql("ddl")
             params = [query_val, target, path.get("database")]

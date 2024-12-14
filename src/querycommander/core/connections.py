@@ -89,4 +89,3 @@ class Connections:
 
         if c_type in ["secretsmanager", "secretmanager"]:
             return self._get_secretsmanager(conn_name)
-            

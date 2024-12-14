@@ -1,0 +1,1 @@
+select table_catalog, table_schema, table_name, table_type from information_schema.tables where table_schema = ? and table_name = ? order by table_name

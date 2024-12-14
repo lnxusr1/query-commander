@@ -1,0 +1,1 @@
+select 'CREATE SCHEMA ' || nspname || ';' as definition from pg_catalog.pg_namespace where nspname = %s

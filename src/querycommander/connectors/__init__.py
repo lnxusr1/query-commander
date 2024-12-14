@@ -1,4 +1,6 @@
+import os
 import logging
+import traceback
 from querycommander.core.config import settings as cfg
 
 class Connector:
@@ -13,7 +15,6 @@ class Connector:
 
         self.database = kwargs.get("database")
         self.schema = kwargs.get("schema")
-
 
     @property
     def explain_as_output(self):
@@ -65,3 +66,33 @@ class Connector:
     def details(self, type, target, path):
         self.err.append("Not implemented.")
         return None
+
+    def get_sql_file(self, category):
+        if self._type is not None:
+            file_path = os.path.join(os.path.dirname(__file__), "extra_sql", str(self._type).lower())
+
+            try:
+                files = os.listdir(file_path)
+                file_name = files[files.index(category.lower().strip().replace('-','_') + ".sql")]
+                file_name = os.path.join(file_path, file_name)
+                if os.path.exists(file_name):
+                    with open(file_name, "r", encoding="UTF-8") as fp:
+                        contents = fp.read().rstrip()
+                    
+                    return contents
+            except:
+                pass
+
+        return None
+    
+    def log(self, content, message=None, with_trace=False):
+        if with_trace:
+            self.logger.debug(str(traceback.format_exc()))
+
+        self.logger.error(f"[{self.tokenizer.username}@{self.tokenizer.remote_addr}] - {self.host} - {str(content)} - {self.tokenizer.token}")
+
+        if message is None:
+            message = content
+        self.err.append(str(message))
+
+        return True

@@ -1,0 +1,1 @@
+select viewname from pg_catalog.pg_views where schemaname = %s order by viewname

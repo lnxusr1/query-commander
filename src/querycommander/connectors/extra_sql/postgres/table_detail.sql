@@ -1,0 +1,1 @@
+select schemaname, tablename, tableowner, tablespace, rowsecurity from pg_catalog.pg_tables where schemaname = %s and tablename = %s

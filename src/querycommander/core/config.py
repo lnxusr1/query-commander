@@ -9,27 +9,21 @@ from querycommander.core.connections import Connections
 def get_websocket_apis_invoking_lambda(context):
     import boto3
 
-    # Get the Lambda function ARN
     function_name = os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
-    #function_version = os.environ['AWS_LAMBDA_FUNCTION_VERSION']
     region = os.environ['AWS_REGION']
     account_id = context.invoked_function_arn.split(":")[4]
     lambda_arn = f"arn:aws:lambda:{region}:{account_id}:function:{function_name}"
 
-    # Create a client for API Gateway V2
     client = boto3.client('apigatewayv2')
 
-    # List all WebSocket APIs
     response = client.get_apis()
 
-    # List to hold APIs that invoke the current Lambda function
     websocket_apis_invoke_lambda = []
 
     for api in response['Items']:
         api_id = api['ApiId']
 
         if api['ProtocolType'] == "WEBSOCKET":
-            # Get all integrations for this API
             stages = client.get_stages(ApiId=api_id)
             stages = [x.get("StageName") for x in stages["Items"]]
             if len(stages) == 1:
@@ -37,7 +31,6 @@ def get_websocket_apis_invoking_lambda(context):
                 integrations = client.get_integrations(ApiId=api_id)
                 for integration in integrations['Items']:
 
-                    # Check if the integration is a Lambda proxy integration and if the URI matches the Lambda ARN
                     if integration['IntegrationType'] == 'AWS_PROXY' and f"{lambda_arn}/invocations" in integration['IntegrationUri']:
                         api_endpoint = f"{api['ApiEndpoint']}/{stages[0]}"
                         if api_endpoint not in websocket_apis_invoke_lambda:
@@ -60,7 +53,6 @@ class Settings:
                 self.data = yaml.safe_load(fp)
 
         self._connections = Connections(global_settings=self, **self.data.get("connections", {}))
-        #self.web_socket = self.data.get("settings", {}).get("web_socket", "")
         self.is_lambda = False
         self.context = None
 

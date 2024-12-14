@@ -1,0 +1,1 @@
+select index_name from sys.all_indexes where index_type != 'IOT - TOP' and table_owner = :1 and table_name = :2 order by index_name

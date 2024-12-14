@@ -1,0 +1,1 @@
+select owner, view_name, read_only from sys.all_views where owner = :1 and view_name = :2 order by view_name

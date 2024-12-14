@@ -1,0 +1,1 @@
+select subpartition_name from sys.all_tab_subpartitions where table_owner = :1 and table_name = :2 and partition_name = :3 order by SUBPARTITION_POSITION

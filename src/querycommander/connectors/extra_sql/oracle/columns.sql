@@ -1,0 +1,1 @@
+select column_name as "Column Name", column_id as "#", data_type as "Data Type", data_length as "Length", data_precision as "Precision", data_scale as "Scale", nullable as "Nullable", data_default as "Default" from sys.all_tab_columns where owner = :1 and table_name = :2 order by column_id

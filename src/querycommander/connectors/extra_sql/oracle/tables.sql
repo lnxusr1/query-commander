@@ -1,0 +1,1 @@
+select table_name from sys.all_tables where owner = :1 and table_name not in (select mview_name from sys.all_mviews where owner = :2) order by table_name

@@ -1,0 +1,1 @@
+show create table `{OBJECT_NAME}`

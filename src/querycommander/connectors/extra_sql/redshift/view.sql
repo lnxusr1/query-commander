@@ -1,0 +1,2 @@
+select CONCAT(CONCAT(CONCAT(CONCAT(CONCAT('CREATE OR REPLACE VIEW ', schemaname), '.'), viewname), ' AS 
+'), definition) as definition, schemaname, viewname, viewowner from pg_catalog.pg_views where schemaname = %s and viewname = %s;

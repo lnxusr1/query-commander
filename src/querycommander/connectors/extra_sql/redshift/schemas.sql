@@ -1,0 +1,1 @@
+select nspname from pg_catalog.pg_namespace where nspname not in ('pg_auto_copy','catalog_history','pg_internal','pg_catalog', 'pg_toast', 'information_schema') order by nspname

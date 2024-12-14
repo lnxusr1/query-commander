@@ -56,15 +56,12 @@ class LDAPAuth(Authenticator):
             raise ValueError("No LDAP Base DN was specified.")
             
         if self.microsoft:
-            # Active Directory (uses memberOf attribute on user for group DNs)
             self.user_search_filter = kwargs.get("options", {}).get("user_search_filter", "(&(objectClass=user)(sAMAccountName={USERNAME}))")
             self.user_domain_separator = kwargs.get("options", {}).get("domain_separator", "\\")
             self.user_pattern = kwargs.get("options", {}).get("user_pattern")
             self.user_group_search_filter = None
-            #self.user_group_search_filter = kwargs.get("options", {}).get("user_group_search_filter", "")
 
         else:
-            # OpenLDAP (has to search for groups to see who is a member)
             self.user_search_filter = kwargs.get("options", {}).get("user_search_filter", "(&(objectClass=person)(uid={USERNAME}))")
             self.user_pattern = kwargs.get("options", {}).get("user_pattern")  # example only:  "uid={USERNAME},ou=people,dc=example,dc=com"
             self.user_group_search_filter = kwargs.get("options", {}).get("user_group_search_filter", "(&(objectClass=posixGroup)(memberUid={USERNAME}))")
@@ -96,7 +93,6 @@ class LDAPAuth(Authenticator):
             )
 
             if isinstance(self.conn.entries, list) and len(self.conn.entries) > 0:
-                #logging.debug(str([entry.cn.value for entry in self.conn.entries]))
                 for entry in self.conn.entries:
                     if str(entry.sAMAccountName.value).lower() == str(self.username).lower():
                         user_group_list = entry.memberOf.value
@@ -125,7 +121,6 @@ class LDAPAuth(Authenticator):
             )
 
             if isinstance(self.conn.entries, list) and len(self.conn.entries) > 0:
-                #logging.debug(str([entry.cn.value for entry in self.conn.entries]))
                 return [entry.cn.value for entry in self.conn.entries]
 
         except Exception:
@@ -182,8 +177,6 @@ class LDAPAuth(Authenticator):
             if self.conn is None:
                 self.conn = ldap3.Connection(self.server, user=ldap_login, password=password, auto_bind=True, **self.conn_options)
 
-            # If we reach this line then the login was valid
-
         except Exception:
             self.logger.error(f"[LDAP {self.host}] LDAP credential validation failed for user: {username}")
             self.logger.debug(f"[LDAP {self.host}] {str(sys.exc_info()[0])}")
@@ -211,5 +204,3 @@ def get_authenticator(connection_details):
         return LDAPAuth(**connection_details)
     
     return Authenticator(**connection_details)
-
-#authenticator = get_authenticator(cfg.sys_authenticator)

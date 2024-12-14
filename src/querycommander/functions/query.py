@@ -12,7 +12,6 @@ def get_query_results(tokenizer, response, connection_name, db_name, sql, query_
     resp = response
     records_per_request = cfg.records_per_request
 
-    #limit_exceeded = False
     if cfg.rate_limit_records > 0 and cfg.rate_limit_period > 0:
         remaining_records = tokenizer.get_records_remaining()
         if records_per_request > remaining_records:
@@ -84,9 +83,5 @@ def get_query_results(tokenizer, response, connection_name, db_name, sql, query_
 
     logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Query results retrieved: {connection_name}/{db_name} - {tokenizer.token}")
 
-    resp.output({ 
-        "ok": True, 
-        "data": data
-    })
-
+    resp.output({  "ok": True,  "data": data })
     return

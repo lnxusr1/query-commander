@@ -1,0 +1,1 @@
+select column_name, ordinal_position, data_type, is_nullable, column_default from information_schema.columns where table_schema = ? and table_name = ? order by ordinal_position

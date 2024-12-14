@@ -1,0 +1,1 @@
+select mview_name from sys.all_mviews where owner = :1 order by mview_name

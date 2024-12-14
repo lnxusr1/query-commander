@@ -2,7 +2,6 @@ import sys
 import traceback
 import logging
 import json
-
 from querycommander.core.config import settings as cfg
 from querycommander.core.helpers import encrypt, generate_session_token
 from querycommander.core.tokenizer import get_tokenizer
@@ -22,17 +21,12 @@ def process_request(request, response):
         from querycommander.core.authenticator import get_authenticator
         authenticator = get_authenticator(cfg.sys_authenticator)
         
-        #logger.debug(f"authenticator type = {cfg.sys_authenticator.get('type', 'local')}")
-        #logger.debug(f"tokenizer type = {cfg.sys_tokenizer.get('type', 'local')}")
-        #logger.debug(f"connections type = {cfg.sys_connections().get('type', 'config')}")
-
         username = str(request.json_data.get("username", "")).strip()[0:100]
         password = str(request.json_data.get("password", ""))[0:256]
 
         if authenticator.validate(username, password):
 
             if len(authenticator.roles) == 0:
-                # No roles for this login.
                 logger.error(f"[{username}@{request.host}] No roles found for user")
                 response.output({ "ok": False })
                 return
@@ -49,8 +43,6 @@ def process_request(request, response):
             resp_data["connections"] = tokenizer.connections()
             tokenizer.set("connections", resp_data["connections"])
 
-            #logger.debug(str(resp_data))
-
             if len(resp_data["connections"]) == 0:
                 logger.error(f"[{username}@{tokenizer.remote_addr}] No connections for user")
                 response.output({ "ok": False })
@@ -65,7 +57,6 @@ def process_request(request, response):
                     )
                 )
 
-            #tokenizer.purge()
             tokenizer.token = generate_session_token() # Force a new token to be issued
             logger.debug(f"[{username}@{tokenizer.remote_addr}] Authentication complete, placing token - {tokenizer.token}")
             if not tokenizer.update():
@@ -75,7 +66,6 @@ def process_request(request, response):
 
             logger.info(f"[{username}@{tokenizer.remote_addr}] Login successful - {tokenizer.token}")
 
-            # If only 1 role then return connections
             response.output(resp_data)
             return
         else:
@@ -88,8 +78,6 @@ def process_request(request, response):
     tokenizer.set_remote_addr(request.host)
 
     if command == "check":
-        # check: allow browser to check if session is still valid (does not auto-extend session length)
-        # check-init: same as "check" but if a valid token is found it auto-extends the session length
         if not tokenizer.validate():
             logger.info(f"[{tokenizer.remote_addr}] Invalid token - {tokenizer.token}")
             response.output({ "ok": False, "logout": True }, extend=False)
@@ -106,8 +94,6 @@ def process_request(request, response):
             response.output({ 
                 "ok": True, 
                 "username": username,
-                #"roles": [tokenizer.role_selected], # tokenizer.roles as list
-                #"role_selected": tokenizer.role_selected, 
                 "connections": tokenizer.connections(),
                 "profiles": cfg.profiles,
                 "web_socket": cfg.web_socket,
@@ -160,20 +146,6 @@ def process_request(request, response):
                 page_settings = prf.get("settings", {})
                 connection_defaults = prf.get("defaults", {}).get("connections", {})
 
-                #connection_details = {}
-
-                #if len(tabs) > 0:
-                #    from querycommander.functions.meta import get_info_dbs
-                #    for t in tabs:
-                #        c_name = t.get("connection")
-                #        if c_name in connection_details:
-                #            continue
-
-                #        logger.debug(c_name)
-                #        dbs = get_info_dbs(c_name)
-                #        if dbs is not None:
-                #            connection_details[c_name] = dbs
-
                 logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Profile retrieved - {tokenizer.token}")
 
                 response.output({
@@ -183,7 +155,6 @@ def process_request(request, response):
                     "defaults": {
                         "connections": connection_defaults
                     }
-                    #"connections": connection_details
                 })
 
             except:
@@ -206,9 +177,7 @@ def process_request(request, response):
 
                 logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Profile saved - {tokenizer.token}")
 
-                response.output({
-                    "ok": ret
-                })
+                response.output({ "ok": ret })
 
             except:
                 logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed to save profile - {tokenizer.token}")
@@ -225,9 +194,7 @@ def process_request(request, response):
 
                 logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] Profile deleted - {tokenizer.token}")
 
-                response.output({
-                    "ok": ret
-                })
+                response.output({ "ok": ret })
 
             except:
                 logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] Failed to delete profile - {tokenizer.token}")
@@ -238,22 +205,18 @@ def process_request(request, response):
             return
 
     if command == "meta":
-        #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] meta request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
         return get_info(tokenizer, request, response, "meta")
 
     if command == "ddl":
-        #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] ddl request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
         return get_info(tokenizer, request, response, "ddl")
 
     if command == "details":
-        #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from querycommander.functions.meta import get_info
         return get_info(tokenizer, request, response, "details")
 
     if command == "query":
-        #logger.info(f"[{tokenizer.username}@{tokenizer.remote_addr}] detail request [{tokenizer.token}]")
         from querycommander.functions.query import get_query_results
         return get_query_results(
             tokenizer, 
@@ -266,7 +229,6 @@ def process_request(request, response):
             int(request.json_data.get("row_count", 0))
         )
 
-    # Default response... not valid, client should initiate logout procedures
     logger.error(f"[{request.host}] Invalid request")
     response.output({ "ok": False, "logout": True })
     return

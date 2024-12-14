@@ -1,0 +1,1 @@
+select owner, object_name from sys.all_procedures where owner != 'SYS' and procedure_name is null and object_type = :1 and owner = :2 and object_name = :3 order by object_name

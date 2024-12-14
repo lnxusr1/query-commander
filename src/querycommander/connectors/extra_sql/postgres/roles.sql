@@ -1,0 +1,1 @@
+select rolname from pg_catalog.pg_roles order by rolname

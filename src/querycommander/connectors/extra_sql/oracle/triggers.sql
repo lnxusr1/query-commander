@@ -1,0 +1,1 @@
+select trigger_name from sys.all_triggers where table_owner = :1 and table_name = :2 order by trigger_name

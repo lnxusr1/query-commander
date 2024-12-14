@@ -1,0 +1,1 @@
+select datname from pg_catalog.pg_database where not datistemplate and datname not in ('sys:internal','padb_harvest') order by datname

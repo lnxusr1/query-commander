@@ -1,0 +1,1 @@
+select view_definition from information_schema.views where table_schema = ? order by table_name

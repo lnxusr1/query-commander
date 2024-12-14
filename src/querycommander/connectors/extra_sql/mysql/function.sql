@@ -1,0 +1,1 @@
+show create function `{OBJECT_NAME}`

@@ -3,7 +3,6 @@ import sys
 import logging
 import json
 import traceback
-import http.cookies
 
 from querycommander import __version__
 from querycommander.functions import process_request

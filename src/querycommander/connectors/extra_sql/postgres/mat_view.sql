@@ -1,0 +1,2 @@
+select CONCAT('CREATE MATERIALIZED VIEW ', schemaname, '.', matviewname, ' AS 
+', definition) as definition, schemaname, matviewname, matviewowner, tablespace from pg_catalog.pg_matviews where schemaname = %s and matviewname = %s;

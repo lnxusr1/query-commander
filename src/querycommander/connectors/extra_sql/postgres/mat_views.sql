@@ -1,0 +1,1 @@
+select matviewname from pg_catalog.pg_matviews where schemaname = %s order by matviewname

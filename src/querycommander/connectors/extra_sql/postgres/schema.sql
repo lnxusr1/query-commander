@@ -1,0 +1,1 @@
+select CONCAT('CREATE SCHEMA ', nspname, ' AUTHORIZATION ', nspowner::regrole::text, ';') as definition, nspname, nspowner::regrole::text as nspowner from pg_catalog.pg_namespace where nspname = %s

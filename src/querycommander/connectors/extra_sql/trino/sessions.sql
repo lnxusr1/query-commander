@@ -1,0 +1,1 @@
+select * from system.runtime.queries where state = 'RUNNING'

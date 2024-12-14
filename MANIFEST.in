@@ -6,4 +6,9 @@ include requirements.txt
 include src/querycommander/static/*.*
 include src/querycommander/.htaccess
 include src/querycommander/connectors/extra_sql/*.*
+include src/querycommander/connectors/extra_sql/mysql/*.*
+include src/querycommander/connectors/extra_sql/oracle/*.*
+include src/querycommander/connectors/extra_sql/postgres/*.*
+include src/querycommander/connectors/extra_sql/redshift/*.*
+include src/querycommander/connectors/extra_sql/trino/*.*
 include src/querycommander/VERSION

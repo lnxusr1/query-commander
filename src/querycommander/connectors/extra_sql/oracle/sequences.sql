@@ -1,0 +1,1 @@
+select sequence_name from sys.all_sequences where sequence_owner = :1 order by sequence_name

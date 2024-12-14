@@ -1,0 +1,1 @@
+SELECT * FROM system.runtime.queries WHERE state IN ('RUNNING', 'QUEUED') ORDER BY started DESC

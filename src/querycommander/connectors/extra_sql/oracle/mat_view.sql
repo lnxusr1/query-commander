@@ -1,0 +1,1 @@
+select owner, mview_name, updatable, refresh_mode, refresh_method, build_mode, last_refresh_date from sys.all_mviews where owner = :1 and mview_name = :2 order by mview_name

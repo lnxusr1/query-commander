@@ -3,19 +3,6 @@ from querycommander.connectors.selector import get_db_connection
 
 logger = logging.getLogger()
 
-#def get_info_dbs(tokenizer, connection_name):
-#    logger.debug(f"================> {connection_name}")
-#    connection = get_db_connection(connection_name)
-#    if connection is None:
-#        return None
-#    
-#    if not connection.open():
-#        logger.error(f"[{tokenizer.username}@{tokenizer.remote_addr}] META: Unable to connect to server: {connection_name} - {tokenizer.token}")
-#        return
-#        
-#    _, data = connection.meta("connection", connection_name, { "connection": connection_name })
-#    return data
-
 
 def get_info(tokenizer, request, response, data_type="meta"):
     resp = response

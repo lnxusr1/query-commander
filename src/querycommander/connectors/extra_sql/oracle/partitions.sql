@@ -1,0 +1,1 @@
+select PARTITION_NAME from sys.all_tab_partitions where table_owner = :1 and table_name = :2 order by PARTITION_POSITION

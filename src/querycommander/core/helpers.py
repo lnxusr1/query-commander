@@ -1,8 +1,6 @@
 import os
 import re
 import datetime
-import hashlib
-import secrets
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 import uuid
 from cryptography.hazmat.primitives import hashes
@@ -12,8 +10,6 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 
 def generate_session_token():
-    #random_bytes = secrets.token_bytes(32) + get_utc_now().strftime("%Y%m%d%H%M%S").encode()
-    #session_token = hashlib.sha256(random_bytes).hexdigest()
     session_token = uuid.uuid4().hex
     return session_token
 
@@ -24,32 +20,25 @@ def get_utc_now():
         return datetime.datetime.utcnow()
 
 def quote_ident(identifier):
-    # Ensure the identifier is a valid schema name (e.g., no special characters)
     if not re.match(r'^[A-Za-z_][A-Za-z0-9_]*$', identifier):
         raise ValueError("Invalid schema name")
     return f'"{identifier}"'
 
-# Validate a string is reasonable.  This is not a perfect test.
 def validate_string(text, is_username=False, max_length=None):
     if text == "" or text is None:
         return False
     
-    # Check length
     if max_length is not None and len(text) > max_length:
         return False
 
-    # Check if the text starts and ends with an alphanumeric character
     if is_username and (not text[0].isalnum() or not text[-1].isalnum()):
         return False
 
-    # Check for valid characters (alphanumeric, dots, hyphens, underscores)
     if not re.match("^[a-zA-Z0-9][a-zA-Z0-9_.-]*[a-zA-Z0-9]$", text):
         return False
 
-    # If all conditions pass, the text is considered valid
     return True
 
-# Key derivation function for generating a key from a password
 def derive_key(password, salt):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -61,7 +50,6 @@ def derive_key(password, salt):
     key = kdf.derive(password.encode('utf-8'))
     return key
 
-# Encrypt function
 def encrypt(password, plaintext):
     salt = os.urandom(16)
     key = derive_key(password, salt)
@@ -71,7 +59,6 @@ def encrypt(password, plaintext):
     ciphertext = encryptor.update(plaintext.encode('utf-8')) + encryptor.finalize()
     return urlsafe_b64encode(salt + iv + ciphertext).decode('utf-8')
 
-# Decrypt function
 def decrypt(password, ciphertext):
     data = urlsafe_b64decode(ciphertext)
     salt, iv, ciphertext = data[:16], data[16:32], data[32:]

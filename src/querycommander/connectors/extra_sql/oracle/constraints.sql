@@ -1,0 +1,1 @@
+select constraint_name from sys.all_constraints where constraint_type in ('R','P','U') and owner = :1 and table_name = :2 order by constraint_name

@@ -26,7 +26,6 @@ class Tokens:
         self.logger.setLevel(cfg.log_level)
 
     def _get_token_data(self):
-        # OVERRIDE THIS METHOD
 
         return { 
             "type": "token",
@@ -40,14 +39,7 @@ class Tokens:
         }
 
     def _put_token_data(self):
-        # OVERRIDE THIS METHOD
-
         return False
-
-    #def _remove_token_data(self):
-    #    # OVERRIDE THIS METHOD
-    #
-    #    return False
 
     def is_expired(self, timestamp):
         if self.token is None or self.data is None:
@@ -97,8 +89,6 @@ class Tokens:
     def validate(self):
         self._get()
 
-        #self.logger.debug(f"{self._username} == {self.token} == {self.data}")
-
         if self.token is not None \
             and len(str(self.data.get("token", "")).strip()) >= 20 \
             and str(self.data.get("token", "")).strip() == str(self.token):
@@ -108,7 +98,6 @@ class Tokens:
                     self._do_update = True
                     return True
 
-        #self._remove_token_data()
         return False
     
     def validate_connection(self, connection_data):
@@ -163,7 +152,6 @@ class Tokens:
         self.token = token
 
     def set_username(self, value):
-        #self.logger.debug(f"Setting username: {value}")
         if value is None:
             return
         
@@ -185,9 +173,6 @@ class Tokens:
 
         return True
 
-    #def purge(self):    
-    #    return False
-    
     @property
     def username(self):
         self._get()
@@ -229,7 +214,6 @@ class Tokens:
 
             i = i - 1
 
-        # Put it back for next time
         self.set("history", history_data)
 
         r_count = cfg.rate_limit_records - r_count
@@ -237,36 +221,28 @@ class Tokens:
 
     def connections(self):
         if self._connections is not None and isinstance(self._connections, list) and len(self._connections) > 0:
-            #self.logger.debug("CONNECTIONS FROM LOCAL CACHE")
             return self._connections
         
         if len(self.data.get("connections", [])) > 0:
-            #self.logger.debug("CONNECTIONS FROM LOCAL DATA")
             return self.data.get("connections", [])
         
         if cfg.sys_authenticator.get("type", "local") == "local":
-            #self.logger.debug("CONNECTIONS FROM CONFIG")
             self._connections = [{ "name": str(x), "type": str(cfg.sys_connections(x).get("type")).lower() } for x in cfg.sys_connections()]
             return self._connections
         else:
-            #self.logger.debug("CONNECTIONS FROM PROCESSING")
             self._get()
-            #self.logger.debug(f"{self._connections}")
             conns = []
             for x in cfg.sys_connections():
                 for r in self.roles:
-                    #self.logger.debug(f"Role {r}")
                     l_conn = cfg.sys_connections(x)
                     conn_roles = [x.lower().strip() for x in l_conn.get("roles", [])]
                     if not isinstance(r, str):
                         self.logger.debug(str(r))
                         
                     if str(r).lower().strip() in conn_roles:
-                        #self.logger.debug(f"Role {r} in {conn_roles}")
                         conns.append({ "name": str(x), "type": str(cfg.sys_connections(x).get("type")).lower() })
                         break
 
-            #self.logger.debug(f"{self._connections}")
             self._connections = conns
             return self._connections
 
@@ -291,7 +267,6 @@ class Tokens:
                 if str(req_type) == "logout":
                     cookie['token']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
 
-                #cookie['token']['expires'] = 0 # Session cookie
                 cookie['token']['secure'] = True
             
             if self._username is not None and str(self._username) != "None":
@@ -299,7 +274,6 @@ class Tokens:
                 if str(req_type) == "logout":
                     cookie['username']['expires'] = expiration_time.strftime('%a, %d-%b-%Y %H:%M:%S UTC')
 
-                #cookie['username']['expires'] = 0 # Session cookie
                 cookie['username']['secure'] = True
 
             ret = cookie.output()
@@ -324,7 +298,6 @@ class LocalTokens(Tokens):
         data = None
 
         try:
-            # using sha1() simply to insure the filename is a string without special chars in it
             filename = os.path.join(self.path, f"{hashlib.sha1(self._username.encode()).hexdigest()}.json")
             if os.path.exists(filename):
                 with open(filename, "r", encoding="UTF-8") as fp:
@@ -340,7 +313,6 @@ class LocalTokens(Tokens):
             return False
         
         try:
-            # using sha1() simply to insure the filename is a string without special chars in it
             filename = os.path.join(self.path, f"{hashlib.sha1(self._username.encode()).hexdigest()}.json")
             os.makedirs(self.path, exist_ok=True)
 
@@ -353,38 +325,6 @@ class LocalTokens(Tokens):
             return False
         
         return True
-
-    #def _remove_token_data(self):
-    #    if self.token is None or self._username is None:
-    #        return False
-    #    
-    #    try:
-    #        # using sha1() simply to insure the filename is a string without special chars in it
-    #        filename = os.path.join(self.path, f"{hashlib.sha1(self._username.encode()).hexdigest()}.json")
-    #        if os.path.exists(filename):
-    #            os.remove(filename)
-    #
-    #    except:
-    #        return False
-    #
-    #    return True
-    
-    #def purge(self):
-    #    if os.path.exists(self.path):
-    #        file_list = os.listdir(self.path)
-    #        for file_name in file_list:
-    #            if file_name.endswith(".json"):
-    #                with open(os.path.join(self.path, file_name), "r", encoding="UTF-8") as fp:
-    #                    data = json.load(fp)
-    #                
-    #                if self.is_expired(data.get("expires")):
-    #                    username = data.get("username")
-    #                    token = data.get("token")
-    #                    file_name_base = file_name.rsplit('.', 1)[0]
-    #                    logging.info(f"[{username}] Expired token purged. - {token}")
-    #                    os.remove(os.path.join(self.path, file_name))
-    #    
-    #    return True
 
 
 class RedisTokens(Tokens):
@@ -433,37 +373,6 @@ class RedisTokens(Tokens):
         
         return True
 
-    #def _remove_token_data(self):
-    #    if self.token is None or self._username is None:
-    #        return False
-    #    
-    #    try:
-    #        self.conn.delete(self.token)
-    #    except:
-    #        return False
-    #
-    #    return True 
-    
-    #def purge(self):
-    #    cursor = 0
-    #    while True:
-    #        cursor, tokens = self.conn.scan(cursor=cursor)
-    #        for token in tokens:
-    #            data = json.loads(self.conn.get(token))
-    #            if data.get("type", "") == "token":
-    #                if self.is_expired(data.get("expires")):
-    #                    username = data.get("username")
-    #                    try:
-    #                        self.conn.delete(token)
-    #                        logging.info(f"[{username}] Expired token purged. - {token}")
-    #                    except:
-    #                        logging.error(f"[{username}] Unable to remove expired token - {token}")
-    #
-    #        if cursor == 0:
-    #            break
-    #
-    #    return True
-
 
 class DynamoDBTokens(Tokens):
     def __init__(self, **kwargs):
@@ -486,9 +395,7 @@ class DynamoDBTokens(Tokens):
         data = super()._get_token_data()
 
         try:
-            #self.logger.debug(f"Getting token from dynamodb key={self._username}")
             response = self.conn.get_item(TableName=self.table_name, Key={ "username": { "S": str(self._username) } }, ConsistentRead=True)
-            #self.logger.debug(f"Token data = {response['Item'].get('data')}")
             d = response["Item"].get("data").get("S")
             data = json.loads(d if isinstance(d, str) else "{}")
         except:
@@ -498,16 +405,11 @@ class DynamoDBTokens(Tokens):
 
     def _put_token_data(self):
         
-        #stack = traceback.extract_stack()
-        #formatted_stack = traceback.format_list(stack)
-        #self.logger.debug("\n".join(formatted_stack))
-        
         if self.token is None or self._username is None or self.data is None:
             self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
             return False
         
         try:
-            #self.logger.debug(f"Sending {self.username} and {self.token} and {self.data}")
             self.conn.put_item(TableName=self.table_name, Item={ "username": { "S": str(self._username) }, "data": { "S": json.dumps(self.data) } })
         except:
             self.logger.error(f"[{self._username}@{self.remote_addr}] Unable to place token - {self.token}")
@@ -516,37 +418,6 @@ class DynamoDBTokens(Tokens):
             return False
         
         return True
-
-    #def _remove_token_data(self):
-    #    if self.token is None or self._username is None:
-    #        return False
-    #
-    #    try:
-    #        self.conn.delete_item(TableName=self.table_name, Key={ "token": { "S": self.token } })
-    #    except:
-    #        return False
-    #    
-    #    return True
-    
-    #def purge(self):
-    #    try:
-    #        response = self.conn.scan(TableName=self.table_name)
-    #        for item in response["Items"]:
-    #            data = json.loads(item.get("data").get("S"))
-    #            if data.get("type", "") == "token":
-    #                if self.is_expired(data.get("expires")):
-    #                    username = data.get("username")
-    #                    token = item.get("token")
-    #                    
-    #                    try:
-    #                        self.conn.delete_item(TableName=self.table_name, Key={ "token": token })
-    #                        logging.info(f"[{username}] Expired token purged. - {token}")
-    #                    except:
-    #                        logging.error(f"[{username}] Unable to remove expired token - {token}")
-    #    except:
-    #        pass
-    #    
-    #    return True
 
 
 def get_tokenizer(connection_details):
@@ -560,6 +431,3 @@ def get_tokenizer(connection_details):
         return DynamoDBTokens(**connection_details)
     
     return Tokens(**connection_details)
-
-
-#tokenizer = get_tokenizer(cfg.sys_tokenizer)

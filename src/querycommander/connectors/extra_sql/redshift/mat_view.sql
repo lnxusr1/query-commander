@@ -1,0 +1,1 @@
+select definition, schemaname, viewname, viewowner from pg_catalog.pg_views where schemaname = %s and viewname = %s;

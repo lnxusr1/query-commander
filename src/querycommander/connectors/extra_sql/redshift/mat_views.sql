@@ -1,0 +1,1 @@
+select name from pg_catalog.stv_mv_info where db_name = %s and schema = %s order by name

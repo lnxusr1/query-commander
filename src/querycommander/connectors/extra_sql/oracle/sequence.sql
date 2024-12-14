@@ -1,0 +1,1 @@
+select sequence_owner, sequence_name, min_value, max_value, increment_by, cache_size, last_number from sys.all_sequences where sequence_owner = :1 and sequence_name = :2 order by sequence_name

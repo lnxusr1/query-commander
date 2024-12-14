@@ -1,0 +1,1 @@
+show create trigger `{OBJECT_NAME}`

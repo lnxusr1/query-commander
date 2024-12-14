@@ -1,0 +1,1 @@
+select grantee as "Role", privilege as "Privilege", grantor as "Granted By", grantable as "With Grant" from sys.all_tab_privs where type = :1 and table_schema = :2 and table_name = :3 order by grantee, privilege

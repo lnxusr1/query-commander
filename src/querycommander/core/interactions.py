@@ -1,7 +1,6 @@
 import json
 import logging
 import http.cookies
-#from querycommander.core.tokenizer import tokenizer
 
 logger = logging.getLogger("INTERACTIONS")
 
@@ -36,7 +35,6 @@ class Response:
         self.raw_data = data
         self.extend = extend
 
-        #self.add_header("Access-Control-Allow-Origin", "*")
         self.add_header("Cache-Control", "max-age=0, no-cache, no-store, must-revalidate")
         self.add_header("Pragma", "no-cache")
         self.add_header("Expires", "0")
@@ -72,9 +70,6 @@ class Response:
             else:
                 print(f"{str(item.rstrip())}: {str(self.headers.get(item))}")
         
-#        if self.cookie is not None:
-#            print(str(self.cookie).strip())
-    
         print("")
         if data is None and self.data is None:
             print("")
@@ -136,9 +131,6 @@ class Request:
             self.raw_data = data
             if (str(self.headers.get("CONTENT_TYPE"))).lower() == "application/json" and len(self.raw_data) > 0:
                 self.json_data = json.loads(self.raw_data)
-
-    #def set_user(self, username):
-    #    self.json_data["username"] = username
 
     @property
     def host(self):
